@@ -1,0 +1,5 @@
+{
+  "name": "AcordesAI",
+  "description": "Una aplicación inteligente de cifrados y letras de canciones. Busca cualquier canción, obten los acordes generados por IA, guarda tus favoritos y comparte tus opiniones. Diseñado para músicos, optimizado para móvil.",
+  "requestFramePermissions": []
+}
