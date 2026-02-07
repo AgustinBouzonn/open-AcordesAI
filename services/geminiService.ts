@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Song, SongSearchResult, Instrument } from "../types";
+import { sanitizeInput } from "../utils/security";
 
 // Initialize Gemini Client
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -9,10 +10,13 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
  * This simulates a search index by asking the AI for popular matches.
  */
 export const searchSongs = async (query: string): Promise<SongSearchResult[]> => {
+  const cleanQuery = sanitizeInput(query);
+  if (!cleanQuery) return [];
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Search for popular songs matching the query: "${query}". Return a JSON list of up to 5 best matches.`,
+      contents: `Search for popular songs matching the query: """${cleanQuery}""". Return a JSON list of up to 5 best matches.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -47,8 +51,12 @@ export const getSongData = async (
     artist?: string, 
     instrument: Instrument = 'guitar'
 ): Promise<Song> => {
+  const cleanId = sanitizeInput(songId);
+  const cleanTitle = title ? sanitizeInput(title) : undefined;
+  const cleanArtist = artist ? sanitizeInput(artist) : undefined;
+
   // If we don't have title/artist (e.g. loading from ID), we ask the AI to infer it or just provide the data.
-  const promptContext = title && artist ? `${title} by ${artist}` : `the song with ID ${songId}`;
+  const promptContext = cleanTitle && cleanArtist ? `"""${cleanTitle}""" by """${cleanArtist}"""` : `the song with ID """${cleanId}"""`;
 
   // Tailor prompt for the instrument
   let instrumentInstruction = "";
@@ -87,9 +95,9 @@ export const getSongData = async (
     const data = JSON.parse(response.text || "{}");
     
     return {
-      id: songId,
-      title: data.title || title || "Unknown Title",
-      artist: data.artist || artist || "Unknown Artist",
+      id: cleanId,
+      title: data.title || cleanTitle || "Unknown Title",
+      artist: data.artist || cleanArtist || "Unknown Artist",
       key: data.key || "C",
       content: data.content || "Could not generate content.",
       chords: {
