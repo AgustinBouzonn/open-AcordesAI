@@ -1,18 +1,22 @@
 /**
- * Sanitizes user input to prevent prompt injection and ensures reasonable length.
- * Removes characters that might be used to confuse the LLM if necessary,
- * but primarily focuses on length and structure.
+ * Sanitizes input to prevent prompt injection and other security issues.
+ * @param input The user input string.
+ * @returns Sanitized string.
  */
-export const sanitizeInput = (input: string, maxLength: number = 100): string => {
+export const sanitizeInput = (input: string): string => {
   if (!input) return "";
 
-  // Truncate to max length to prevent token exhaustion or long-winded injections
-  let sanitized = input.slice(0, maxLength);
+  // 1. Trim whitespace
+  let sanitized = input.trim();
 
-  // Remove potential control characters (basic sanitization)
-  // Removing quotes to prevent breaking out of the prompt delimiter
-  // Removing backslashes to prevent escape sequences
-  sanitized = sanitized.replace(/["\\]/g, '');
+  // 2. Limit length to prevent token exhaustion or DOS
+  // 500 characters should be enough for song titles/artists/queries
+  sanitized = sanitized.slice(0, 500);
 
-  return sanitized.trim();
+  // 3. Remove potentially dangerous characters for LLM prompts
+  // We remove double quotes and backticks to prevent breaking out of string literals in prompts
+  // and remove angle brackets to prevent potential tag injection if prompts use XML structure.
+  sanitized = sanitized.replace(/["`<>]/g, '');
+
+  return sanitized;
 };
