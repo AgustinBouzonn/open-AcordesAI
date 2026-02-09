@@ -1,3 +1,3 @@
-## 2024-05-23 - Prevent Eager Evaluation in React Router
-**Learning:** React Router `element` prop accepts a React Element, not a function call. Using `element={renderFunction()}` executes the function on *every* parent render, regardless of the route match. This causes massive performance issues if the function contains expensive logic (like synchronous `localStorage` reads).
-**Action:** Always pass components (e.g., `<Component />`) to `element`. If inline rendering is needed, wrap it in a component defined outside the render loop or use `useMemo`, but prefer extracting to a standalone component to ensure lazy evaluation and better separation of concerns.
+## 2025-05-23 - Storage Service JSON Parsing Bottleneck
+**Learning:** `localStorage` access via `JSON.parse` for large objects (like the song cache) is extremely expensive and blocks the main thread. Accessing this data inside render loops (e.g. `getFavoriteSongsFull`) causes significant jank.
+**Action:** Always implement an in-memory cache layer for `localStorage` data that is accessed frequently. Use `storage` event listeners to maintain cross-tab consistency if needed.

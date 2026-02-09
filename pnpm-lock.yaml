@@ -26,16 +26,16 @@ importers:
     devDependencies:
       '@types/node':
         specifier: ^22.14.0
-        version: 22.19.10
+        version: 22.19.9
       '@vitejs/plugin-react':
         specifier: ^5.0.0
-        version: 5.1.3(vite@6.4.1(@types/node@22.19.10))
+        version: 5.1.3(vite@6.4.1(@types/node@22.19.9))
       typescript:
         specifier: ~5.8.2
         version: 5.8.3
       vite:
         specifier: ^6.2.0
-        version: 6.4.1(@types/node@22.19.10)
+        version: 6.4.1(@types/node@22.19.9)
 
 packages:
 
@@ -484,8 +484,8 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
-  '@types/node@22.19.10':
-    resolution: {integrity: sha512-tF5VOugLS/EuDlTBijk0MqABfP8UxgYazTLo3uIn3b4yJgg26QRbVYJYsDtHrjdDUIRfP70+VfhTTc+CE1yskw==}
+  '@types/node@22.19.9':
+    resolution: {integrity: sha512-PD03/U8g1F9T9MI+1OBisaIARhSzeidsUjQaf51fOxrfjeiKN9bLVO06lHuHYjxdnqLWJijJHfqXPSJri2EM2A==}
 
   '@vitejs/plugin-react@5.1.3':
     resolution: {integrity: sha512-NVUnA6gQCl8jfoYqKqQU5Clv0aPw14KkZYCsX6T9Lfu9slI0LOU10OTwFHS/WmptsMMpshNd/1tuWsHQ2Uk+cg==}
@@ -1287,11 +1287,11 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
-  '@types/node@22.19.10':
+  '@types/node@22.19.9':
     dependencies:
       undici-types: 6.21.0
 
-  '@vitejs/plugin-react@5.1.3(vite@6.4.1(@types/node@22.19.10))':
+  '@vitejs/plugin-react@5.1.3(vite@6.4.1(@types/node@22.19.9))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -1299,7 +1299,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.2
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 6.4.1(@types/node@22.19.10)
+      vite: 6.4.1(@types/node@22.19.9)
     transitivePeerDependencies:
       - supports-color
 
@@ -1577,7 +1577,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.19.10
+      '@types/node': 22.19.9
       long: 5.3.2
 
   react-dom@19.2.4(react@19.2.4):
@@ -1691,7 +1691,7 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
-  vite@6.4.1(@types/node@22.19.10):
+  vite@6.4.1(@types/node@22.19.9):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
@@ -1700,7 +1700,7 @@ snapshots:
       rollup: 4.57.1
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 22.19.10
+      '@types/node': 22.19.9
       fsevents: 2.3.3
 
   web-streams-polyfill@3.3.3: {}
