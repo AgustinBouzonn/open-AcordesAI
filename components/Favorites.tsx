@@ -1,20 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Music, ChevronRight } from 'lucide-react';
-import { Song } from '../types';
 import { getFavoriteSongsFull } from '../services/storageService';
 
 interface FavoritesProps {
-  loadSong: (id: string, title?: string, artist?: string) => void;
+  loadSong: (id: string, title?: string, artist?: string) => Promise<void>;
 }
 
 export const Favorites: React.FC<FavoritesProps> = ({ loadSong }) => {
-  const [favs, setFavs] = useState<Song[]>([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setFavs(getFavoriteSongsFull());
-  }, []);
+  // Refresh favorites list when entering this view
+  const favs = getFavoriteSongsFull();
 
   return (
     <div className="space-y-6">

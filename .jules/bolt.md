@@ -1,3 +1,3 @@
-## 2025-05-18 - React Router Element Prop Anti-Pattern
-**Learning:** Passing a function call (e.g., `element={renderFavorites()}`) to React Router's `element` prop causes the function to execute on *every* parent render, leading to severe performance degradation if the function performs synchronous IO or expensive computations.
-**Action:** Always extract route content into separate components and pass them as JSX elements (e.g., `element={<Favorites />}`).
+## 2024-05-23 - Prevent Eager Evaluation in React Router
+**Learning:** React Router `element` prop accepts a React Element, not a function call. Using `element={renderFunction()}` executes the function on *every* parent render, regardless of the route match. This causes massive performance issues if the function contains expensive logic (like synchronous `localStorage` reads).
+**Action:** Always pass components (e.g., `<Component />`) to `element`. If inline rendering is needed, wrap it in a component defined outside the render loop or use `useMemo`, but prefer extracting to a standalone component to ensure lazy evaluation and better separation of concerns.

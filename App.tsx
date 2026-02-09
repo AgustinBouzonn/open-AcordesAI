@@ -4,7 +4,7 @@ import { Layout } from './components/Layout';
 import { SongViewer } from './components/SongViewer';
 import { Favorites } from './components/Favorites';
 import { History } from './components/History';
-import { Song, SongSearchResult, ViewState, Instrument } from './types';
+import { Song, SongSearchResult, Instrument } from './types';
 import { searchSongs, getSongData } from './services/geminiService';
 import { cacheSong, getCachedSong, addToHistory, updateSongInstrument } from './services/storageService';
 import { Search, Loader2, Music, TrendingUp, ChevronRight } from 'lucide-react';
@@ -220,7 +220,6 @@ function AppContent() {
        )}
     </div>
   );
-
 
   const renderSongDetail = () => {
     if (isLoadingSong) {
