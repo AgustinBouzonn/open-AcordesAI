@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
+import { Song } from '../types';
 import { getHistorySongsFull } from '../services/storageService';
 
 interface HistoryProps {
-  loadSong: (id: string, title?: string, artist?: string) => Promise<void>;
+  loadSong: (id: string, title?: string, artist?: string) => void;
 }
 
 export const History: React.FC<HistoryProps> = ({ loadSong }) => {
-  const history = getHistorySongsFull();
+  const [history, setHistory] = useState<Song[]>([]);
+
+  useEffect(() => {
+    setHistory(getHistorySongsFull());
+  }, []);
 
   return (
     <div className="space-y-6">
