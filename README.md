@@ -1,23 +1,18 @@
 # 🎸 AcordesAI - Cifrados Inteligentes con IA
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://github.com/AgustinBouzonn/open-AcordesAI)
-[![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://github.com/AgustinBouzonn/open-AcordesAI)
-[![Google Gemini](https://img.shields.io/badge/Gemini-4285F4?style=flat-square&logo=google&logoColor=white)](https://github.com/AgustinBouzonn/open-AcordesAI)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://github.com/AgustinBouzonn/open-AcordesAI)
-[![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=flat-square&logo=pwa&logoColor=white)](https://github.com/AgustinBouzonn/open-AcordesAI)
-[![License](https://img.shields.io/github/license/AgustinBouzonn/open-AcordesAI?style=flat-square)](LICENSE)
+<div align="center">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"/>
+  <img src="https://img.shields.io/badge/Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini"/>
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind"/>
+  <img src="https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA"/>
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
+</div>
 
 <div align="center">
   <h3>🎵 Tu asistente musical con Inteligencia Artificial</h3>
   <p>
-    Genera cifrados, acordes y letras de cualquier canción en tiempo real
-    <br />
-    <a href="#-instalación"><strong>Instalación »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/AgustinBouzonn/open-AcordesAI/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/AgustinBouzonn/open-AcordesAI/issues">Request Feature</a>
+    Genera cifrados, acordes y letras de cualquier canción en tiempo real con el poder de Google Gemini
   </p>
 </div>
 
@@ -25,69 +20,79 @@
 
 ## 📖 Descripción
 
-**AcordesAI** es una aplicación web progresiva (PWA) diseñada para músicos que utiliza la inteligencia artificial de **Google Gemini** para generar cifrados, acordes y letras de canciones en tiempo real.
+**AcordesAI** es una Progressive Web App (PWA) revolucionaria diseñada para músicos de todos los niveles. A diferencia de las bases de datos tradicionales que solo contienen canciones preexistentes, AcordesAI utiliza la **inteligencia artificial de Google Gemini** para generar cifrados, acordes y letras de **cualquier canción**, incluso si nunca antes fue transcrita.
 
-A diferencia de las bases de datos tradicionales, AcordesAI puede generar cifrados para **cualquier canción**, incluso si nunca antes fue transcrita, usando el poder de la IA.
+### 🌟 ¿Por qué AcordesAI?
+
+- 🎯 **Sin límites:** No estás restringido a una base de datos preexistente
+- ⚡ **Instantáneo:** Obtén cifrados en segundos, no en horas
+- 🎸 **Multi-instrumento:** Guitarra, Ukelele y Piano
+- 💾 **Offline:** Funciona sin conexión gracias a PWA
+- 🆓 **Gratis:** Código abierto para la comunidad
 
 ---
 
 ## ✨ Características Principales
 
 ### 🎯 Búsqueda Inteligente
-- **Búsqueda universal**: Encuentra cualquier canción o artista usando la API de Gemini
-- **Detección automática**: Identifica título, artista y metadatos automáticamente
-- **Sin límites**: No estás restringido a una base de datos preexistente
+```
+🔍 Busca cualquier canción → 🧠 IA detecta metadatos → 🎸 Obtén cifrado al instante
+```
 
-### 🎸 Visualizador de Canciones
-- **Cifrados generados por IA**: Obtén acordes y letra de cualquier canción al instante
-- **Detección de tono**: La IA identifica automáticamente la tonalidad de la canción
-- **Herramientas de práctica**:
-  - 📜 **Autoscroll**: Desplazamiento automático con velocidad variable
-  - 🔤 **Tamaño de fuente**: Ajustable para mejor legibilidad
-  - 🎚️ **Transposición**: Cambia el tono de la canción (próximamente)
+- **Búsqueda universal:** Encuentra cualquier canción o artista
+- **Detección automática:** Identifica título, artista y tonalidad
+- **Sin restricciones:** No dependes de bases de datos externas
 
-### 🎹 Multi-Instrumento
-Soporte para múltiples instrumentos con memoria inteligente:
-- **🎸 Guitarra**: Acordes estándar con diagramas
-- **🪗 Ukelele**: Acordes adaptados para afinación GCEA
-- **🎹 Piano**: Acordes con indicaciones de bajos cuando es necesario
-- **💾 Cache inteligente**: El sistema guarda la versión de cada instrumento para evitar regeneraciones
+### 🎸 Visualizador Avanzado
+
+| Feature | Descripción |
+|---------|-------------|
+| 🎼 **Cifrados IA** | Acordes generados por Gemini |
+| 🎹 **Multi-instrumento** | Guitarra, Ukelele, Piano |
+| 📜 **Autoscroll** | Velocidad ajustable 1-10 |
+| 🔤 **Fuente ajustable** | Tamaño personalizable |
+| 🎚️ **Transposición** | Cambio de tono (próximamente) |
 
 ### 📚 Gestión de Biblioteca
-- **⭐ Favoritos**: Guarda tus canciones preferidas para acceso rápido
-- **🕐 Historial**: Accede automáticamente a las últimas 10 canciones visualizadas
-- **💾 Caché local**: Las canciones generadas se guardan en el dispositivo para ahorrar datos
 
-### 🤝 Comunidad
-- **💬 Comentarios**: Deja opiniones y notas sobre los cifrados generados
+```yaml
+Biblioteca Inteligente:
+  Favoritos:
+    - Acceso rápido a tus canciones preferidas
+    - Sincronización cross-device
+
+  Historial:
+    - Últimas 10 canciones visualizadas
+    - Acceso rápido a canciones recientes
+
+  Caché Local:
+    - Ahorro de datos
+    - Acceso instantáneo
+    - Funciona offline
+```
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Stack Tecnológico
 
 ### Frontend
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/React-19-20232A?style=flat-square&logo=react&logoColor=61DAFB)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)
+<div>
+  <img src="https://img.shields.io/badge/React-19-black?style=flat-square&logo=react&logoColor=61DAFB" alt="React 19"/>
+  <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5.0"/>
+  <img src="https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind 3.4"/>
+  <img src="https://img.shields.io/badge/Vite-5.0-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite 5.0"/>
+</div>
 
 ### IA & Backend
-![Google Gemini](https://img.shields.io/badge/Gemini-4285F4?style=flat-square&logo=google&logoColor=white)
-![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat-square&logo=react-router&logoColor=white)
-
-### Herramientas
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
-![Lucide](https://img.shields.io/badge/Lucide-Icons-000000?style=flat-square&logo=lucide&logoColor=white)
+<div>
+  <img src="https://img.shields.io/badge/Gemini_Pro-4285F4?style=flat-square&logo=google&logoColor=white" alt="Gemini Pro"/>
+  <img src="https://img.shields.io/badge/React_Router-6.20-CA4245?style=flat-square&logo=react-router&logoColor=white" alt="React Router"/>
+  <img src="https://img.shields.io/badge/Zustand-4.4-000000?style=flat-square&logo=zustand&logoColor=white" alt="Zustand"/>
+</div>
 
 ---
 
-## 📦 Instalación
-
-### Prerrequisitos
-- Node.js 18+ instalado
-- npm o yarn
-- API Key de Google Gemini ([obtener aquí](https://ai.google.dev/))
-
-### Pasos
+## 📦 Instalación Rápida
 
 ```bash
 # 1. Clonar el repositorio
@@ -97,40 +102,38 @@ cd open-AcordesAI
 # 2. Instalar dependencias
 npm install
 
-# 3. Configurar variable de entorno
+# 3. Configurar API Key
 echo "VITE_GEMINI_API_KEY=tu_api_key_aqui" > .env
 
-# 4. Iniciar servidor de desarrollo
+# 4. Iniciar desarrollo
 npm run dev
 ```
 
-La aplicación estará disponible en `http://localhost:5173`
+**¿No tienes API Key?** [Obtén una gratis aquí](https://ai.google.dev/) 🆓
 
 ---
 
 ## 🚀 Uso
 
-### 1. Configurar API Key
-Antes de usar la aplicación, necesitas una API Key de Google Gemini:
-1. Ve a [Google AI Studio](https://ai.google.dev/)
-2. Crea una cuenta o inicia sesión
-3. Genera una API Key
-4. Configúrala en el archivo `.env` como `VITE_GEMINI_API_KEY`
+### 1️⃣ Configurar API Key
+```bash
+# Editar .env
+VITE_GEMINI_API_KEY=tu_api_key_aqui
+```
 
-### 2. Buscar una Canción
-1. Escribe el nombre de la canción o artista en el buscador
-2. La IA detectará automáticamente los metadatos
-3. Espera la generación del cifrado (segundos)
+### 2️⃣ Buscar Canción
+```
+1. Escribe nombre de canción o artista
+2. La IA detecta metadatos automáticamente
+3. Espera la generación (segundos)
+```
 
-### 3. Visualizar y Practicar
-1. Selecciona el instrumento (Guitarra, Ukelele, Piano)
-2. Ajusta el tamaño de fuente y velocidad de autoscroll
-3. Usa las herramientas de práctica para aprender
-
-### 4. Guardar y Organizar
-- Añade a favoritos para acceso rápido
-- El historial guarda tus últimas 10 canciones
-- Los cifrados se guardan en caché local
+### 3️⃣ Visualizar y Practicar
+```
+1. Selecciona instrumento (Guitarra/Ukelele/Piano)
+2. Ajusta tamaño de fuente y autoscroll
+3. ¡Practica como un profesional!
+```
 
 ---
 
@@ -138,25 +141,25 @@ Antes de usar la aplicación, necesitas una API Key de Google Gemini:
 
 ```
 open-AcordesAI/
-├── src/
-│   ├── components/          # Componentes UI reutilizables
-│   │   ├── Layout.tsx      # Layout principal de la app
-│   │   └── SongViewer.tsx  # Visualizador de canciones
-│   ├── services/           # Lógica de negocio
-│   │   ├── geminiService.ts    # Conexión con Google Gemini
-│   │   └── storageService.ts   # Gestión de caché, historial, favoritos
-│   ├── types/              # Definiciones TypeScript
-│   ├── App.tsx             # Componente principal
-│   └── main.tsx            # Entry point
-├── public/                 # Archivos estáticos
-├── docs/                   # Documentación técnica
-├── .env.example            # Ejemplo de variables de entorno
-└── package.json
+├── 📂 src/
+│   ├── 🎨 components/          # Componentes UI reutilizables
+│   │   ├── Layout.tsx         # Layout principal
+│   │   └── SongViewer.tsx     # Visualizador de canciones
+│   ├── 🔧 services/            # Lógica de negocio
+│   │   ├── geminiService.ts   # Conexión Gemini API
+│   │   └── storageService.ts  # Gestión de caché
+│   ├── 📝 types/              # Tipos TypeScript
+│   ├── ⚙️ App.tsx             # App principal
+│   └── 🚀 main.tsx            # Entry point
+├── 📂 public/                 # Archivos estáticos
+├── 📂 docs/                   # Documentación
+├── 📄 .env.example            # Template de configuración
+└── 📄 package.json
 ```
 
 ---
 
-## 🔧 Configuración Avanzada
+## 🔧 Configuración
 
 ### Variables de Entorno
 ```bash
@@ -164,53 +167,66 @@ open-AcordesAI/
 VITE_GEMINI_API_KEY=tu_api_key_aqui
 
 # Configuración de caché (opcional)
-VITE_CACHE_EXPIRATION_HOURS=24
+VITE_CACHE_EXPIRATION_HOURS=24      # Expiración de caché
+VITE_MAX_HISTORY_SIZE=10            # Tamaño del historial
+VITE_DEBUG=false                    # Modo debug
 ```
-
-### Personalización
-- Tamaño de fuente: Ajustable en el visualizador
-- Velocidad de autoscroll: 1-10
-- Instrumentos: Guitarra, Ukelele, Piano
 
 ---
 
-## 🌟 Características Futuras
+## 🌟 Roadmap
 
-- [ ] 🎚️ **Transposición**: Cambiar el tono de las canciones
-- [ ] 🎵 **Reproductor de audio**: Escuchar la canción mientras ves el cifrado
-- [ ] 📱 **Exportar a PDF**: Guardar cifrados en formato PDF
-- [ ] 🎤 **Modo karaoke**: Letra sincronizada con audio
-- [ ] 🌐 **Multi-idioma**: Soporte para inglés, portugués, etc.
-- [ ] 📊 **Estadísticas**: Progreso de práctica y canciones aprendidas
+### ✅ Versión 1.0 (Actual)
+- [x] Búsqueda de canciones con IA
+- [x] Multi-instrumento (Guitarra, Ukelele, Piano)
+- [x] Caché local e historial
+- [x] Autoscroll y fuente ajustable
+- [x] PWA functionality
+
+### 🔜 Versión 2.0 (Próximamente)
+- [ ] 🎚️ **Transposición** de tono
+- [ ] 🎵 **Reproductor** de audio integrado
+- [ ] 📄 **Exportar** a PDF
+- [ ] 🎤 **Modo karaoke** sincronizado
+- [ ] 🌐 **Multi-idioma** (EN, PT, FR)
+- [ ] 📊 **Estadísticas** de práctica
+
+### 💡 Versión 3.0 (Futuro)
+- [ ] 🎸 **Diagramas** de acordes interactivos
+- [ ] 🤖 **Recomendaciones** de canciones
+- [ ] 🎓 **Tutoriales** integrados
+- [ ] 👥 **Comunidad** y sharing
+- [ ] 📱 **App nativa** (iOS, Android)
 
 ---
 
 ## 🤝 Contribuir
 
-¡Las contribuciones son bienvenidas! Por favor:
+¡Las contribuciones son bienvenidas! 🎉
 
 1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+2. Crea tu feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit tus cambios (`git commit -m 'feat: Add some amazing feature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
-Ver [CONTRIBUTING.md](CONTRIBUTING.md) para más detalles.
+**Ver [CONTRIBUTING.md](CONTRIBUTING.md) para más detalles.**
 
 ---
 
 ## 📝 Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
+Este proyecto está bajo la Licencia MIT - ver archivo [LICENSE](LICENSE) para detalles.
 
 ---
 
 ## 👨‍💻 Autor
 
-**Agustín Bouzon** - [AgustinBouzonn](https://github.com/AgustinBouzonn)
+**Agustín Bouzon**
 
-- LinkedIn: [agustinbouzon](https://linkedin.com/in/agustinbouzon)
-- Website: [bthings.space](https://bthings.space)
+- 💼 [LinkedIn](https://linkedin.com/in/agustinbouzon)
+- 🌐 [Website](https://bthings.space)
+- 📧 [Email](mailto:abouzon@linksolution.com.ar)
 
 ---
 
@@ -220,23 +236,22 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detal
 - **Vite** - Por la herramienta de build increíblemente rápida
 - **React** - Por el framework frontend que facilita el desarrollo
 - **Tailwind CSS** - Por el sistema de diseño utility-first
-
----
-
-## 📞 Soporte
-
-¿Tienes problemas o sugerencias?
-
-- 📧 Email: [abouzon@linksolution.com.ar](mailto:abouzon@linksolution.com.ar)
-- 🐛 [Issues](https://github.com/AgustinBouzonn/open-AcordesAI/issues)
-- 💬 [Discussions](https://github.com/AgustinBouzonn/open-AcordesAI/discussions)
+- **La comunidad** - Por el feedback y soporte constante
 
 ---
 
 <div align="center">
-  <sub>Hecho con ❤️ por <a href="https://github.com/AgustinBouzonn">Agustín Bouzon</a></sub>
-</div>
 
-<div align="center">
-  <p>⭐ Si te gusta este proyecto, ¡dejame una star! ⭐</p>
+## ⭐ ¿Te gusta este proyecto? ¡Dejame una star! ⭐
+
+[![GitHub stars](https://img.shields.io/github/stars/AgustinBouzonn/open-AcordesAI?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e)](https://github.com/AgustinBouzonn/open-AcordesAI)
+
+[![GitHub forks](https://img.shields.io/github/forks/AgustinBouzonn/open-AcordesAI?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e)](https://github.com/AgustinBouzonn/open-AcordesAI/fork)
+
+---
+
+<sub>Hecho con ❤️ y 🎸 por <a href="https://github.com/AgustinBouzonn">Agustín Bouzon</a></sub>
+
+<i>"La música es el lenguaje universal, la IA es el traductor"</i>
+
 </div>
