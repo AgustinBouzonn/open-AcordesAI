@@ -12,6 +12,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 export const searchSongs = async (query: string): Promise<SongSearchResult[]> => {
   const safeQuery = sanitizeInput(query);
   try {
+    const sanitizedQuery = sanitizeInput(query);
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Search for popular songs matching the query: "${safeQuery}". Return a JSON list of up to 5 best matches.`,
@@ -49,6 +50,11 @@ export const getSongData = async (
     artist?: string, 
     instrument: Instrument = 'guitar'
 ): Promise<Song> => {
+  // Sanitize inputs
+  const safeTitle = title ? sanitizeInput(title) : undefined;
+  const safeArtist = artist ? sanitizeInput(artist) : undefined;
+  const safeId = sanitizeInput(songId);
+
   // If we don't have title/artist (e.g. loading from ID), we ask the AI to infer it or just provide the data.
   const safeTitle = title ? sanitizeInput(title) : undefined;
   const safeArtist = artist ? sanitizeInput(artist) : undefined;
