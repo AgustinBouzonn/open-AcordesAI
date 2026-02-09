@@ -10,11 +10,12 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
  * This simulates a search index by asking the AI for popular matches.
  */
 export const searchSongs = async (query: string): Promise<SongSearchResult[]> => {
+  const safeQuery = sanitizeInput(query);
   try {
     const sanitizedQuery = sanitizeInput(query);
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Search for popular songs matching the query: "${sanitizedQuery}". Return a JSON list of up to 5 best matches.`,
+      contents: `Search for popular songs matching the query: "${safeQuery}". Return a JSON list of up to 5 best matches.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -55,7 +56,11 @@ export const getSongData = async (
   const safeId = sanitizeInput(songId);
 
   // If we don't have title/artist (e.g. loading from ID), we ask the AI to infer it or just provide the data.
-  const promptContext = safeTitle && safeArtist ? `${safeTitle} by ${safeArtist}` : `the song with ID ${safeId}`;
+  const safeTitle = title ? sanitizeInput(title) : undefined;
+  const safeArtist = artist ? sanitizeInput(artist) : undefined;
+  const safeSongId = sanitizeInput(songId);
+
+  const promptContext = safeTitle && safeArtist ? `${safeTitle} by ${safeArtist}` : `the song with ID ${safeSongId}`;
 
   // Tailor prompt for the instrument
   let instrumentInstruction = "";

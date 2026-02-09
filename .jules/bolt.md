@@ -1,0 +1,3 @@
+## 2024-05-23 - Prevent Eager Evaluation in React Router
+**Learning:** React Router `element` prop accepts a React Element, not a function call. Using `element={renderFunction()}` executes the function on *every* parent render, regardless of the route match. This causes massive performance issues if the function contains expensive logic (like synchronous `localStorage` reads).
+**Action:** Always pass components (e.g., `<Component />`) to `element`. If inline rendering is needed, wrap it in a component defined outside the render loop or use `useMemo`, but prefer extracting to a standalone component to ensure lazy evaluation and better separation of concerns.
