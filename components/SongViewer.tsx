@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Share2, Guitar, Music, Keyboard } from 'lucide-react';
+import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Guitar, Music, Keyboard } from 'lucide-react';
 import { Song, Comment, Instrument } from '../types';
 import { isSongFavorite, toggleFavorite, addComment, getComments } from '../services/storageService';
 
@@ -89,17 +89,17 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
         <div className="flex items-center gap-3">
           <button 
             onClick={handleToggleFav}
-            className={`p-3 rounded-full transition ${isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
             aria-label={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
             title={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
+            className={`p-3 rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
           >
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
           <button 
              onClick={() => setShowComments(!showComments)}
-             className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative"
-             aria-label={showComments ? "Ocultar comentarios" : "Mostrar comentarios"}
-             title={showComments ? "Ocultar comentarios" : "Mostrar comentarios"}
+             aria-label={showComments ? "Ocultar opiniones" : "Mostrar opiniones"}
+             title={showComments ? "Ocultar opiniones" : "Mostrar opiniones"}
+             className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <MessageSquare size={20} />
             {comments.length > 0 && (
@@ -142,21 +142,21 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
         <div className="flex items-center justify-between w-full md:w-auto gap-4 px-2">
             <div className="flex items-center gap-2">
             <button
-                onClick={() => setFontSize(s => Math.max(12, s - 2))}
-                className="p-2 text-gray-400 hover:text-white"
-                aria-label="Disminuir tamaño de letra"
-                title="Disminuir tamaño de letra"
+              onClick={() => setFontSize(s => Math.max(12, s - 2))}
+              className="p-2 text-gray-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded"
+              aria-label="Disminuir tamaño de letra"
+              title="Disminuir tamaño de letra"
             >
-                <Minus size={16} />
+              <Minus size={16} />
             </button>
             <Type size={18} className="text-brand" />
             <button
-                onClick={() => setFontSize(s => Math.min(24, s + 2))}
-                className="p-2 text-gray-400 hover:text-white"
-                aria-label="Aumentar tamaño de letra"
-                title="Aumentar tamaño de letra"
+              onClick={() => setFontSize(s => Math.min(24, s + 2))}
+              className="p-2 text-gray-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded"
+              aria-label="Aumentar tamaño de letra"
+              title="Aumentar tamaño de letra"
             >
-                <Plus size={16} />
+              <Plus size={16} />
             </button>
             </div>
             
@@ -204,6 +204,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="¿Qué te parece este cifrado?"
+                  aria-label="Escribe tu opinión"
                   className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none"
                   rows={3}
                 />
