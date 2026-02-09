@@ -18,6 +18,41 @@
 
 ---
 
+## 🤖 Disclaimer de Responsabilidad
+
+<div align="center">
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   ⚠️ ESTE README FUE 85% ESCRITO POR IA ⚠️                 ║
+║                                                              ║
+║   Mi aporte:                                                ║
+║   ✓ Tuve la idea del proyecto                              ║
+║   ✓ Le dije a la IA qué escribir                           ║
+║   ✓ Revisé que no dijera cosas raras                       ║
+║   ✓ Añadí el chiste del 85%                                ║
+║   ✓ Probablemente escribí algo de código                   ║
+║   (pero también puede que la IA lo hiciera)                 ║
+║                                                              ║
+║   La IA hizo:                                              ║
+║   ✓ Todo el formateo bonito                                ║
+║   ✓ Los badges (soy muy malo acordándome los nombres)     ║
+║   ✓ La tabla de features                                   ║
+║   ✓ Este disclaimer                                        ║
+║                                                              ║
+║   ¿Resultado?                                              ║
+║   Un README que se ve profesional mientras                 ║
+║   yo practico guitarra (que es lo que realmente            ║
+║   me importa).                                             ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+</div>
+
+---
+
 ## 📖 Descripción
 
 **AcordesAI** es una Progressive Web App (PWA) revolucionaria diseñada para músicos de todos los niveles. A diferencia de las bases de datos tradicionales que solo contienen canciones preexistentes, AcordesAI utiliza la **inteligencia artificial de Google Gemini** para generar cifrados, acordes y letras de **cualquier canción**, incluso si nunca antes fue transcrita.
@@ -237,6 +272,35 @@ Este proyecto está bajo la Licencia MIT - ver archivo [LICENSE](LICENSE) para d
 - **React** - Por el framework frontend que facilita el desarrollo
 - **Tailwind CSS** - Por el sistema de diseño utility-first
 - **La comunidad** - Por el feedback y soporte constante
+- **ChatGPT/Claude/Gemini** - Por ayudarme a escribir este README (y probablemente algo de código)
+
+---
+
+## 🎭 Nota Final
+
+<div align="center">
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   Si estás leyendo esto y pensás:                          │
+│   "¡Qué README más profesional!"                           │
+│                                                             │
+│   Gracias, me lo escribió mi asistente IA.                 │
+│   Yo solo le dije qué poner.                               │
+│                                                             │
+│   Si pensás:                                               │
+│   "¡Qué README más largo e innecesario!"                   │
+│                                                             │
+│   También me lo escribió la IA.                            │
+│   Le gusta mucho explicar cosas.                           │
+│                                                             │
+│   En fin... ¿usás la app o seguis leyendo READMEs?        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+</div>
 
 ---
 
@@ -250,8 +314,10 @@ Este proyecto está bajo la Licencia MIT - ver archivo [LICENSE](LICENSE) para d
 
 ---
 
-<sub>Hecho con ❤️ y 🎸 por <a href="https://github.com/AgustinBouzonn">Agustín Bouzon</a></sub>
+<sub>Hecho con ❤️, 🎸 y mucho ☕ (con ayuda de IA) por <a href="https://github.com/AgustinBouzonn">Agustín Bouzon</a></sub>
 
 <i>"La música es el lenguaje universal, la IA es el traductor"</i>
+
+<i>"Y yo soy el tipo que le dice a la IA qué traducir"</i>
 
 </div>
