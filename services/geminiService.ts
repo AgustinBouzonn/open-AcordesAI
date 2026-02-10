@@ -3,7 +3,7 @@ import { Song, SongSearchResult, Instrument } from "../types";
 import { sanitizeInput } from "../utils/security";
 
 // Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 /**
  * Searches for songs based on a query.
@@ -58,12 +58,7 @@ export const getSongData = async (
   const safeId = sanitizeInput(songId);
 
   // If we don't have title/artist (e.g. loading from ID), we ask the AI to infer it or just provide the data.
-  const safeTitle = title ? sanitizeInput(title) : undefined;
-  const safeArtist = artist ? sanitizeInput(artist) : undefined;
-  const safeSongId = sanitizeInput(songId);
-
-  // If we don't have title/artist (e.g. loading from ID), we ask the AI to infer it or just provide the data.
-  const promptContext = cleanTitle && cleanArtist ? `"""${cleanTitle}""" by """${cleanArtist}"""` : `the song with ID """${cleanId}"""`;
+  const promptContext = safeTitle && safeArtist ? `"""${safeTitle}""" by """${safeArtist}"""` : `the song with ID """${safeId}"""`;
 
   // Tailor prompt for the instrument
   let instrumentInstruction = "";
@@ -100,11 +95,11 @@ export const getSongData = async (
     });
 
     const data = JSON.parse(response.text || "{}");
-    
+
     return {
-      id: cleanId,
-      title: data.title || cleanTitle || "Unknown Title",
-      artist: data.artist || cleanArtist || "Unknown Artist",
+      id: safeId,
+      title: data.title || safeTitle || "Unknown Title",
+      artist: data.artist || safeArtist || "Unknown Artist",
       key: data.key || "C",
       content: data.content || "Could not generate content.",
       chords: {

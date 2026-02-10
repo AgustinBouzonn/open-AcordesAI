@@ -67,6 +67,23 @@
 
 ---
 
+## 📸 Screenshots
+
+<div align="center">
+
+### Pantalla Principal
+![Home](docs/screenshots/01-home.png)
+
+### Búsqueda de Canciones
+![Search](docs/screenshots/02-search.png)
+
+### Visualizador con Acordes IA
+![Song View](docs/screenshots/03-song-view.png)
+
+</div>
+
+---
+
 ## ✨ Características Principales
 
 ### 🎯 Búsqueda Inteligente
