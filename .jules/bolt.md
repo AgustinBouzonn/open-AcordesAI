@@ -1,0 +1,3 @@
+## 2024-05-23 - Synchronous Storage Access in Render Loop
+**Learning:** The application relies on helper functions like `getFavoriteSongsFull` which synchronously access `localStorage` and parse JSON. When these functions are called inside inline render functions passed to `Route.element` (e.g., `element={renderFavorites()}`), they execute on *every* render of the parent component, regardless of the active route.
+**Action:** Always wrap route components in separate functional components or memoize them. Avoid inline function calls in `Route.element` that perform expensive work, especially when the work involves synchronous I/O or JSON parsing.
