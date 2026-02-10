@@ -89,12 +89,16 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
         <div className="flex items-center gap-3">
           <button 
             onClick={handleToggleFav}
+            aria-label={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
+            title={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
             className={`p-3 rounded-full transition ${isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
           >
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
           <button 
              onClick={() => setShowComments(!showComments)}
+             aria-label={showComments ? "Ocultar comentarios" : "Mostrar comentarios"}
+             title={showComments ? "Ocultar comentarios" : "Mostrar comentarios"}
              className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative"
           >
             <MessageSquare size={20} />
@@ -137,9 +141,25 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
 
         <div className="flex items-center justify-between w-full md:w-auto gap-4 px-2">
             <div className="flex items-center gap-2">
-            <button onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-2 text-gray-400 hover:text-white"><Minus size={16} /></button>
+            <button
+                onClick={() => setFontSize(s => Math.max(12, s - 2))}
+                disabled={fontSize <= 12}
+                aria-label="Disminuir tamaño de letra"
+                title="Disminuir tamaño de letra"
+                className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <Minus size={16} />
+            </button>
             <Type size={18} className="text-brand" />
-            <button onClick={() => setFontSize(s => Math.min(24, s + 2))} className="p-2 text-gray-400 hover:text-white"><Plus size={16} /></button>
+            <button
+                onClick={() => setFontSize(s => Math.min(24, s + 2))}
+                disabled={fontSize >= 24}
+                aria-label="Aumentar tamaño de letra"
+                title="Aumentar tamaño de letra"
+                className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <Plus size={16} />
+            </button>
             </div>
             
             <div className="w-px h-6 bg-dark-600 hidden md:block"></div>
