@@ -28,11 +28,22 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Helper to safely parse JSON
+const safeJSONParse = <T>(jsonString: string | null, fallback: T): T => {
+  if (!jsonString) return fallback;
+  try {
+    return JSON.parse(jsonString);
+  } catch (e) {
+    console.error("Failed to parse storage item", e);
+    return fallback;
+  }
+};
+
 // Helper to get cache with lazy loading
 const getSongsCache = (): Record<string, Song> => {
   if (!memoryCache.songs) {
     const stored = localStorage.getItem(CACHED_SONGS_KEY);
-    memoryCache.songs = stored ? JSON.parse(stored) : {};
+    memoryCache.songs = safeJSONParse(stored, {});
   }
   return memoryCache.songs!;
 };
@@ -40,7 +51,7 @@ const getSongsCache = (): Record<string, Song> => {
 const getFavoritesCache = (): string[] => {
   if (!memoryCache.favorites) {
     const stored = localStorage.getItem(FAVORITES_KEY);
-    memoryCache.favorites = stored ? JSON.parse(stored) : [];
+    memoryCache.favorites = safeJSONParse(stored, []);
   }
   return memoryCache.favorites!;
 };
@@ -48,7 +59,7 @@ const getFavoritesCache = (): string[] => {
 const getHistoryCache = (): string[] => {
   if (!memoryCache.history) {
     const stored = localStorage.getItem(HISTORY_KEY);
-    memoryCache.history = stored ? JSON.parse(stored) : [];
+    memoryCache.history = safeJSONParse(stored, []);
   }
   return memoryCache.history!;
 };
@@ -56,7 +67,7 @@ const getHistoryCache = (): string[] => {
 const getCommentsCache = (): Record<string, Comment[]> => {
   if (!memoryCache.comments) {
     const stored = localStorage.getItem(COMMENTS_KEY);
-    memoryCache.comments = stored ? JSON.parse(stored) : {};
+    memoryCache.comments = safeJSONParse(stored, {});
   }
   return memoryCache.comments!;
 };
