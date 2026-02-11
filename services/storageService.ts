@@ -113,7 +113,13 @@ export const getComments = (songId: string): Comment[] => {
   return allComments[songId] || [];
 };
 
+export const MAX_COMMENT_LENGTH = 500;
+
 export const addComment = (songId: string, text: string): Comment => {
+  if (text.length > MAX_COMMENT_LENGTH) {
+    throw new Error(`El comentario no puede exceder los ${MAX_COMMENT_LENGTH} caracteres.`);
+  }
+
   const allComments = getCommentsCache();
   const songComments = allComments[songId] || [];
   

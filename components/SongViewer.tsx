@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Share2, Guitar, Music, Keyboard } from 'lucide-react';
 import { Song, Comment, Instrument } from '../types';
-import { isSongFavorite, toggleFavorite, addComment, getComments } from '../services/storageService';
+import { isSongFavorite, toggleFavorite, addComment, getComments, MAX_COMMENT_LENGTH } from '../services/storageService';
 
 interface SongViewerProps {
   song: Song;
@@ -186,9 +186,15 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="¿Qué te parece este cifrado?"
+                  maxLength={MAX_COMMENT_LENGTH}
                   className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none"
                   rows={3}
                 />
+                <div className="flex justify-end mt-1 mb-2">
+                  <span className="text-xs text-gray-500">
+                    {newComment.length}/{MAX_COMMENT_LENGTH}
+                  </span>
+                </div>
                 <button 
                   type="submit"
                   disabled={!newComment.trim()}
