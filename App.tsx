@@ -136,6 +136,7 @@ function AppContent() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Canción o artista..."
+            aria-label="Buscar canción o artista"
             className="w-full bg-dark-800 border border-dark-600 rounded-full py-3 pl-12 pr-4 text-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition shadow-lg"
           />
           <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
@@ -178,6 +179,7 @@ function AppContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar..."
+              aria-label="Buscar canciones"
               className="w-full bg-dark-800 border border-dark-600 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-brand"
               autoFocus
             />
