@@ -16,3 +16,14 @@ export const sanitizeInput = (input: string, maxLength: number = 100): string =>
 
   return sanitized.trim();
 };
+
+/**
+ * Sanitizes user comments to prevent storage exhaustion and limit length.
+ * React escapes by default, but this adds a layer of defense.
+ */
+export const sanitizeComment = (input: string, maxLength: number = 500): string => {
+  if (!input) return "";
+
+  // Truncate
+  return input.slice(0, maxLength).trim();
+};

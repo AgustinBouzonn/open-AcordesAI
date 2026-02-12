@@ -1,4 +1,5 @@
 import { Comment, Song, Instrument } from '../types';
+import { sanitizeComment } from '../utils/security';
 
 const FAVORITES_KEY = 'acordesai_favorites';
 const COMMENTS_KEY = 'acordesai_comments';
@@ -61,25 +62,34 @@ const getCommentsCache = (): Record<string, Comment[]> => {
   return memoryCache.comments!;
 };
 
+// Helper to safely set localStorage item (prevents DoS crash on quota exceeded)
+const safeSetItem = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    console.error(`Failed to save to localStorage for key ${key}:`, error);
+  }
+};
+
 // Helper to update cache and storage
 const updateSongsCache = (newCache: Record<string, Song>) => {
   memoryCache.songs = newCache;
-  localStorage.setItem(CACHED_SONGS_KEY, JSON.stringify(newCache));
+  safeSetItem(CACHED_SONGS_KEY, JSON.stringify(newCache));
 };
 
 const updateFavoritesCache = (newFavorites: string[]) => {
   memoryCache.favorites = newFavorites;
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
+  safeSetItem(FAVORITES_KEY, JSON.stringify(newFavorites));
 };
 
 const updateHistoryCache = (newHistory: string[]) => {
   memoryCache.history = newHistory;
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+  safeSetItem(HISTORY_KEY, JSON.stringify(newHistory));
 };
 
 const updateCommentsCache = (newComments: Record<string, Comment[]>) => {
   memoryCache.comments = newComments;
-  localStorage.setItem(COMMENTS_KEY, JSON.stringify(newComments));
+  safeSetItem(COMMENTS_KEY, JSON.stringify(newComments));
 };
 
 export const getFavorites = (): string[] => {
@@ -114,6 +124,11 @@ export const getComments = (songId: string): Comment[] => {
 };
 
 export const addComment = (songId: string, text: string): Comment => {
+  const cleanText = sanitizeComment(text);
+  if (!cleanText) {
+    throw new Error('El comentario no puede estar vacío');
+  }
+
   const allComments = getCommentsCache();
   const songComments = allComments[songId] || [];
   
@@ -121,7 +136,7 @@ export const addComment = (songId: string, text: string): Comment => {
     id: Date.now().toString(),
     songId,
     user: 'Usuario Anónimo', // In a real app, this would come from auth
-    text,
+    text: cleanText,
     timestamp: Date.now(),
   };
 
