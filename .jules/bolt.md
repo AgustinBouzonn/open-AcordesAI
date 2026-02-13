@@ -1,0 +1,3 @@
+## 2024-05-22 - Route Render Functions Anti-Pattern
+**Learning:** Using inline function calls (e.g., `element={renderHome()}`) in React Router `Route` definitions causes eager execution of all route components on every parent render, regardless of the active route. This leads to massive performance overhead, especially if those functions perform expensive operations (like synchronous `localStorage` reads or complex calculations).
+**Action:** Always use component references (e.g., `element={<Home />}`) in `Route` definitions. Extract route content into standalone components to ensure they only mount and render when the route is active.
