@@ -1,4 +1,5 @@
 import { Comment, Song, Instrument } from '../types';
+import { sanitizeComment } from '../utils/security';
 
 const FAVORITES_KEY = 'acordesai_favorites';
 const COMMENTS_KEY = 'acordesai_comments';
@@ -117,11 +118,14 @@ export const addComment = (songId: string, text: string): Comment => {
   const allComments = getCommentsCache();
   const songComments = allComments[songId] || [];
   
+  // Sanitize comment to prevent DoS (max 500 chars)
+  const sanitizedText = sanitizeComment(text, 500);
+
   const newComment: Comment = {
     id: Date.now().toString(),
     songId,
     user: 'Usuario Anónimo', // In a real app, this would come from auth
-    text,
+    text: sanitizedText,
     timestamp: Date.now(),
   };
 

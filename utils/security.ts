@@ -16,3 +16,17 @@ export const sanitizeInput = (input: string, maxLength: number = 100): string =>
 
   return sanitized.trim();
 };
+
+/**
+ * Sanitizes user comments to prevent DoS via large payloads.
+ * Enforces strict length limits but preserves punctuation for readability.
+ */
+export const sanitizeComment = (input: string, maxLength: number = 500): string => {
+  if (!input) return "";
+
+  // Truncate to max length
+  let sanitized = input.slice(0, maxLength);
+
+  // Trim whitespace
+  return sanitized.trim();
+};

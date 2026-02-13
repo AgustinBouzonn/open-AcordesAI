@@ -188,6 +188,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
                   placeholder="¿Qué te parece este cifrado?"
                   className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none"
                   rows={3}
+                  maxLength={500}
                 />
                 <button 
                   type="submit"
