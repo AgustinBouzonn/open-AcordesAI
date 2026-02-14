@@ -1,0 +1,3 @@
+## 2024-05-22 - Route Render Functions Performance Pitfall
+**Learning:** Defining render functions inside a component (e.g., `const renderHome = () => ...`) and calling them directly in React Router's `element` prop (`element={renderHome()}`) forces those functions to execute on *every* render of the parent component, even if the route is not active. This causes unnecessary computation and side effects (like synchronous localStorage reads) for hidden views.
+**Action:** Always extract route views into separate components and pass them as elements (e.g., `element={<Home />}`). This ensures the component logic only runs when the route is actually mounted.
