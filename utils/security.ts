@@ -16,3 +16,25 @@ export const sanitizeInput = (input: string, maxLength: number = 100): string =>
 
   return sanitized.trim();
 };
+
+/**
+ * Safely parses a JSON string, returning a fallback value if parsing fails.
+ * This prevents application crashes from malformed data in LocalStorage.
+ */
+export const safeJSONParse = <T>(jsonString: string | null, fallback: T): T => {
+  if (!jsonString) return fallback;
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch (error) {
+    console.error("Error parsing JSON from storage:", error);
+    return fallback;
+  }
+};
+
+/**
+ * Truncates and sanitizes comment text to prevent storage exhaustion and massive payloads.
+ */
+export const sanitizeComment = (text: string, maxLength: number = 500): string => {
+  if (!text) return "";
+  return text.slice(0, maxLength).trim();
+};
