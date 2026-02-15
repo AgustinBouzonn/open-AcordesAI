@@ -1,4 +1,5 @@
 import { Comment, Song, Instrument } from '../types';
+import { safeJSONParse, sanitizeComment, safeSetItem } from '../utils/security';
 
 const FAVORITES_KEY = 'acordesai_favorites';
 const COMMENTS_KEY = 'acordesai_comments';
@@ -32,7 +33,7 @@ if (typeof window !== 'undefined') {
 const getSongsCache = (): Record<string, Song> => {
   if (!memoryCache.songs) {
     const stored = localStorage.getItem(CACHED_SONGS_KEY);
-    memoryCache.songs = stored ? JSON.parse(stored) : {};
+    memoryCache.songs = safeJSONParse(stored, {});
   }
   return memoryCache.songs!;
 };
@@ -40,7 +41,7 @@ const getSongsCache = (): Record<string, Song> => {
 const getFavoritesCache = (): string[] => {
   if (!memoryCache.favorites) {
     const stored = localStorage.getItem(FAVORITES_KEY);
-    memoryCache.favorites = stored ? JSON.parse(stored) : [];
+    memoryCache.favorites = safeJSONParse(stored, []);
   }
   return memoryCache.favorites!;
 };
@@ -48,7 +49,7 @@ const getFavoritesCache = (): string[] => {
 const getHistoryCache = (): string[] => {
   if (!memoryCache.history) {
     const stored = localStorage.getItem(HISTORY_KEY);
-    memoryCache.history = stored ? JSON.parse(stored) : [];
+    memoryCache.history = safeJSONParse(stored, []);
   }
   return memoryCache.history!;
 };
@@ -56,7 +57,7 @@ const getHistoryCache = (): string[] => {
 const getCommentsCache = (): Record<string, Comment[]> => {
   if (!memoryCache.comments) {
     const stored = localStorage.getItem(COMMENTS_KEY);
-    memoryCache.comments = stored ? JSON.parse(stored) : {};
+    memoryCache.comments = safeJSONParse(stored, {});
   }
   return memoryCache.comments!;
 };
@@ -64,22 +65,22 @@ const getCommentsCache = (): Record<string, Comment[]> => {
 // Helper to update cache and storage
 const updateSongsCache = (newCache: Record<string, Song>) => {
   memoryCache.songs = newCache;
-  localStorage.setItem(CACHED_SONGS_KEY, JSON.stringify(newCache));
+  safeSetItem(CACHED_SONGS_KEY, JSON.stringify(newCache));
 };
 
 const updateFavoritesCache = (newFavorites: string[]) => {
   memoryCache.favorites = newFavorites;
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
+  safeSetItem(FAVORITES_KEY, JSON.stringify(newFavorites));
 };
 
 const updateHistoryCache = (newHistory: string[]) => {
   memoryCache.history = newHistory;
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+  safeSetItem(HISTORY_KEY, JSON.stringify(newHistory));
 };
 
 const updateCommentsCache = (newComments: Record<string, Comment[]>) => {
   memoryCache.comments = newComments;
-  localStorage.setItem(COMMENTS_KEY, JSON.stringify(newComments));
+  safeSetItem(COMMENTS_KEY, JSON.stringify(newComments));
 };
 
 export const getFavorites = (): string[] => {
@@ -117,11 +118,14 @@ export const addComment = (songId: string, text: string): Comment => {
   const allComments = getCommentsCache();
   const songComments = allComments[songId] || [];
   
+  // Security: Sanitize input to prevent XSS and DoS (length limits)
+  const safeText = sanitizeComment(text);
+
   const newComment: Comment = {
     id: Date.now().toString(),
     songId,
     user: 'Usuario Anónimo', // In a real app, this would come from auth
-    text,
+    text: safeText,
     timestamp: Date.now(),
   };
 
