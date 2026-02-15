@@ -27,24 +27,28 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
           <nav className="hidden md:flex items-center gap-6">
             <button 
               onClick={() => onNavigate('HOME')}
+              aria-current={activeTab === 'HOME' ? 'page' : undefined}
               className={`text-sm font-medium hover:text-brand transition ${activeTab === 'HOME' ? 'text-brand' : 'text-gray-400'}`}
             >
               Inicio
             </button>
             <button 
               onClick={() => onNavigate('SEARCH')}
+              aria-current={activeTab === 'SEARCH' ? 'page' : undefined}
               className={`text-sm font-medium hover:text-brand transition ${activeTab === 'SEARCH' ? 'text-brand' : 'text-gray-400'}`}
             >
               Buscar
             </button>
             <button 
               onClick={() => onNavigate('FAVORITES')}
+              aria-current={activeTab === 'FAVORITES' ? 'page' : undefined}
               className={`text-sm font-medium hover:text-brand transition ${activeTab === 'FAVORITES' ? 'text-brand' : 'text-gray-400'}`}
             >
               Favoritos
             </button>
             <button 
               onClick={() => onNavigate('HISTORY')}
+              aria-current={activeTab === 'HISTORY' ? 'page' : undefined}
               className={`text-sm font-medium hover:text-brand transition ${activeTab === 'HISTORY' ? 'text-brand' : 'text-gray-400'}`}
             >
               Historial
@@ -63,6 +67,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
         <div className="flex justify-around items-center h-16">
           <button 
             onClick={() => onNavigate('HOME')}
+            aria-current={activeTab === 'HOME' ? 'page' : undefined}
             className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'HOME' ? 'text-brand' : 'text-gray-500'}`}
           >
             <Home size={20} />
@@ -70,6 +75,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
           </button>
           <button 
             onClick={() => onNavigate('SEARCH')}
+            aria-current={activeTab === 'SEARCH' ? 'page' : undefined}
             className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'SEARCH' ? 'text-brand' : 'text-gray-500'}`}
           >
             <Search size={20} />
@@ -77,6 +83,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
           </button>
           <button 
             onClick={() => onNavigate('FAVORITES')}
+            aria-current={activeTab === 'FAVORITES' ? 'page' : undefined}
             className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'FAVORITES' ? 'text-brand' : 'text-gray-500'}`}
           >
             <Heart size={20} />
@@ -84,6 +91,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
           </button>
           <button 
             onClick={() => onNavigate('HISTORY')}
+            aria-current={activeTab === 'HISTORY' ? 'page' : undefined}
             className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'HISTORY' ? 'text-brand' : 'text-gray-500'}`}
           >
             <Clock size={20} />
