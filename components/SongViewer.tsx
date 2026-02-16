@@ -89,12 +89,17 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
         <div className="flex items-center gap-3">
           <button 
             onClick={handleToggleFav}
+            aria-label={isFav ? "Quitar de favoritos" : "Agregar a favoritos"}
+            title={isFav ? "Quitar de favoritos" : "Agregar a favoritos"}
             className={`p-3 rounded-full transition ${isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
           >
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
           <button 
              onClick={() => setShowComments(!showComments)}
+             aria-label={showComments ? "Ocultar opiniones" : "Mostrar opiniones"}
+             title={showComments ? "Ocultar opiniones" : "Mostrar opiniones"}
+             aria-expanded={showComments}
              className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative"
           >
             <MessageSquare size={20} />
@@ -111,9 +116,10 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
       <div className="sticky top-20 md:top-24 z-30 bg-dark-800/95 backdrop-blur-md rounded-xl border border-dark-600 shadow-xl flex flex-col md:flex-row items-center justify-between p-2 gap-3">
         
         {/* Instrument Selector */}
-        <div className="flex p-1 bg-dark-900 rounded-lg w-full md:w-auto">
+        <div className="flex p-1 bg-dark-900 rounded-lg w-full md:w-auto" role="group" aria-label="Selector de instrumento">
             <button 
                 onClick={() => switchInstrument('guitar')}
+                aria-pressed={activeInstrument === 'guitar'}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${activeInstrument === 'guitar' ? 'bg-brand text-white shadow' : 'text-gray-400 hover:text-white'}`}
             >
                 <Guitar size={16} />
@@ -121,6 +127,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
             </button>
             <button 
                 onClick={() => switchInstrument('ukulele')}
+                aria-pressed={activeInstrument === 'ukulele'}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${activeInstrument === 'ukulele' ? 'bg-brand text-white shadow' : 'text-gray-400 hover:text-white'}`}
             >
                 <Music size={16} />
@@ -128,6 +135,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
             </button>
             <button 
                 onClick={() => switchInstrument('piano')}
+                aria-pressed={activeInstrument === 'piano'}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${activeInstrument === 'piano' ? 'bg-brand text-white shadow' : 'text-gray-400 hover:text-white'}`}
             >
                 <Keyboard size={16} />
@@ -137,9 +145,25 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
 
         <div className="flex items-center justify-between w-full md:w-auto gap-4 px-2">
             <div className="flex items-center gap-2">
-            <button onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-2 text-gray-400 hover:text-white"><Minus size={16} /></button>
+            <button
+                onClick={() => setFontSize(s => Math.max(12, s - 2))}
+                className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Disminuir tamaño de fuente"
+                title="Disminuir tamaño de fuente"
+                disabled={fontSize <= 12}
+            >
+                <Minus size={16} />
+            </button>
             <Type size={18} className="text-brand" />
-            <button onClick={() => setFontSize(s => Math.min(24, s + 2))} className="p-2 text-gray-400 hover:text-white"><Plus size={16} /></button>
+            <button
+                onClick={() => setFontSize(s => Math.min(24, s + 2))}
+                className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Aumentar tamaño de fuente"
+                title="Aumentar tamaño de fuente"
+                disabled={fontSize >= 24}
+            >
+                <Plus size={16} />
+            </button>
             </div>
             
             <div className="w-px h-6 bg-dark-600 hidden md:block"></div>
