@@ -1,0 +1,3 @@
+## 2024-02-18 - [Inline Render Functions]
+**Learning:** Using inline render functions (e.g. `element={renderHome()}`) in React Router `Routes` causes the component logic to execute on *every* parent render, regardless of whether the route is active. This can lead to significant performance overhead if the render function contains expensive logic like parsing `localStorage` or initializing large object trees.
+**Action:** Always extract route content into standalone React components and pass them as JSX elements (e.g. `element={<Home />}`) to leverage React's lifecycle management and ensure code only runs when the route is mounted.
