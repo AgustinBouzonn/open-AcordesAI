@@ -150,19 +150,21 @@ function AppContent() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {TRENDING_SEARCHES.map((term, idx) => (
-            <div 
+            <button
               key={idx}
+              type="button"
+              aria-label={`Buscar ${term}`}
               onClick={() => { setSearchQuery(term); handleSearch({ preventDefault: () => {} } as any); }}
-              className="group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center"
+              className="group w-full text-left bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 transition flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <div className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition">
-                  <Music size={20} />
+                  <Music size={20} aria-hidden="true" />
                 </div>
                 <span className="font-medium text-sm text-gray-200">{term}</span>
               </div>
-              <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" />
-            </div>
+              <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" aria-hidden="true" />
+            </button>
           ))}
         </div>
       </div>
