@@ -18,7 +18,9 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
   const [showComments, setShowComments] = useState(false);
   const [activeInstrument, setActiveInstrument] = useState<Instrument>('guitar');
   
-  const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scrollRequestRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
+  const scrollAccumulatorRef = useRef(0);
 
   useEffect(() => {
     setIsFav(isSongFavorite(song.id));
@@ -30,15 +32,39 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
   }, [song.id]);
 
   useEffect(() => {
+    const scroll = (time: number) => {
+      if (lastTimeRef.current !== null) {
+        const delta = time - lastTimeRef.current;
+        // Speed normalization: previous was 1px per (50 / autoScrollSpeed) ms
+        // This equals (autoScrollSpeed / 50) pixels per millisecond
+        const pixelsPerMs = autoScrollSpeed / 50;
+        scrollAccumulatorRef.current += delta * pixelsPerMs;
+
+        if (scrollAccumulatorRef.current >= 1) {
+          const scrollAmount = Math.floor(scrollAccumulatorRef.current);
+          window.scrollBy(0, scrollAmount);
+          scrollAccumulatorRef.current -= scrollAmount;
+        }
+      }
+      lastTimeRef.current = time;
+      scrollRequestRef.current = requestAnimationFrame(scroll);
+    };
+
     if (autoScrollSpeed > 0) {
-      scrollInterval.current = setInterval(() => {
-        window.scrollBy(0, 1);
-      }, 50 / autoScrollSpeed);
+      lastTimeRef.current = null;
+      scrollRequestRef.current = requestAnimationFrame(scroll);
     } else {
-      if (scrollInterval.current) clearInterval(scrollInterval.current);
+      if (scrollRequestRef.current !== null) {
+        cancelAnimationFrame(scrollRequestRef.current);
+      }
+      lastTimeRef.current = null;
+      scrollAccumulatorRef.current = 0;
     }
+
     return () => {
-      if (scrollInterval.current) clearInterval(scrollInterval.current);
+      if (scrollRequestRef.current !== null) {
+        cancelAnimationFrame(scrollRequestRef.current);
+      }
     };
   }, [autoScrollSpeed]);
 
