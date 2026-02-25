@@ -150,19 +150,21 @@ function AppContent() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {TRENDING_SEARCHES.map((term, idx) => (
-            <div 
+            <button
+              type="button"
               key={idx}
               onClick={() => { setSearchQuery(term); handleSearch({ preventDefault: () => {} } as any); }}
-              className="group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center"
+              className="w-full text-left group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
+              aria-label={`Buscar ${term}`}
             >
-              <div className="flex items-center gap-3">
-                <div className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition">
+              <span className="flex items-center gap-3">
+                <span className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition">
                   <Music size={20} />
-                </div>
+                </span>
                 <span className="font-medium text-sm text-gray-200">{term}</span>
-              </div>
+              </span>
               <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" />
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -193,19 +195,20 @@ function AppContent() {
        {searchResults.length > 0 ? (
          <div className="space-y-2">
            {searchResults.map((result) => (
-             <div 
+             <button
+                type="button"
                 key={result.id}
                 onClick={() => loadSong(result.id, result.title, result.artist)}
-                className="bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex justify-between items-center"
+                className="w-full text-left bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex justify-between items-center focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
              >
-               <div>
-                 <h3 className="font-bold text-white">{result.title}</h3>
-                 <p className="text-sm text-brand">{result.artist}</p>
-               </div>
-               <div className="bg-dark-900 p-2 rounded-full">
+               <span>
+                 <span className="block font-bold text-white text-lg">{result.title}</span>
+                 <span className="block text-sm text-brand">{result.artist}</span>
+               </span>
+               <span className="bg-dark-900 p-2 rounded-full">
                  <ChevronRight size={16} className="text-gray-500" />
-               </div>
-             </div>
+               </span>
+             </button>
            ))}
          </div>
        ) : (
@@ -243,34 +246,35 @@ function AppContent() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {favs.map((song) => (
-              <div
+              <button
+                type="button"
                 key={song.id}
                 onClick={() => loadSong(song.id)}
-                className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1 relative overflow-hidden"
+                className="w-full text-left group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1 relative overflow-hidden focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
               >
-                 <div className="absolute inset-0 bg-gradient-to-r from-brand/0 via-brand/5 to-brand/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
+                 <span className="absolute inset-0 bg-gradient-to-r from-brand/0 via-brand/5 to-brand/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
 
-                 <div className="flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-4 overflow-hidden">
-                       <div className="bg-dark-900/80 p-3 rounded-full text-brand group-hover:bg-brand group-hover:text-white transition-colors duration-300 shrink-0 border border-dark-700 group-hover:border-brand">
+                 <span className="flex items-center justify-between relative z-10">
+                    <span className="flex items-center gap-4 overflow-hidden">
+                       <span className="bg-dark-900/80 p-3 rounded-full text-brand group-hover:bg-brand group-hover:text-white transition-colors duration-300 shrink-0 border border-dark-700 group-hover:border-brand">
                           <Music size={24} />
-                       </div>
+                       </span>
 
-                       <div className="min-w-0">
-                          <h3 className="font-bold text-white text-lg truncate group-hover:text-brand transition-colors">{song.title}</h3>
-                          <p className="text-gray-400 text-sm truncate">{song.artist}</p>
-                       </div>
-                    </div>
+                       <span className="min-w-0 flex flex-col items-start">
+                          <span className="block font-bold text-white text-lg truncate group-hover:text-brand transition-colors">{song.title}</span>
+                          <span className="block text-gray-400 text-sm truncate">{song.artist}</span>
+                       </span>
+                    </span>
 
-                    <div className="flex items-center gap-3 shrink-0 ml-3 pl-3 border-l border-dark-700/50">
-                       <div className="flex flex-col items-center">
+                    <span className="flex items-center gap-3 shrink-0 ml-3 pl-3 border-l border-dark-700/50">
+                       <span className="flex flex-col items-center">
                           <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">Tono</span>
                           <span className="font-mono font-bold text-brand bg-dark-900 px-2 py-0.5 rounded border border-dark-700 shadow-sm min-w-[2rem] text-center">{song.key}</span>
-                       </div>
+                       </span>
                        <ChevronRight className="text-dark-600 group-hover:text-white transition-transform group-hover:translate-x-1" size={20} />
-                    </div>
-                 </div>
-              </div>
+                    </span>
+                 </span>
+              </button>
             ))}
           </div>
         )}
@@ -295,19 +299,20 @@ function AppContent() {
         ) : (
           <div className="space-y-2">
             {history.map((song) => (
-              <div
+              <button
+                type="button"
                 key={song.id}
                 onClick={() => loadSong(song.id)}
-                className="bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-dark-700 hover:border-brand/30 transition flex justify-between items-center"
+                className="w-full text-left bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-dark-700 hover:border-brand/30 transition flex justify-between items-center focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
               >
-                <div>
-                  <h3 className="font-bold text-white">{song.title}</h3>
-                  <p className="text-sm text-gray-400">{song.artist}</p>
-                </div>
-                <div className="text-xs text-brand font-mono bg-brand/10 px-2 py-1 rounded">
+                <span>
+                  <span className="block font-bold text-white text-lg">{song.title}</span>
+                  <span className="block text-sm text-gray-400">{song.artist}</span>
+                </span>
+                <span className="text-xs text-brand font-mono bg-brand/10 px-2 py-1 rounded">
                    {song.key}
-                </div>
-              </div>
+                </span>
+              </button>
             ))}
           </div>
         )}
