@@ -150,10 +150,12 @@ function AppContent() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {TRENDING_SEARCHES.map((term, idx) => (
-            <div 
+            <button
+              type="button"
               key={idx}
               onClick={() => { setSearchQuery(term); handleSearch({ preventDefault: () => {} } as any); }}
-              className="group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center"
+              className="w-full text-left group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
+              aria-label={`Buscar ${term}`}
             >
               <div className="flex items-center gap-3">
                 <div className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition">
@@ -162,7 +164,7 @@ function AppContent() {
                 <span className="font-medium text-sm text-gray-200">{term}</span>
               </div>
               <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" />
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -193,10 +195,11 @@ function AppContent() {
        {searchResults.length > 0 ? (
          <div className="space-y-2">
            {searchResults.map((result) => (
-             <div 
+             <button
+                type="button"
                 key={result.id}
                 onClick={() => loadSong(result.id, result.title, result.artist)}
-                className="bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex justify-between items-center"
+                className="w-full text-left bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex justify-between items-center focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
              >
                <div>
                  <h3 className="font-bold text-white">{result.title}</h3>
@@ -205,7 +208,7 @@ function AppContent() {
                <div className="bg-dark-900 p-2 rounded-full">
                  <ChevronRight size={16} className="text-gray-500" />
                </div>
-             </div>
+             </button>
            ))}
          </div>
        ) : (
@@ -243,10 +246,11 @@ function AppContent() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {favs.map((song) => (
-              <div
+              <button
+                type="button"
                 key={song.id}
                 onClick={() => loadSong(song.id)}
-                className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1 relative overflow-hidden"
+                className="w-full text-left group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1 relative overflow-hidden focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
               >
                  <div className="absolute inset-0 bg-gradient-to-r from-brand/0 via-brand/5 to-brand/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
 
@@ -270,7 +274,7 @@ function AppContent() {
                        <ChevronRight className="text-dark-600 group-hover:text-white transition-transform group-hover:translate-x-1" size={20} />
                     </div>
                  </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -295,10 +299,11 @@ function AppContent() {
         ) : (
           <div className="space-y-2">
             {history.map((song) => (
-              <div
+              <button
+                type="button"
                 key={song.id}
                 onClick={() => loadSong(song.id)}
-                className="bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-dark-700 hover:border-brand/30 transition flex justify-between items-center"
+                className="w-full text-left bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-dark-700 hover:border-brand/30 transition flex justify-between items-center focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
               >
                 <div>
                   <h3 className="font-bold text-white">{song.title}</h3>
@@ -307,7 +312,7 @@ function AppContent() {
                 <div className="text-xs text-brand font-mono bg-brand/10 px-2 py-1 rounded">
                    {song.key}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
