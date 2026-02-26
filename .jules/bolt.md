@@ -1,0 +1,3 @@
+## 2024-05-22 - [React Router Performance Anti-pattern]
+**Learning:** Using inline function calls (e.g., `element={renderComponent()}`) in React Router props causes the function to execute on *every* render of the parent component, even if the route doesn't match. This can lead to significant performance issues if the function contains expensive logic (like parsing JSON from localStorage).
+**Action:** Always use component references (e.g., `element={<Component />}`) or wrapped components to ensure they are only mounted/rendered when the route matches. This allows React to optimize rendering and avoids unnecessary computations.
