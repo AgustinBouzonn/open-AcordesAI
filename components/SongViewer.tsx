@@ -18,7 +18,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
   const [showComments, setShowComments] = useState(false);
   const [activeInstrument, setActiveInstrument] = useState<Instrument>('guitar');
   
-  const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scrollAccumulator = useRef(0);
 
   useEffect(() => {
     setIsFav(isSongFavorite(song.id));
@@ -29,16 +29,37 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
     setActiveInstrument('guitar'); 
   }, [song.id]);
 
+  // Optimized auto-scroll using requestAnimationFrame for smoother performance
   useEffect(() => {
+    let animationFrameId: number;
+    let lastTime: number | null = null;
+
+    const animate = (time: number) => {
+      if (lastTime !== null) {
+        const delta = time - lastTime;
+        // Calculate pixels to scroll based on speed (pixels per ms)
+        // Original logic was 1px per (50 / speed) ms => speed/50 px/ms
+        const pixelsPerMs = autoScrollSpeed / 50;
+
+        scrollAccumulator.current += pixelsPerMs * delta;
+
+        if (scrollAccumulator.current >= 1) {
+          const pixelsToScroll = Math.floor(scrollAccumulator.current);
+          window.scrollBy(0, pixelsToScroll);
+          scrollAccumulator.current -= pixelsToScroll;
+        }
+      }
+      lastTime = time;
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
     if (autoScrollSpeed > 0) {
-      scrollInterval.current = setInterval(() => {
-        window.scrollBy(0, 1);
-      }, 50 / autoScrollSpeed);
-    } else {
-      if (scrollInterval.current) clearInterval(scrollInterval.current);
+      scrollAccumulator.current = 0;
+      animationFrameId = requestAnimationFrame(animate);
     }
+
     return () => {
-      if (scrollInterval.current) clearInterval(scrollInterval.current);
+      cancelAnimationFrame(animationFrameId);
     };
   }, [autoScrollSpeed]);
 
