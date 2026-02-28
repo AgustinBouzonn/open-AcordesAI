@@ -1,0 +1,3 @@
+## 2024-03-24 - Interactive Component Accessibility Attributes
+**Learning:** Found multiple interactive elements built around semantic `button` tags but lacking descriptive ARIA labels, semantic type attributes (`type="button"`), and keyboard focus rings for visual indication. These were mainly icon-only buttons.
+**Action:** Always provide robust and dynamic `aria-label` / `title` properties based on component state for all icon-only buttons. Ensure focus outlines are visually distinct (`focus-visible:ring-2`, `focus-visible:ring-brand`, `focus-visible:outline-none`) and avoid layout jumps. Add `type="button"` to buttons to prevent unintended form submissions inside `<form>` elements.
