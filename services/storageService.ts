@@ -1,4 +1,5 @@
 import { Comment, Song, Instrument } from '../types';
+import { safeJSONParse } from '../utils/security';
 
 const FAVORITES_KEY = 'acordesai_favorites';
 const COMMENTS_KEY = 'acordesai_comments';
@@ -32,7 +33,7 @@ if (typeof window !== 'undefined') {
 const getSongsCache = (): Record<string, Song> => {
   if (!memoryCache.songs) {
     const stored = localStorage.getItem(CACHED_SONGS_KEY);
-    memoryCache.songs = stored ? JSON.parse(stored) : {};
+    memoryCache.songs = safeJSONParse<Record<string, Song>>(stored, {});
   }
   return memoryCache.songs!;
 };
@@ -40,7 +41,7 @@ const getSongsCache = (): Record<string, Song> => {
 const getFavoritesCache = (): string[] => {
   if (!memoryCache.favorites) {
     const stored = localStorage.getItem(FAVORITES_KEY);
-    memoryCache.favorites = stored ? JSON.parse(stored) : [];
+    memoryCache.favorites = safeJSONParse<string[]>(stored, []);
   }
   return memoryCache.favorites!;
 };
@@ -48,7 +49,7 @@ const getFavoritesCache = (): string[] => {
 const getHistoryCache = (): string[] => {
   if (!memoryCache.history) {
     const stored = localStorage.getItem(HISTORY_KEY);
-    memoryCache.history = stored ? JSON.parse(stored) : [];
+    memoryCache.history = safeJSONParse<string[]>(stored, []);
   }
   return memoryCache.history!;
 };
@@ -56,7 +57,7 @@ const getHistoryCache = (): string[] => {
 const getCommentsCache = (): Record<string, Comment[]> => {
   if (!memoryCache.comments) {
     const stored = localStorage.getItem(COMMENTS_KEY);
-    memoryCache.comments = stored ? JSON.parse(stored) : {};
+    memoryCache.comments = safeJSONParse<Record<string, Comment[]>>(stored, {});
   }
   return memoryCache.comments!;
 };
@@ -117,11 +118,14 @@ export const addComment = (songId: string, text: string): Comment => {
   const allComments = getCommentsCache();
   const songComments = allComments[songId] || [];
   
+  // Truncate text to 500 characters to prevent Local Storage exhaustion DoS
+  const safeText = text.slice(0, 500);
+
   const newComment: Comment = {
     id: Date.now().toString(),
     songId,
     user: 'Usuario Anónimo', // In a real app, this would come from auth
-    text,
+    text: safeText,
     timestamp: Date.now(),
   };
 
