@@ -1,0 +1,3 @@
+## 2024-05-24 - React Router Inline Functions
+**Learning:** Using inline render functions (e.g. `() => <div/>`) as values for the `element` prop in React Router `<Route>` causes unnecessary re-renders and execution of inactive view logic (such as heavy data fetching from storage) every time the parent component state changes. This causes major performance degradation across the application.
+**Action:** Always wrap route views in stable React component definitions (e.g., `const MyView = () => <div/>`) and pass them as JSX instance tags (`<Route element={<MyView />} />`) to ensure React Router can correctly mount/unmount and isolate render logic to the active route.
