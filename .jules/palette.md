@@ -1,0 +1,3 @@
+## 2026-03-02 - Accessible Icon-Only Controls
+**Learning:** In highly interactive components like `SongViewer.tsx` where screen real estate is optimized (e.g., sticky control bars for font size and scroll speed), buttons often drop text in favor of icons (like Minus/Plus or Heart). Without explicit `aria-label` and `title` attributes, screen readers only announce these as generic "buttons", and sighted users lack tooltips to confirm their function before clicking.
+**Action:** Always pair `aria-label` (for screen readers) with `title` (for visual tooltips) on all icon-only buttons. Ensure dynamic states (e.g., play/pause or favorite/unfavorite) update these attributes to reflect the current action.
