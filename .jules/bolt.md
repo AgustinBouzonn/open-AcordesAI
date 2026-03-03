@@ -1,0 +1,3 @@
+## 2023-10-27 - [App.tsx Inline Components Causing Re-renders]
+**Learning:** React Router view components (e.g., `renderHome`, `renderSearch`, `renderFavorites`, `renderHistory`, `renderSongDetail`) were defined completely inside the `AppContent` functional component as inline functions. This pattern causes unnecessary component re-creations and re-renders of the view components on every state change in `AppContent` (like updating `searchQuery`, `isSearching`, etc.), leading to performance bottlenecks.
+**Action:** Always extract view components and map functions into separate, standalone React components outside the main stateful parent component. Pass state and callbacks down as props to ensure stable component references and prevent unnecessary re-renders.
