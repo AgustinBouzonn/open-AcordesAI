@@ -1,0 +1,3 @@
+## 2024-05-24 - Interactive Component Accessibility and Tooltips
+**Learning:** In the `SongViewer` component, key interactive elements (favorite, comments, zoom out, zoom in) lacked `aria-label` attributes for screen readers and native `title` attributes for visual tooltips, making the interface harder to navigate for visually impaired users and slightly less intuitive for regular users encountering icon-only controls.
+**Action:** Applied Spanish-localized `aria-label` and `title` attributes ("Añadir a favoritos", "Ver opiniones", "Reducir tamaño de fuente", "Aumentar tamaño de fuente") along with `type="button"` across these icon buttons to ensure screen reader compliance and provide helpful native hover hints without changing the component's visual footprint.
