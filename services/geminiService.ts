@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Song, SongSearchResult, Instrument } from "../types";
-import { sanitizeInput } from "../utils/security";
+import { sanitizeInput, safeJSONParse } from "../utils/security";
 
 // Initialize Gemini Client
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
@@ -35,7 +35,7 @@ export const searchSongs = async (query: string): Promise<SongSearchResult[]> =>
       },
     });
 
-    return JSON.parse(response.text || "[]");
+    return safeJSONParse<SongSearchResult[]>(response.text, []);
   } catch (error) {
     console.error("Error searching songs:", error);
     return [];
@@ -52,6 +52,12 @@ export const getSongData = async (
     artist?: string, 
     instrument: Instrument = 'guitar'
 ): Promise<Song> => {
+  // Validate instrument allowlist to prevent prompt injection via the instrument parameter
+  const VALID_INSTRUMENTS: Instrument[] = ['guitar', 'ukulele', 'piano'];
+  if (!VALID_INSTRUMENTS.includes(instrument)) {
+    throw new Error(`Invalid instrument requested: ${instrument}`);
+  }
+
   // Sanitize inputs
   const safeTitle = title ? sanitizeInput(title) : undefined;
   const safeArtist = artist ? sanitizeInput(artist) : undefined;
@@ -94,7 +100,7 @@ export const getSongData = async (
       },
     });
 
-    const data = JSON.parse(response.text || "{}");
+    const data = safeJSONParse<any>(response.text, {});
 
     return {
       id: safeId,
