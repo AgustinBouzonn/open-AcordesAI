@@ -7,6 +7,13 @@ import { searchSongs, getSongData } from './services/geminiService';
 import { getFavoriteSongsFull, cacheSong, getCachedSong, addToHistory, getHistorySongsFull, updateSongInstrument } from './services/storageService';
 import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart } from 'lucide-react';
 
+
+interface HomeViewProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  handleSearch: (e: React.FormEvent | { preventDefault: () => void }) => void;
+}
+
 const TRENDING_SEARCHES = [
   "Lamento Boliviano - Enanitos Verdes",
   "De Música Ligera - Soda Stereo",
@@ -14,6 +21,253 @@ const TRENDING_SEARCHES = [
   "Wonderwall - Oasis",
   "Creep - Radiohead"
 ];
+
+const HomeView: React.FC<HomeViewProps> = ({ searchQuery, setSearchQuery, handleSearch }) => (
+  <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="text-center py-12 space-y-4">
+      <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-brand to-yellow-500">
+        Toca lo que quieras.
+      </h1>
+      <p className="text-gray-400 max-w-lg mx-auto">
+        La base de datos de cifrados más inteligente. Busca cualquier canción y obtén los acordes al instante con IA.
+      </p>
+
+      <form onSubmit={(e) => handleSearch(e as any)} className="max-w-md mx-auto relative">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Canción o artista..."
+          className="w-full bg-dark-800 border border-dark-600 rounded-full py-3 pl-12 pr-4 text-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition shadow-lg"
+        />
+        <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
+        <button type="submit" className="hidden">Buscar</button>
+      </form>
+    </div>
+
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
+        <TrendingUp size={16} />
+        <span>Tendencias Hoy</span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {TRENDING_SEARCHES.map((term, idx) => (
+          <button
+            type="button"
+            key={idx}
+            onClick={() => { setSearchQuery(term); handleSearch({ preventDefault: () => {} }); }}
+            className="w-full text-left focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center"
+          >
+            <span className="flex items-center gap-3">
+              <span className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition">
+                <Music size={20} />
+              </span>
+              <span className="font-medium text-sm text-gray-200">{term}</span>
+            </span>
+            <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" />
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+
+interface SearchViewProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  handleSearch: (e: React.FormEvent) => void;
+  isSearching: boolean;
+  searchResults: SongSearchResult[];
+  loadSong: (id: string, title?: string, artist?: string) => void;
+}
+
+const SearchView: React.FC<SearchViewProps> = ({ searchQuery, setSearchQuery, handleSearch, isSearching, searchResults, loadSong }) => (
+  <div className="space-y-6">
+     <div className="sticky top-0 bg-dark-900 z-10 py-2">
+       <form onSubmit={handleSearch} className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar..."
+            className="w-full bg-dark-800 border border-dark-600 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-brand"
+            autoFocus
+          />
+          <Search className="absolute left-3 top-3.5 text-gray-500" size={20} />
+          {isSearching && (
+            <div className="absolute right-3 top-3.5">
+              <Loader2 className="animate-spin text-brand" size={20} />
+            </div>
+          )}
+        </form>
+     </div>
+
+     {searchResults.length > 0 ? (
+       <div className="space-y-2">
+         {searchResults.map((result) => (
+           <button
+              type="button"
+              key={result.id}
+              onClick={() => loadSong(result.id, result.title, result.artist)}
+              className="w-full text-left focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex justify-between items-center"
+           >
+             <span>
+               <span className="block font-bold text-white">{result.title}</span>
+               <span className="block text-sm text-brand">{result.artist}</span>
+             </span>
+             <span className="bg-dark-900 p-2 rounded-full">
+               <ChevronRight size={16} className="text-gray-500" />
+             </span>
+           </button>
+         ))}
+       </div>
+     ) : (
+       !isSearching && (
+         <div className="text-center text-gray-500 mt-20">
+           <Search size={48} className="mx-auto mb-4 opacity-20" />
+           <p>Busca tu canción favorita para ver los acordes.</p>
+         </div>
+       )
+     )}
+  </div>
+);
+
+
+interface FavoritesViewProps {
+  navigate: (path: string) => void;
+  loadSong: (id: string) => void;
+}
+
+const FavoritesView: React.FC<FavoritesViewProps> = ({ navigate, loadSong }) => {
+  const favs = getFavoriteSongsFull();
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold flex items-center gap-2">
+        <Heart className="text-brand fill-current" />
+        Mis Favoritos
+      </h2>
+      {favs.length === 0 ? (
+        <div className="text-center text-gray-500 mt-20 bg-dark-800 p-8 rounded-xl border border-dashed border-dark-600">
+          <Heart size={48} className="mx-auto mb-4 opacity-20" />
+          <p>Aún no tienes canciones favoritas.</p>
+          <button
+            type="button"
+            onClick={() => navigate('/search')}
+            className="mt-4 text-brand font-medium hover:underline focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
+          >
+            Buscar canciones
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {favs.map((song) => (
+            <button
+              type="button"
+              key={song.id}
+              onClick={() => loadSong(song.id)}
+              className="w-full text-left focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1 relative overflow-hidden"
+            >
+               <span className="absolute inset-0 bg-gradient-to-r from-brand/0 via-brand/5 to-brand/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
+
+               <span className="flex items-center justify-between relative z-10">
+                  <span className="flex items-center gap-4 overflow-hidden">
+                     <span className="bg-dark-900/80 p-3 rounded-full text-brand group-hover:bg-brand group-hover:text-white transition-colors duration-300 shrink-0 border border-dark-700 group-hover:border-brand">
+                        <Music size={24} />
+                     </span>
+
+                     <span className="min-w-0">
+                        <span className="block font-bold text-white text-lg truncate group-hover:text-brand transition-colors">{song.title}</span>
+                        <span className="block text-gray-400 text-sm truncate">{song.artist}</span>
+                     </span>
+                  </span>
+
+                  <span className="flex items-center gap-3 shrink-0 ml-3 pl-3 border-l border-dark-700/50">
+                     <span className="flex flex-col items-center">
+                        <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">Tono</span>
+                        <span className="font-mono font-bold text-brand bg-dark-900 px-2 py-0.5 rounded border border-dark-700 shadow-sm min-w-[2rem] text-center">{song.key}</span>
+                     </span>
+                     <ChevronRight className="text-dark-600 group-hover:text-white transition-transform group-hover:translate-x-1" size={20} />
+                  </span>
+               </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+interface HistoryViewProps {
+  loadSong: (id: string) => void;
+}
+
+const HistoryView: React.FC<HistoryViewProps> = ({ loadSong }) => {
+  const history = getHistorySongsFull();
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold flex items-center gap-2">
+        <Clock className="text-brand" />
+        Historial Reciente
+      </h2>
+      {history.length === 0 ? (
+        <div className="text-center text-gray-500 mt-20">
+          <Clock size={48} className="mx-auto mb-4 opacity-20" />
+          <p>Las últimas canciones que veas aparecerán aquí.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {history.map((song) => (
+            <button
+              type="button"
+              key={song.id}
+              onClick={() => loadSong(song.id)}
+              className="w-full text-left focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-dark-700 hover:border-brand/30 transition flex justify-between items-center"
+            >
+              <span>
+                <span className="block font-bold text-white">{song.title}</span>
+                <span className="block text-sm text-gray-400">{song.artist}</span>
+              </span>
+              <span className="text-xs text-brand font-mono bg-brand/10 px-2 py-1 rounded">
+                 {song.key}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+interface SongDetailViewProps {
+  isLoadingSong: boolean;
+  currentSong: Song | null;
+  handleInstrumentChange: (instrument: Instrument) => void;
+  loadingInstrument: boolean;
+}
+
+const SongDetailView: React.FC<SongDetailViewProps> = ({ isLoadingSong, currentSong, handleInstrumentChange, loadingInstrument }) => {
+  if (isLoadingSong) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-brand">
+        <Loader2 size={48} className="animate-spin mb-4" />
+        <p className="text-white font-medium animate-pulse">La IA está extrayendo los acordes...</p>
+      </div>
+    );
+  }
+  if (!currentSong) return <div>Error loading song.</div>;
+  return (
+      <SongViewer
+          song={currentSong}
+          onInstrumentChange={handleInstrumentChange}
+          isLoadingInstrument={loadingInstrument}
+      />
+  );
+};
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('HOME');
@@ -39,7 +293,7 @@ function AppContent() {
   }, [location]);
 
   // Handle Search
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent | { preventDefault: () => void }) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     
@@ -86,30 +340,22 @@ function AppContent() {
 
     // Check if we already have the chords for this instrument
     if (currentSong.chords && currentSong.chords[instrument]) {
-        // Just update the main content view locally if needed, but the viewer handles the 'chords' map.
-        // We really just need to return here.
         return;
     }
 
     setLoadingInstrument(true);
     try {
-        // Fetch new data specifically for this instrument
-        // We reuse getSongData but merge the result
         const newData = await getSongData(currentSong.id, currentSong.title, currentSong.artist, instrument);
         
-        // Update local state
         const updatedSong = {
             ...currentSong,
             chords: {
                 ...currentSong.chords,
-                [instrument]: newData.content // The new content is in the .content of the response or .chords[instrument]
+                [instrument]: newData.content
             }
         };
         
         setCurrentSong(updatedSong);
-        
-        // Update Cache
-        // We use the specific update helper to ensure we persist just this new piece without data loss
         updateSongInstrument(currentSong.id, instrument, newData.content);
         
     } catch (e) {
@@ -117,221 +363,6 @@ function AppContent() {
     } finally {
         setLoadingInstrument(false);
     }
-  };
-
-  // Views
-  const renderHome = () => (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="text-center py-12 space-y-4">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-brand to-yellow-500">
-          Toca lo que quieras.
-        </h1>
-        <p className="text-gray-400 max-w-lg mx-auto">
-          La base de datos de cifrados más inteligente. Busca cualquier canción y obtén los acordes al instante con IA.
-        </p>
-        
-        <form onSubmit={handleSearch} className="max-w-md mx-auto relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Canción o artista..."
-            className="w-full bg-dark-800 border border-dark-600 rounded-full py-3 pl-12 pr-4 text-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition shadow-lg"
-          />
-          <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
-          <button type="submit" className="hidden">Buscar</button>
-        </form>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
-          <TrendingUp size={16} />
-          <span>Tendencias Hoy</span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {TRENDING_SEARCHES.map((term, idx) => (
-            <div 
-              key={idx}
-              onClick={() => { setSearchQuery(term); handleSearch({ preventDefault: () => {} } as any); }}
-              className="group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center"
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition">
-                  <Music size={20} />
-                </div>
-                <span className="font-medium text-sm text-gray-200">{term}</span>
-              </div>
-              <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSearch = () => (
-    <div className="space-y-6">
-       <div className="sticky top-0 bg-dark-900 z-10 py-2">
-         <form onSubmit={handleSearch} className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar..."
-              className="w-full bg-dark-800 border border-dark-600 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-brand"
-              autoFocus
-            />
-            <Search className="absolute left-3 top-3.5 text-gray-500" size={20} />
-            {isSearching && (
-              <div className="absolute right-3 top-3.5">
-                <Loader2 className="animate-spin text-brand" size={20} />
-              </div>
-            )}
-          </form>
-       </div>
-
-       {searchResults.length > 0 ? (
-         <div className="space-y-2">
-           {searchResults.map((result) => (
-             <div 
-                key={result.id}
-                onClick={() => loadSong(result.id, result.title, result.artist)}
-                className="bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex justify-between items-center"
-             >
-               <div>
-                 <h3 className="font-bold text-white">{result.title}</h3>
-                 <p className="text-sm text-brand">{result.artist}</p>
-               </div>
-               <div className="bg-dark-900 p-2 rounded-full">
-                 <ChevronRight size={16} className="text-gray-500" />
-               </div>
-             </div>
-           ))}
-         </div>
-       ) : (
-         !isSearching && (
-           <div className="text-center text-gray-500 mt-20">
-             <Search size={48} className="mx-auto mb-4 opacity-20" />
-             <p>Busca tu canción favorita para ver los acordes.</p>
-           </div>
-         )
-       )}
-    </div>
-  );
-
-  const renderFavorites = () => {
-    // Refresh favorites list when entering this view
-    const favs = getFavoriteSongsFull();
-
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Heart className="text-brand fill-current" />
-          Mis Favoritos
-        </h2>
-        {favs.length === 0 ? (
-          <div className="text-center text-gray-500 mt-20 bg-dark-800 p-8 rounded-xl border border-dashed border-dark-600">
-            <Heart size={48} className="mx-auto mb-4 opacity-20" />
-            <p>Aún no tienes canciones favoritas.</p>
-            <button
-              onClick={() => navigate('/search')}
-              className="mt-4 text-brand font-medium hover:underline"
-            >
-              Buscar canciones
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {favs.map((song) => (
-              <div
-                key={song.id}
-                onClick={() => loadSong(song.id)}
-                className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1 relative overflow-hidden"
-              >
-                 <div className="absolute inset-0 bg-gradient-to-r from-brand/0 via-brand/5 to-brand/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
-
-                 <div className="flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-4 overflow-hidden">
-                       <div className="bg-dark-900/80 p-3 rounded-full text-brand group-hover:bg-brand group-hover:text-white transition-colors duration-300 shrink-0 border border-dark-700 group-hover:border-brand">
-                          <Music size={24} />
-                       </div>
-
-                       <div className="min-w-0">
-                          <h3 className="font-bold text-white text-lg truncate group-hover:text-brand transition-colors">{song.title}</h3>
-                          <p className="text-gray-400 text-sm truncate">{song.artist}</p>
-                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 shrink-0 ml-3 pl-3 border-l border-dark-700/50">
-                       <div className="flex flex-col items-center">
-                          <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">Tono</span>
-                          <span className="font-mono font-bold text-brand bg-dark-900 px-2 py-0.5 rounded border border-dark-700 shadow-sm min-w-[2rem] text-center">{song.key}</span>
-                       </div>
-                       <ChevronRight className="text-dark-600 group-hover:text-white transition-transform group-hover:translate-x-1" size={20} />
-                    </div>
-                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderHistory = () => {
-    const history = getHistorySongsFull();
-
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Clock className="text-brand" />
-          Historial Reciente
-        </h2>
-        {history.length === 0 ? (
-          <div className="text-center text-gray-500 mt-20">
-            <Clock size={48} className="mx-auto mb-4 opacity-20" />
-            <p>Las últimas canciones que veas aparecerán aquí.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {history.map((song) => (
-              <div
-                key={song.id}
-                onClick={() => loadSong(song.id)}
-                className="bg-dark-800 hover:bg-dark-700 p-4 rounded-xl cursor-pointer border border-dark-700 hover:border-brand/30 transition flex justify-between items-center"
-              >
-                <div>
-                  <h3 className="font-bold text-white">{song.title}</h3>
-                  <p className="text-sm text-gray-400">{song.artist}</p>
-                </div>
-                <div className="text-xs text-brand font-mono bg-brand/10 px-2 py-1 rounded">
-                   {song.key}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderSongDetail = () => {
-    if (isLoadingSong) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-brand">
-          <Loader2 size={48} className="animate-spin mb-4" />
-          <p className="text-white font-medium animate-pulse">La IA está extrayendo los acordes...</p>
-        </div>
-      );
-    }
-    if (!currentSong) return <div>Error loading song.</div>;
-    return (
-        <SongViewer 
-            song={currentSong} 
-            onInstrumentChange={handleInstrumentChange}
-            isLoadingInstrument={loadingInstrument}
-        />
-    );
   };
 
   return (
@@ -342,11 +373,11 @@ function AppContent() {
         if (tab === 'HISTORY') navigate('/history');
     }}>
       <Routes>
-        <Route path="/" element={renderHome()} />
-        <Route path="/search" element={renderSearch()} />
-        <Route path="/favorites" element={renderFavorites()} />
-        <Route path="/history" element={renderHistory()} />
-        <Route path="/song/:id" element={renderSongDetail()} />
+        <Route path="/" element={<HomeView searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch} />} />
+        <Route path="/search" element={<SearchView searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch as any} isSearching={isSearching} searchResults={searchResults} loadSong={loadSong} />} />
+        <Route path="/favorites" element={<FavoritesView navigate={navigate} loadSong={loadSong} />} />
+        <Route path="/history" element={<HistoryView loadSong={loadSong} />} />
+        <Route path="/song/:id" element={<SongDetailView isLoadingSong={isLoadingSong} currentSong={currentSong} handleInstrumentChange={handleInstrumentChange} loadingInstrument={loadingInstrument} />} />
       </Routes>
     </Layout>
   );
