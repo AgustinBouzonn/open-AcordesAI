@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Song, SongSearchResult, Instrument } from "../types";
-import { sanitizeInput } from "../utils/security";
+import { sanitizeInput, safeJSONParse } from "../utils/security";
 
 // Initialize Gemini Client
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
@@ -35,7 +35,7 @@ export const searchSongs = async (query: string): Promise<SongSearchResult[]> =>
       },
     });
 
-    return JSON.parse(response.text || "[]");
+    return safeJSONParse(response.text, []);
   } catch (error) {
     console.error("Error searching songs:", error);
     return [];
@@ -94,7 +94,7 @@ export const getSongData = async (
       },
     });
 
-    const data = JSON.parse(response.text || "{}");
+    const data = safeJSONParse(response.text, {});
 
     return {
       id: safeId,

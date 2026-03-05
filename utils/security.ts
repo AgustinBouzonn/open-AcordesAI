@@ -16,3 +16,17 @@ export const sanitizeInput = (input: string, maxLength: number = 100): string =>
 
   return sanitized.trim();
 };
+
+/**
+ * Safely parses a JSON string, returning a default value if parsing fails.
+ * Helps prevent application crashes due to corrupted local storage or malformed AI responses.
+ */
+export const safeJSONParse = <T>(input: string | null | undefined, defaultValue: T): T => {
+  if (!input) return defaultValue;
+  try {
+    return JSON.parse(input) as T;
+  } catch (error) {
+    console.error("SafeJSONParse: Failed to parse JSON string.", error);
+    return defaultValue;
+  }
+};
