@@ -88,12 +88,18 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
         
         <div className="flex items-center gap-3">
           <button 
+            type="button"
+            aria-label={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
+            title={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
             onClick={handleToggleFav}
             className={`p-3 rounded-full transition ${isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
           >
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
           <button 
+             type="button"
+             aria-label="Ver opiniones"
+             title="Ver opiniones"
              onClick={() => setShowComments(!showComments)}
              className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative"
           >
@@ -137,14 +143,17 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
 
         <div className="flex items-center justify-between w-full md:w-auto gap-4 px-2">
             <div className="flex items-center gap-2">
-            <button onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-2 text-gray-400 hover:text-white"><Minus size={16} /></button>
+            <button type="button" aria-label="Reducir tamaño de letra" title="Reducir tamaño de letra" onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-2 text-gray-400 hover:text-white"><Minus size={16} /></button>
             <Type size={18} className="text-brand" />
-            <button onClick={() => setFontSize(s => Math.min(24, s + 2))} className="p-2 text-gray-400 hover:text-white"><Plus size={16} /></button>
+            <button type="button" aria-label="Aumentar tamaño de letra" title="Aumentar tamaño de letra" onClick={() => setFontSize(s => Math.min(24, s + 2))} className="p-2 text-gray-400 hover:text-white"><Plus size={16} /></button>
             </div>
             
             <div className="w-px h-6 bg-dark-600 hidden md:block"></div>
 
             <button 
+            type="button"
+            aria-label={autoScrollSpeed > 0 ? 'Pausar autoscroll' : 'Iniciar autoscroll'}
+            title={autoScrollSpeed > 0 ? 'Pausar autoscroll' : 'Iniciar autoscroll'}
             onClick={toggleScroll}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition ${autoScrollSpeed > 0 ? 'bg-brand text-white' : 'bg-dark-700 text-gray-300'}`}
             >

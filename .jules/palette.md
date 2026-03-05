@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility improvements for icon-only buttons
+**Learning:** Icon-only buttons without `aria-label` or `title` attributes are completely opaque to screen readers, drastically reducing usability for visually impaired users. Furthermore, without `type="button"`, buttons inside forms can accidentally trigger form submissions.
+**Action:** When adding or modifying interactive elements, especially icon-only buttons (like those using `lucide-react`), always include descriptive, localized `aria-label` and `title` attributes. Also ensure they have explicit `type="button"` attributes unless they are intended to submit a form.
