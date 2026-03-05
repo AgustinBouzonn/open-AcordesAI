@@ -26,24 +26,28 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6">
             <button 
+              type="button"
               onClick={() => onNavigate('HOME')}
               className={`text-sm font-medium hover:text-brand transition ${activeTab === 'HOME' ? 'text-brand' : 'text-gray-400'}`}
             >
               Inicio
             </button>
             <button 
+              type="button"
               onClick={() => onNavigate('SEARCH')}
               className={`text-sm font-medium hover:text-brand transition ${activeTab === 'SEARCH' ? 'text-brand' : 'text-gray-400'}`}
             >
               Buscar
             </button>
             <button 
+              type="button"
               onClick={() => onNavigate('FAVORITES')}
               className={`text-sm font-medium hover:text-brand transition ${activeTab === 'FAVORITES' ? 'text-brand' : 'text-gray-400'}`}
             >
               Favoritos
             </button>
             <button 
+              type="button"
               onClick={() => onNavigate('HISTORY')}
               className={`text-sm font-medium hover:text-brand transition ${activeTab === 'HISTORY' ? 'text-brand' : 'text-gray-400'}`}
             >
@@ -62,6 +66,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-dark-800 border-t border-dark-700 pb-safe z-50">
         <div className="flex justify-around items-center h-16">
           <button 
+            type="button"
             onClick={() => onNavigate('HOME')}
             className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'HOME' ? 'text-brand' : 'text-gray-500'}`}
           >
@@ -69,6 +74,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
             <span className="text-[10px]">Inicio</span>
           </button>
           <button 
+            type="button"
             onClick={() => onNavigate('SEARCH')}
             className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'SEARCH' ? 'text-brand' : 'text-gray-500'}`}
           >
@@ -76,6 +82,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
             <span className="text-[10px]">Buscar</span>
           </button>
           <button 
+            type="button"
             onClick={() => onNavigate('FAVORITES')}
             className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'FAVORITES' ? 'text-brand' : 'text-gray-500'}`}
           >
@@ -83,6 +90,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate 
             <span className="text-[10px]">Favoritos</span>
           </button>
           <button 
+            type="button"
             onClick={() => onNavigate('HISTORY')}
             className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'HISTORY' ? 'text-brand' : 'text-gray-500'}`}
           >
