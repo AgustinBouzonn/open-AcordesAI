@@ -29,16 +29,49 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
     setActiveInstrument('guitar'); 
   }, [song.id]);
 
+  const animationFrameRef = useRef<number | null>(null);
+  const scrollAccumulator = useRef(0);
+  const lastTimeRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (autoScrollSpeed > 0) {
-      scrollInterval.current = setInterval(() => {
-        window.scrollBy(0, 1);
-      }, 50 / autoScrollSpeed);
+      const speed = autoScrollSpeed; // Capture value in closure
+
+      const animate = (time: number) => {
+        if (lastTimeRef.current === null) {
+          lastTimeRef.current = time;
+        }
+
+        const delta = time - lastTimeRef.current;
+        lastTimeRef.current = time;
+
+        // speed / 50 pixels per millisecond
+        scrollAccumulator.current += delta * (speed / 50);
+
+        if (scrollAccumulator.current >= 1) {
+          const pixelsToScroll = Math.floor(scrollAccumulator.current);
+          window.scrollBy(0, pixelsToScroll);
+          scrollAccumulator.current -= pixelsToScroll;
+        }
+
+        animationFrameRef.current = requestAnimationFrame(animate);
+      };
+
+      lastTimeRef.current = null; // Reset time for new animation loop
+      scrollAccumulator.current = 0; // Reset accumulator
+      animationFrameRef.current = requestAnimationFrame(animate);
     } else {
-      if (scrollInterval.current) clearInterval(scrollInterval.current);
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
     }
+
     return () => {
-      if (scrollInterval.current) clearInterval(scrollInterval.current);
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
     };
   }, [autoScrollSpeed]);
 
