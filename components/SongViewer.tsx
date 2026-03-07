@@ -88,14 +88,20 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
         
         <div className="flex items-center gap-3">
           <button 
+            type="button"
             onClick={handleToggleFav}
-            className={`p-3 rounded-full transition ${isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
+            aria-label={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
+            title={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
+            className={`p-3 rounded-full transition focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
           >
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
           <button 
+             type="button"
              onClick={() => setShowComments(!showComments)}
-             className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative"
+             aria-label="Mostrar opiniones"
+             title="Mostrar opiniones"
+             className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
           >
             <MessageSquare size={20} />
             {comments.length > 0 && (
@@ -113,22 +119,25 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
         {/* Instrument Selector */}
         <div className="flex p-1 bg-dark-900 rounded-lg w-full md:w-auto">
             <button 
+                type="button"
                 onClick={() => switchInstrument('guitar')}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${activeInstrument === 'guitar' ? 'bg-brand text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${activeInstrument === 'guitar' ? 'bg-brand text-white shadow' : 'text-gray-400 hover:text-white'}`}
             >
                 <Guitar size={16} />
                 <span>Guitarra</span>
             </button>
             <button 
+                type="button"
                 onClick={() => switchInstrument('ukulele')}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${activeInstrument === 'ukulele' ? 'bg-brand text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${activeInstrument === 'ukulele' ? 'bg-brand text-white shadow' : 'text-gray-400 hover:text-white'}`}
             >
                 <Music size={16} />
                 <span>Ukelele</span>
             </button>
             <button 
+                type="button"
                 onClick={() => switchInstrument('piano')}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${activeInstrument === 'piano' ? 'bg-brand text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${activeInstrument === 'piano' ? 'bg-brand text-white shadow' : 'text-gray-400 hover:text-white'}`}
             >
                 <Keyboard size={16} />
                 <span>Piano</span>
@@ -137,16 +146,33 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
 
         <div className="flex items-center justify-between w-full md:w-auto gap-4 px-2">
             <div className="flex items-center gap-2">
-            <button onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-2 text-gray-400 hover:text-white"><Minus size={16} /></button>
+            <button
+              type="button"
+              onClick={() => setFontSize(s => Math.max(12, s - 2))}
+              aria-label="Reducir tamaño de fuente"
+              title="Reducir tamaño de fuente"
+              className="p-2 text-gray-400 hover:text-white rounded-full focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
+            >
+              <Minus size={16} />
+            </button>
             <Type size={18} className="text-brand" />
-            <button onClick={() => setFontSize(s => Math.min(24, s + 2))} className="p-2 text-gray-400 hover:text-white"><Plus size={16} /></button>
+            <button
+              type="button"
+              onClick={() => setFontSize(s => Math.min(24, s + 2))}
+              aria-label="Aumentar tamaño de fuente"
+              title="Aumentar tamaño de fuente"
+              className="p-2 text-gray-400 hover:text-white rounded-full focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
+            >
+              <Plus size={16} />
+            </button>
             </div>
             
             <div className="w-px h-6 bg-dark-600 hidden md:block"></div>
 
             <button 
+            type="button"
             onClick={toggleScroll}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition ${autoScrollSpeed > 0 ? 'bg-brand text-white' : 'bg-dark-700 text-gray-300'}`}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${autoScrollSpeed > 0 ? 'bg-brand text-white' : 'bg-dark-700 text-gray-300'}`}
             >
             {autoScrollSpeed > 0 ? <PauseCircle size={16} /> : <PlayCircle size={16} />}
             <span>{autoScrollSpeed > 0 ? 'Pausar' : 'Autoscroll'}</span>
