@@ -186,6 +186,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="¿Qué te parece este cifrado?"
+                  maxLength={500}
                   className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none"
                   rows={3}
                 />
