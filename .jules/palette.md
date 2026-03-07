@@ -1,0 +1,3 @@
+## 2024-03-07 - Accessibility of Icon-Only Buttons
+**Learning:** Found that multiple icon-only buttons (`Heart`, `MessageSquare`, `Minus`, `Plus`) lacked `aria-label` attributes and `title` tooltips, meaning screen readers and mouse hover users lacked context. Also, several buttons across `SongViewer.tsx` lacked explicit `type="button"` and consistent `focus-visible` styling for keyboard users.
+**Action:** Added localized `aria-label` and `title` attributes to all icon-only buttons. Standardized `focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none` across all interactive buttons in the component for clear keyboard navigation feedback. Always ensure icon buttons are accompanied by accessible labels.
