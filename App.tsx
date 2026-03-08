@@ -15,112 +15,20 @@ const TRENDING_SEARCHES = [
   "Creep - Radiohead"
 ];
 
-function AppContent() {
-  const [activeTab, setActiveTab] = useState('HOME');
-  const navigate = useNavigate();
-  const location = useLocation();
 
-  // State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SongSearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [isLoadingSong, setIsLoadingSong] = useState(false);
-  const [loadingInstrument, setLoadingInstrument] = useState(false);
+// ⚡ Bolt Optimization: Extracted route views into standalone React components.
+// Previously, views like `renderFavorites` were inline functions executed directly within `<Route element={renderFavorites()} />`.
+// This meant every state change in `AppContent` (like typing a single letter in the search bar)
+// forced all 5 view functions to execute synchronously, triggering expensive `localStorage` reads
+// (e.g., `getFavoriteSongsFull()`) even when the user wasn't on that tab.
+// Now, these components are properly mounted/unmounted by React Router, preventing unnecessary execution.
+interface HomeViewProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  handleSearch: (e: React.FormEvent) => void;
+}
 
-  // Sync tab with route
-  useEffect(() => {
-    const path = location.pathname;
-    if (path === '/') setActiveTab('HOME');
-    else if (path === '/search') setActiveTab('SEARCH');
-    else if (path === '/favorites') setActiveTab('FAVORITES');
-    else if (path === '/history') setActiveTab('HISTORY');
-    else if (path.startsWith('/song/')) setActiveTab('SONG_DETAIL');
-  }, [location]);
-
-  // Handle Search
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
-    setIsSearching(true);
-    // Switch to search view if not already
-    navigate('/search');
-    
-    const results = await searchSongs(searchQuery);
-    setSearchResults(results);
-    setIsSearching(false);
-  };
-
-  // Handle Song Selection
-  const loadSong = async (id: string, title?: string, artist?: string) => {
-    setIsLoadingSong(true);
-    
-    // Check cache first
-    const cached = getCachedSong(id);
-    if (cached) {
-      setCurrentSong(cached);
-      addToHistory(cached.id); // Add to history
-      setIsLoadingSong(false);
-      navigate(`/song/${id}`);
-      return;
-    }
-
-    try {
-      // Default to guitar when loading fresh
-      const songData = await getSongData(id, title, artist, 'guitar');
-      cacheSong(songData);
-      addToHistory(songData.id); // Add to history
-      setCurrentSong(songData);
-      navigate(`/song/${id}`);
-    } catch (err) {
-      alert("Error al cargar la canción.");
-    } finally {
-      setIsLoadingSong(false);
-    }
-  };
-
-  // Handle Instrument Switch
-  const handleInstrumentChange = async (instrument: Instrument) => {
-    if (!currentSong) return;
-
-    // Check if we already have the chords for this instrument
-    if (currentSong.chords && currentSong.chords[instrument]) {
-        // Just update the main content view locally if needed, but the viewer handles the 'chords' map.
-        // We really just need to return here.
-        return;
-    }
-
-    setLoadingInstrument(true);
-    try {
-        // Fetch new data specifically for this instrument
-        // We reuse getSongData but merge the result
-        const newData = await getSongData(currentSong.id, currentSong.title, currentSong.artist, instrument);
-        
-        // Update local state
-        const updatedSong = {
-            ...currentSong,
-            chords: {
-                ...currentSong.chords,
-                [instrument]: newData.content // The new content is in the .content of the response or .chords[instrument]
-            }
-        };
-        
-        setCurrentSong(updatedSong);
-        
-        // Update Cache
-        // We use the specific update helper to ensure we persist just this new piece without data loss
-        updateSongInstrument(currentSong.id, instrument, newData.content);
-        
-    } catch (e) {
-        console.error("Failed to switch instrument", e);
-    } finally {
-        setLoadingInstrument(false);
-    }
-  };
-
-  // Views
-  const renderHome = () => (
+const HomeView: React.FC<HomeViewProps> = ({ searchQuery, setSearchQuery, handleSearch }) => (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
       <div className="text-center py-12 space-y-4">
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-brand to-yellow-500">
@@ -152,7 +60,7 @@ function AppContent() {
           {TRENDING_SEARCHES.map((term, idx) => (
             <div 
               key={idx}
-              onClick={() => { setSearchQuery(term); handleSearch({ preventDefault: () => {} } as any); }}
+              onClick={() => { setSearchQuery(term); handleSearch({ preventDefault: () => {} } as React.FormEvent); }}
               className="group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center"
             >
               <div className="flex items-center gap-3">
@@ -167,9 +75,25 @@ function AppContent() {
         </div>
       </div>
     </div>
-  );
+);
 
-  const renderSearch = () => (
+interface SearchViewProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  handleSearch: (e: React.FormEvent) => void;
+  isSearching: boolean;
+  searchResults: SongSearchResult[];
+  loadSong: (id: string, title?: string, artist?: string) => void;
+}
+
+const SearchView: React.FC<SearchViewProps> = ({
+  searchQuery,
+  setSearchQuery,
+  handleSearch,
+  isSearching,
+  searchResults,
+  loadSong
+}) => (
     <div className="space-y-6">
        <div className="sticky top-0 bg-dark-900 z-10 py-2">
          <form onSubmit={handleSearch} className="relative">
@@ -217,9 +141,15 @@ function AppContent() {
          )
        )}
     </div>
-  );
+);
 
-  const renderFavorites = () => {
+
+interface FavoritesViewProps {
+  navigate: ReturnType<typeof useNavigate>;
+  loadSong: (id: string, title?: string, artist?: string) => void;
+}
+
+const FavoritesView: React.FC<FavoritesViewProps> = ({ navigate, loadSong }) => {
     // Refresh favorites list when entering this view
     const favs = getFavoriteSongsFull();
 
@@ -276,9 +206,13 @@ function AppContent() {
         )}
       </div>
     );
-  };
+};
 
-  const renderHistory = () => {
+interface HistoryViewProps {
+  loadSong: (id: string, title?: string, artist?: string) => void;
+}
+
+const HistoryView: React.FC<HistoryViewProps> = ({ loadSong }) => {
     const history = getHistorySongsFull();
 
     return (
@@ -313,9 +247,21 @@ function AppContent() {
         )}
       </div>
     );
-  };
+};
 
-  const renderSongDetail = () => {
+interface SongDetailViewProps {
+  isLoadingSong: boolean;
+  currentSong: Song | null;
+  handleInstrumentChange: (instrument: Instrument) => void;
+  loadingInstrument: boolean;
+}
+
+const SongDetailView: React.FC<SongDetailViewProps> = ({
+  isLoadingSong,
+  currentSong,
+  handleInstrumentChange,
+  loadingInstrument
+}) => {
     if (isLoadingSong) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-brand">
@@ -332,8 +278,113 @@ function AppContent() {
             isLoadingInstrument={loadingInstrument}
         />
     );
+};
+
+function AppContent() {
+  const [activeTab, setActiveTab] = useState('HOME');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SongSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [isLoadingSong, setIsLoadingSong] = useState(false);
+  const [loadingInstrument, setLoadingInstrument] = useState(false);
+
+  // Sync tab with route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/') setActiveTab('HOME');
+    else if (path === '/search') setActiveTab('SEARCH');
+    else if (path === '/favorites') setActiveTab('FAVORITES');
+    else if (path === '/history') setActiveTab('HISTORY');
+    else if (path.startsWith('/song/')) setActiveTab('SONG_DETAIL');
+  }, [location]);
+
+  // Handle Search
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    // Switch to search view if not already
+    navigate('/search');
+
+    const results = await searchSongs(searchQuery);
+    setSearchResults(results);
+    setIsSearching(false);
   };
 
+  // Handle Song Selection
+  const loadSong = async (id: string, title?: string, artist?: string) => {
+    setIsLoadingSong(true);
+
+    // Check cache first
+    const cached = getCachedSong(id);
+    if (cached) {
+      setCurrentSong(cached);
+      addToHistory(cached.id); // Add to history
+      setIsLoadingSong(false);
+      navigate(`/song/${id}`);
+      return;
+    }
+
+    try {
+      // Default to guitar when loading fresh
+      const songData = await getSongData(id, title, artist, 'guitar');
+      cacheSong(songData);
+      addToHistory(songData.id); // Add to history
+      setCurrentSong(songData);
+      navigate(`/song/${id}`);
+    } catch (err) {
+      alert("Error al cargar la canción.");
+    } finally {
+      setIsLoadingSong(false);
+    }
+  };
+
+  // Handle Instrument Switch
+  const handleInstrumentChange = async (instrument: Instrument) => {
+    if (!currentSong) return;
+
+    // Check if we already have the chords for this instrument
+    if (currentSong.chords && currentSong.chords[instrument]) {
+        // Just update the main content view locally if needed, but the viewer handles the 'chords' map.
+        // We really just need to return here.
+        return;
+    }
+
+    setLoadingInstrument(true);
+    try {
+        // Fetch new data specifically for this instrument
+        // We reuse getSongData but merge the result
+        const newData = await getSongData(currentSong.id, currentSong.title, currentSong.artist, instrument);
+
+        // Update local state
+        const updatedSong = {
+            ...currentSong,
+            chords: {
+                ...currentSong.chords,
+                [instrument]: newData.content // The new content is in the .content of the response or .chords[instrument]
+            }
+        };
+
+        setCurrentSong(updatedSong);
+
+        // Update Cache
+        // We use the specific update helper to ensure we persist just this new piece without data loss
+        updateSongInstrument(currentSong.id, instrument, newData.content);
+
+    } catch (e) {
+        console.error("Failed to switch instrument", e);
+    } finally {
+        setLoadingInstrument(false);
+    }
+  };
+
+  // Views
   return (
     <Layout activeTab={activeTab} onNavigate={(tab) => {
         if (tab === 'HOME') navigate('/');
@@ -342,11 +393,11 @@ function AppContent() {
         if (tab === 'HISTORY') navigate('/history');
     }}>
       <Routes>
-        <Route path="/" element={renderHome()} />
-        <Route path="/search" element={renderSearch()} />
-        <Route path="/favorites" element={renderFavorites()} />
-        <Route path="/history" element={renderHistory()} />
-        <Route path="/song/:id" element={renderSongDetail()} />
+        <Route path="/" element={<HomeView searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch} />} />
+        <Route path="/search" element={<SearchView searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch} isSearching={isSearching} searchResults={searchResults} loadSong={loadSong} />} />
+        <Route path="/favorites" element={<FavoritesView navigate={navigate} loadSong={loadSong} />} />
+        <Route path="/history" element={<HistoryView loadSong={loadSong} />} />
+        <Route path="/song/:id" element={<SongDetailView isLoadingSong={isLoadingSong} currentSong={currentSong} handleInstrumentChange={handleInstrumentChange} loadingInstrument={loadingInstrument} />} />
       </Routes>
     </Layout>
   );
