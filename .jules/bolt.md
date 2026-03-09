@@ -1,0 +1,3 @@
+## 2024-05-14 - React Router Component Re-creation Bottleneck
+**Learning:** Passing inline function calls to React Router's `element` prop (e.g., `<Route path="/" element={renderHome()} />`) forces the function to evaluate on *every render* of the parent component, even when the route is inactive. This causes expensive operations inside those functions (like parsing caching objects or reading from `localStorage`) to run on every keystroke in search bars or state updates.
+**Action:** Always define view functions as true React components outside the parent component tree and pass them as JSX elements (e.g., `element={<HomeView />}`). This allows React to defer execution and evaluation until the component is actively mounted.
