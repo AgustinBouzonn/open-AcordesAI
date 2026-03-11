@@ -1,0 +1,3 @@
+## 2024-05-24 - [React List Rendering Cascade]
+**Learning:** Inline components inside the main App component coupled with inline functions for list items (`onClick={() => loadSong(...) }`) cause massive re-render cascades across lists (`TRENDING_SEARCHES`, `searchResults`, `favorites`, `history`) whenever any state in the parent changes. The React reconcile process can't match stable identities so it re-renders all list items continuously.
+**Action:** Extract list items to top-level `React.memo()` components, and provide stable event handler references (`useCallback` for functions like `loadSong` and `handleSearch`) so React can skip rendering list children that haven't changed.
