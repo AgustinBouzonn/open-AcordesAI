@@ -117,11 +117,15 @@ export const addComment = (songId: string, text: string): Comment => {
   const allComments = getCommentsCache();
   const songComments = allComments[songId] || [];
   
+  // Security: Prevent LocalStorage DoS by enforcing a hard limit on comment length
+  const MAX_COMMENT_LENGTH = 500;
+  const sanitizedText = text.slice(0, MAX_COMMENT_LENGTH);
+
   const newComment: Comment = {
     id: Date.now().toString(),
     songId,
     user: 'Usuario Anónimo', // In a real app, this would come from auth
-    text,
+    text: sanitizedText,
     timestamp: Date.now(),
   };
 
