@@ -1,0 +1,3 @@
+## 2024-05-24 - Tailwind CDN and Button Interactivity
+**Learning:** In this application, due to the usage of Tailwind CSS via CDN script (which resets default styles), `<button>` elements require explicit `cursor-pointer` classes to visually indicate interactivity on hover. Furthermore, many icon-only buttons lacked essential accessibility features like `aria-label`, `title`, and visible focus rings.
+**Action:** When adding or modifying interactive elements in this app, explicitly add `cursor-pointer` to button classes, ensure `focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none` is present for keyboard navigation, and provide localized (Spanish) `aria-label` and `title` attributes for icon-only buttons.
