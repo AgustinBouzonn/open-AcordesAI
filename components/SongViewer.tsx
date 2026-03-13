@@ -188,7 +188,13 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onInstrumentChange
                   placeholder="¿Qué te parece este cifrado?"
                   className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none"
                   rows={3}
+                  maxLength={500}
                 />
+                <div className="flex justify-between items-center mt-1">
+                  <span className={`text-xs ${newComment.length >= 500 ? 'text-red-500' : 'text-gray-500'}`}>
+                    {newComment.length}/500
+                  </span>
+                </div>
                 <button 
                   type="submit"
                   disabled={!newComment.trim()}
