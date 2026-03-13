@@ -1,0 +1,3 @@
+## 2024-05-24 - [List Rendering Memoization and Callbacks]
+**Learning:** In React functional components with deep or complex rendering trees (like `AppContent` rendering many list items within switch blocks or directly), inline arrow functions passed as props (e.g., `onClick={() => loadSong(id)}`) completely bypass the optimization benefits of `React.memo`. When `AppContent` re-renders (for example, on every keystroke in the search bar modifying `searchQuery`), every single list item component is recreated.
+**Action:** Always extract list items into separate components wrapped in `React.memo`, and critically, ensure that the event handlers passed to them are wrapped in `useCallback` with stable dependencies to preserve memoization and prevent cascading re-renders.
