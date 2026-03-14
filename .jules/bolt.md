@@ -1,0 +1,4 @@
+
+## 2025-03-08 - React Router Inline Functions Rendering Bottleneck
+**Learning:** Defining inline functional renderers (e.g., `<Route element={renderFavorites()} />`) inside a parent component (`AppContent`) that frequently updates state (like a typing `searchQuery`) completely breaks React Router's intended inactive-route optimization. It forces the router to execute the inline functions for inactive routes simply because the parent re-rendered, meaning expensive, synchronous main-thread code (like parsing `localStorage` strings in `renderFavorites`) gets run on every single keystroke.
+**Action:** Always extract route views into top-level functional components wrapped in `React.memo` (or plain components outside of the changing scope), passing down memoized callbacks via `useCallback`. This guarantees the route views are only executed and re-rendered when they are active or their explicit props change.
