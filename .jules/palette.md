@@ -1,0 +1,4 @@
+
+## 2024-05-28 - Micro UX: Accessible Toggle Buttons and Icon-Only Controls
+**Learning:** Found a pattern of icon-only buttons (`+`, `-`, favorite, comments) lacking explicit labels for screen readers. Also, toggle groups (like the instrument selector) lacked structural meaning (`role="group"`) and active state indications (`aria-pressed`). In addition, hover styles were present but keyboard focus indicators were missing.
+**Action:** When creating icon-only interactive controls, always include `aria-label`, `title` (for tooltips), and `type="button"`. Apply `focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none` for keyboard accessibility. For toggle button groups, wrap them in `role="group"` with an overarching `aria-label`, and use `aria-pressed` on the individual buttons. Apply `aria-hidden="true"` to decorative icons.
