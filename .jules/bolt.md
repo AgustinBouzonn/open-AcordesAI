@@ -1,0 +1,3 @@
+## 2025-02-27 - [Inline React Router Views Cause Spurious Evaluation]
+**Learning:** Calling rendering functions inline for React Router `element` props (e.g., `<Route element={renderFavorites()} />`) causes the entire view logic—including expensive operations like reading from `localStorage` or parsing caches—to execute on every single state change of the parent component (like a search input keystroke), even when the route is not active.
+**Action:** Always define view components outside of the main component and pass them as JSX elements (e.g., `<Route element={<FavoritesView />} />`) so React Router only evaluates them when the route matches. Ensure they are wrapped in `React.memo` if they receive props.
