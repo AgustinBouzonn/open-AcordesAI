@@ -1,0 +1,3 @@
+## 2024-05-24 - [React Router Views Defined Inline causing Re-renders and Expensive Operations]
+**Learning:** React Router view components defined inline within the main `AppContent` component force React Router to execute their logic (such as reading `localStorage` in `getFavoriteSongsFull()` and `getHistorySongsFull()`) on every unrelated state change, like typing in the search bar. This leads to severe performance degradation.
+**Action:** Always extract React Router view components as standalone `React.memo` components outside of the main component and pass callbacks via stable `useCallback` references to avoid unnecessary re-renders.
