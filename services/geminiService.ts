@@ -60,11 +60,15 @@ export const getSongData = async (
   // If we don't have title/artist (e.g. loading from ID), we ask the AI to infer it or just provide the data.
   const promptContext = safeTitle && safeArtist ? `"""${safeTitle}""" by """${safeArtist}"""` : `the song with ID """${safeId}"""`;
 
+  // Validate instrument at runtime against allowlist to prevent prompt injection
+  const allowedInstruments = ['guitar', 'ukulele', 'piano'];
+  const safeInstrument = allowedInstruments.includes(instrument) ? instrument : 'guitar';
+
   // Tailor prompt for the instrument
   let instrumentInstruction = "";
-  if (instrument === 'ukulele') {
+  if (safeInstrument === 'ukulele') {
     instrumentInstruction = "Provide the chords specifically for Ukulele (standard GCEA tuning).";
-  } else if (instrument === 'piano') {
+  } else if (safeInstrument === 'piano') {
     instrumentInstruction = "Provide the chords for Piano/Keyboard. You may include bass note indications (e.g., C/G) where appropriate.";
   } else {
     instrumentInstruction = "Provide standard Guitar chords.";
@@ -73,7 +77,7 @@ export const getSongData = async (
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Provide the ${instrument} chords and lyrics for ${promptContext}. 
+      contents: `Provide the ${safeInstrument} chords and lyrics for ${promptContext}.
       ${instrumentInstruction}
       Format the content as a standard text chord sheet where chords are placed above the lyrics.
       Also determine the key of the song.
