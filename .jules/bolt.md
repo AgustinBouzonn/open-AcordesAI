@@ -1,0 +1,3 @@
+## 2024-05-23 - Inline Route Element Rendering Anti-Pattern
+**Learning:** Calling render functions like `element={renderFavorites()}` directly inside React Router's `<Route>` declarations forces the function to execute on every re-render of the parent component, even when the route is not active. This caused expensive operations like `localStorage` parsing (`getFavoriteSongsFull()`) to run synchronously on every keystroke in the search input.
+**Action:** Always define route views as proper React components (e.g., `<FavoritesView />`) outside the parent component, so React Router only renders them when the route is active. Wrap them in `React.memo` to prevent unnecessary re-renders when parent state updates.
