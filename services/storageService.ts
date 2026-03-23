@@ -117,11 +117,14 @@ export const addComment = (songId: string, text: string): Comment => {
   const allComments = getCommentsCache();
   const songComments = allComments[songId] || [];
   
+  // Truncate to prevent LocalStorage DoS (Security)
+  const safeText = text.substring(0, 500);
+
   const newComment: Comment = {
-    id: Date.now().toString(),
+    id: crypto.randomUUID(),
     songId,
     user: 'Usuario Anónimo', // In a real app, this would come from auth
-    text,
+    text: safeText,
     timestamp: Date.now(),
   };
 
