@@ -1,0 +1,3 @@
+## 2024-05-26 - Accessible Icon Buttons and Toggle Groups in AcordesAI
+**Learning:** Icon-only buttons (like favorites or font scaling) require explicitly descriptive `aria-label`s, `title`s (for tooltips), `type="button"`, and clearly defined focus styles (`focus-visible`) to be functional for screen reader users and keyboard navigators. Similarly, grouped selection controls (like instrument selection) should use a `role="group"` on the container with an `aria-label`, and `aria-pressed` on the toggle buttons to properly announce their active state instead of relying purely on visual styling.
+**Action:** When implementing or modifying icon-only buttons or toggle groups, ensure these accessibility attributes are included to make the components usable for all.
