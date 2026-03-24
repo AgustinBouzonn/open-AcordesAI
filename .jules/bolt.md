@@ -1,0 +1,3 @@
+## 2024-05-24 - [Avoid `map().filter()` allocations]
+**Learning:** This codebase frequently maps over cache object lookups and then filters falsy results (e.g. `arr.map(id => cache[id]).filter(Boolean)`). This creates an unnecessary intermediate array allocation which can impact performance especially in frequently executed getters like `getFavoriteSongsFull` and `getHistorySongsFull`.
+**Action:** Replace two-pass `.map().filter(Boolean)` patterns with a single `.reduce()` pass to build the resulting array in one go, avoiding intermediate allocations.
