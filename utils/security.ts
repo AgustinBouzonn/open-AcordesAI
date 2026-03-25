@@ -16,3 +16,16 @@ export const sanitizeInput = (input: string, maxLength: number = 100): string =>
 
   return sanitized.trim();
 };
+
+/**
+ * Safely parses a JSON string, returning a fallback value if parsing fails.
+ * This prevents application crashes from malformed AI responses or corrupted local storage.
+ */
+export const safeJSONParse = <T>(jsonString: string, fallback: T): T => {
+  try {
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error("Failed to parse JSON string:", error);
+    return fallback;
+  }
+};
