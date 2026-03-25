@@ -1,0 +1,3 @@
+## 2024-03-20 - Icon-Only Button Accessibility in SongViewer
+**Learning:** Found multiple icon-only buttons (favorites, comments, font size controls) lacking semantic attributes. Without `aria-label`, screen readers only announce "button", leaving users blind to the action. Without `title`, sighted users lack tooltip context. Missing `type="button"` can cause unintended form submissions in some contexts, and lacking `focus-visible` styles makes keyboard navigation invisible.
+**Action:** Always add `aria-label`, `title`, explicit `type="button"`, and visible focus rings (`focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none`) to any button whose primary content is an icon without visible text.
