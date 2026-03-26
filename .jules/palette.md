@@ -1,0 +1,3 @@
+## 2024-10-24 - [Accessible Icon-Only Buttons and Toggle Groups]
+**Learning:** Icon-only buttons and button toggle groups frequently lack critical accessibility attributes (ARIA labels, roles, `aria-pressed` states, focus-visible styles, `type="button"`) in this design system, posing a barrier to screen reader users and keyboard navigators.
+**Action:** When working on interactive UI elements, proactively wrap toggle button sets in `role="group"` with `aria-label`, use `aria-pressed` on the items to convey state, and ensure all icon-only interactive controls include explicit `aria-label`, `title`, `type="button"`, `focus-visible` utility classes, and `aria-hidden="true"` on the decorative icons.
