@@ -1,0 +1,3 @@
+## 2024-05-18 - [Eliminate Intermediate Array Allocation in Song Retrieval]
+**Learning:** Using `.map().filter(Boolean)` in data retrieval paths (like fetching favorite or history songs) creates unnecessary intermediate arrays, adding avoidable memory allocation and garbage collection overhead.
+**Action:** Replace two-pass `.map().filter(Boolean)` sequences with a single `.reduce()` pass to gather valid items directly into the final array, reducing iteration overhead and allocations.
