@@ -118,10 +118,10 @@ export const addComment = (songId: string, text: string): Comment => {
   const songComments = allComments[songId] || [];
   
   const newComment: Comment = {
-    id: Date.now().toString(),
+    id: crypto.randomUUID(),
     songId,
     user: 'Usuario Anónimo', // In a real app, this would come from auth
-    text,
+    text: text.slice(0, 500), // Enforce 500 char limit to prevent localStorage DoS
     timestamp: Date.now(),
   };
 
