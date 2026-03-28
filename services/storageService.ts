@@ -181,7 +181,13 @@ export const getCachedSong = (songId: string): Song | null => {
 export const getFavoriteSongsFull = (): Song[] => {
   const favIds = getFavoritesCache();
   const cache = getSongsCache();
-  return favIds.map(id => cache[id]).filter(Boolean);
+  // ⚡ Bolt: Use a single reduce pass to eliminate intermediate array allocations
+  // previously caused by .map().filter(Boolean)
+  return favIds.reduce((acc: Song[], id) => {
+    const song = cache[id];
+    if (song) acc.push(song);
+    return acc;
+  }, []);
 };
 
 // History Functions
@@ -205,5 +211,11 @@ export const addToHistory = (songId: string) => {
 export const getHistorySongsFull = (): Song[] => {
   const historyIds = getHistoryCache();
   const cache = getSongsCache();
-  return historyIds.map(id => cache[id]).filter(Boolean);
+  // ⚡ Bolt: Use a single reduce pass to eliminate intermediate array allocations
+  // previously caused by .map().filter(Boolean)
+  return historyIds.reduce((acc: Song[], id) => {
+    const song = cache[id];
+    if (song) acc.push(song);
+    return acc;
+  }, []);
 };
