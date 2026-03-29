@@ -1,0 +1,3 @@
+## 2026-03-29 - [Single-Pass Array Reduction]
+**Learning:** Using `.map().filter(Boolean)` pattern in high-frequency list retrievals causes unnecessary intermediate array allocations and a second pass over the elements. This adds memory overhead and increases CPU iterations from N to 2N for no benefit.
+**Action:** Use `.reduce()` instead of `.map().filter()` when simultaneously transforming items and filtering out invalid entries (like missing objects). This achieves the same result in a single pass O(N) while preventing unnecessary garbage collection overhead from intermediate arrays.
