@@ -19,6 +19,9 @@ export interface Song {
   rating?: string | number | null;
   rating_count?: string | number;
   has_chords?: string | number;
+  comments_count?: string | number;
+  is_favorite?: boolean | string | number;
+  user_rating?: string | number | null;
   user_id?: string | number;
   view_count?: string | number;
   createdAt?: string;

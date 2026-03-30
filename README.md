@@ -199,6 +199,12 @@ npm run dev
 docker compose up --build
 ```
 
+Si ya habías levantado Postgres antes y agregaste nuevas migraciones, recuerda que los scripts de `backend/migrations/` solo corren automáticamente al crear el volumen por primera vez. Para aplicar la optimización nueva de búsqueda sobre una base existente:
+
+```bash
+docker compose exec postgres psql -U acordesai -d acordesai -f /docker-entrypoint-initdb.d/002_search_indexes.sql
+```
+
 Luego entra desde tu celular a:
 
 ```text

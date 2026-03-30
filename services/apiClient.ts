@@ -65,15 +65,19 @@ class ApiClient {
 
   search = {
     songs: (query: string) => this.request(`/search?q=${encodeURIComponent(query)}`),
+    localSongs: (query: string, limit?: number) =>
+      this.request(`/search/local?q=${encodeURIComponent(query)}${limit ? `&limit=${limit}` : ''}`),
   };
 
   songs = {
     get: (id: string) => this.request(`/songs/${id}`),
-    create: (data: { title: string; artist: string; lyrics: string }) =>
+    create: (data: { title: string; artist: string; lyrics?: string }) =>
       this.request('/songs', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    getCachedChords: (id: string, instrument: string) =>
+      this.request(`/songs/${id}/chords?instrument=${encodeURIComponent(instrument)}`),
     getChords: (id: string, instrument: string) =>
       this.request(`/songs/${id}/chords`, {
         method: 'POST',
@@ -113,6 +117,7 @@ class ApiClient {
 
   ratings = {
     get: (songId: string) => this.request<{ average: string | null; count: number }>(`/ratings/${songId}`),
+    getMine: (songId: string) => this.request<{ score: number | null }>(`/ratings/${songId}/me`),
     save: (songId: string, score: number) =>
       this.request<{ message: string }>(`/ratings/${songId}`, {
         method: 'POST',

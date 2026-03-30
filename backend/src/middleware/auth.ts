@@ -8,6 +8,9 @@ export interface AuthRequest extends Request {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme-use-env-var';
 
+const parseTokenPayload = (token: string): { userId: number; username: string } =>
+  jwt.verify(token, JWT_SECRET) as { userId: number; username: string };
+
 export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) {
@@ -16,13 +19,32 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
   }
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as { userId: number; username: string };
+    const payload = parseTokenPayload(token);
     req.user = { id: payload.userId, username: payload.username };
     req.userId = payload.userId;
     next();
   } catch {
     res.status(401).json({ message: 'Token inválido o expirado' });
   }
+};
+
+export const attachOptionalUser = (req: AuthRequest, _: Response, next: NextFunction): void => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    next();
+    return;
+  }
+
+  try {
+    const payload = parseTokenPayload(token);
+    req.user = { id: payload.userId, username: payload.username };
+    req.userId = payload.userId;
+  } catch {
+    req.user = undefined;
+    req.userId = undefined;
+  }
+
+  next();
 };
 
 export const getRequiredUser = (req: AuthRequest): { id: number; username: string } => {

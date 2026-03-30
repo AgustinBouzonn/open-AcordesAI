@@ -1,33 +1,53 @@
 import React, { useState } from 'react';
-import { X, Send, Loader2 } from 'lucide-react';
+import { X, Send, Loader2, Copy } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { title: string; artist: string; lyrics?: string }) => void;
+  onSubmit: (data: { title: string; artist: string; lyrics?: string; chords?: string }) => void;
 }
 
 export function CreateSongModal({ isOpen, onClose, onSubmit }: Props) {
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('');
   const [lyrics, setLyrics] = useState('');
+  const [chords, setChords] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !artist.trim()) return;
-    
+
+    setError('');
     setLoading(true);
     try {
-      await onSubmit({ title: title.trim(), artist: artist.trim(), lyrics: lyrics.trim() || undefined });
+      await onSubmit({
+        title: title.trim(),
+        artist: artist.trim(),
+        lyrics: lyrics.trim() || undefined,
+        chords: chords.trim() || undefined,
+      });
       setTitle('');
       setArtist('');
       setLyrics('');
+      setChords('');
       onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo crear la canción');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setChords(text);
+    } catch {
+      setError('No se pudo leer el portapapeles');
     }
   };
 
@@ -37,7 +57,7 @@ export function CreateSongModal({ isOpen, onClose, onSubmit }: Props) {
         <button onClick={onClose} style={closeStyle}><X size={20} /></button>
         
         <h2 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
-          Crear nueva canción
+          Crear canción o subir tu cifrado
         </h2>
 
         <form onSubmit={handleSubmit}>
@@ -82,6 +102,27 @@ export function CreateSongModal({ isOpen, onClose, onSubmit }: Props) {
             />
           </div>
 
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', gap: '0.75rem' }}>
+              <label style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
+                Cifrado propio (opcional)
+              </label>
+              <button type="button" onClick={handlePaste} style={secondaryButtonStyle}>
+                <Copy size={14} style={{ marginRight: '0.35rem' }} />
+                Pegar
+              </button>
+            </div>
+            <textarea
+              value={chords}
+              onChange={(e) => setChords(e.target.value)}
+              placeholder="Pega aquí acordes, tabs o estructura de la canción..."
+              rows={8}
+              style={{ ...inputStyle, resize: 'vertical', minHeight: '180px', fontFamily: 'monospace', lineHeight: 1.5 }}
+            />
+          </div>
+
+          {error && <p style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
+
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
             <button type="button" onClick={onClose} style={cancelButtonStyle}>
               Cancelar
@@ -92,7 +133,7 @@ export function CreateSongModal({ isOpen, onClose, onSubmit }: Props) {
               style={{ ...primaryButtonStyle, opacity: loading || !title.trim() || !artist.trim() ? 0.5 : 1 }}
             >
               {loading ? <Loader2 size={18} className="animate-spin" style={{ marginRight: '0.5rem' }} /> : <Send size={18} style={{ marginRight: '0.5rem' }} />}
-              Crear canción
+              {chords.trim() ? 'Crear y guardar cifrado' : 'Crear canción'}
             </button>
           </div>
         </form>
@@ -120,6 +161,10 @@ const inputStyle: React.CSSProperties = {
 
 const cancelButtonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem', background: '#374151', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
+};
+
+const secondaryButtonStyle: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', padding: '0.4rem 0.75rem', background: '#374151', border: 'none', borderRadius: '0.5rem', color: '#d1d5db', cursor: 'pointer', fontSize: '0.75rem',
 };
 
 const primaryButtonStyle: React.CSSProperties = {

@@ -140,9 +140,15 @@ function AppContent() {
         storage.searchSongs(query).catch(() => []),
         storage.searchLocalSongs(query).catch(() => [])
       ]);
+      const normalizedLocalKeys = new Set(
+        localResults.map((result) => `${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
+      );
+      const dedupedItunes = itunesResults.filter(
+        (result) => !normalizedLocalKeys.has(`${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
+      );
       const allResults = [
         ...localResults.map((result) => ({ ...result, source: 'comunidad', id: `local-${result.id}` })),
-        ...itunesResults.map((result) => ({ ...result, source: 'itunes', id: result.id }))
+        ...dedupedItunes.map((result) => ({ ...result, source: 'itunes', id: result.id }))
       ];
       setSearchResults(allResults.map((result) => ({
         title: result.title,
@@ -175,9 +181,33 @@ function AppContent() {
     setFavorites(newFavs);
   };
 
-  const handleCreateSong = async (data: { title: string; artist: string; lyrics?: string }) => {
-    const song = await storage.createSong(data);
+  const handleCreateSong = async (data: { title: string; artist: string; lyrics?: string; chords?: string }) => {
+    const { chords, ...songData } = data;
+    const song = await storage.createSong(songData);
+    if (chords?.trim()) {
+      await storage.saveChords(song.id, chords, 'guitar');
+    }
     navigate(`/song/${song.id}`);
+  };
+
+  const openSearchResult = async (result: SearchResult) => {
+    if (result.source === 'comunidad') {
+      navigate(`/song/${result.id.replace(/^local-/, '')}`);
+      return;
+    }
+
+    if (!user) {
+      setAuthMode('login');
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      const song = await storage.createSong({ title: result.title, artist: result.artist });
+      navigate(`/song/${song.id}`);
+    } catch {
+      setErrorMessage('Error al abrir la canción');
+    }
   };
 
   const handleAddFromCommunity = async (data: { title: string; artist: string }) => {
@@ -293,23 +323,21 @@ function AppContent() {
       {searchResults.length > 0 ? (
         <div className="space-y-2">
           {searchResults.map((result, idx) => (
-            <div key={idx} onClick={async () => {
-              if (!user) {
-                setAuthMode('login');
-                setShowAuthModal(true);
-                return;
-              }
-              try {
-                const song = await storage.createSong({ title: result.title, artist: result.artist, lyrics: '' });
-                navigate(`/song/${song.id}`);
-              } catch (e) {
-                setErrorMessage('Error al crear canción');
-              }
-            }} className="bg-dark-800 hover:bg-dark-700 p-3 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex items-center gap-3">
+            <div key={idx} onClick={() => openSearchResult(result)} className="bg-dark-800 hover:bg-dark-700 p-3 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex items-center gap-3">
               <Artwork size={52} url={result.artworkUrl} />
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white truncate">{result.title}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-white truncate">{result.title}</h3>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                    result.source === 'comunidad' ? 'bg-brand/20 text-brand' : 'bg-dark-700 text-gray-400'
+                  }`}>
+                    {result.source === 'comunidad' ? 'Comunidad' : 'iTunes'}
+                  </span>
+                </div>
                 <p className="text-sm text-brand truncate">{result.artist}</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {result.source === 'comunidad' ? 'Abrir canción existente' : user ? 'Agregar a tu biblioteca' : 'Inicia sesión para agregarla'}
+                </p>
               </div>
               <ChevronRight size={16} className="text-gray-500 shrink-0" />
             </div>
@@ -331,7 +359,7 @@ function AppContent() {
                 onClick={() => user ? setShowCreateModal(true) : (setAuthMode('login'), setShowAuthModal(true))}
                 className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
               >
-                Subir cifrado propio
+                Crear y pegar cifrado
               </button>
             </div>
           </div>

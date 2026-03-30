@@ -19,9 +19,28 @@ const INSTRUMENTS = [
   { id: 'piano', name: 'Piano' },
 ];
 
+const getSongRatingSummary = (song: Song): { average: string; count: number } | null => {
+  const count = Number(song.rating_count ?? 0);
+  if (!count) {
+    return null;
+  }
+
+  const average =
+    typeof song.rating === 'number'
+      ? song.rating.toFixed(1)
+      : typeof song.rating === 'string'
+        ? song.rating
+        : '0.0';
+
+  return { average, count };
+};
+
+const getSongFavoriteState = (song: Song): boolean =>
+  song.is_favorite === true || song.is_favorite === 'true' || song.is_favorite === 1 || song.is_favorite === '1';
+
 export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) => {
   const { user } = useAuth();
-  const [isFav, setIsFav] = useState(false);
+  const [isFav, setIsFav] = useState(() => getSongFavoriteState(song));
   const [fontSize, setFontSize] = useState(16);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(0);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -33,11 +52,16 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [editedChords, setEditedChords] = useState(song.chords || '');
   const [saving, setSaving] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [userRating, setUserRating] = useState(0);
-  const [avgRating, setAvgRating] = useState<{ average: string; count: number } | null>(null);
+  const [userRating, setUserRating] = useState(() => Number(song.user_rating ?? 0));
+  const [avgRating, setAvgRating] = useState<{ average: string; count: number } | null>(() => getSongRatingSummary(song));
   const [transpose, setTranspose] = useState(0);
   const [showShare, setShowShare] = useState(false);
   const [instrument, setInstrument] = useState('guitar');
+  const [instrumentChords, setInstrumentChords] = useState<Record<string, string>>(() =>
+    song.chords ? { guitar: song.chords } : {}
+  );
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [submittingComment, setSubmittingComment] = useState(false);
   
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,22 +80,79 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   };
 
   useEffect(() => {
-    const chords = instrument === 'guitar' ? song.chords || '' : '';
-    setDisplayChords(transposeChords(chords, transpose));
-    setEditedChords(chords);
-    loadFavorites();
-    loadComments();
-    loadRating();
+    setInstrumentChords(song.chords ? { guitar: song.chords } : {});
     setAutoScrollSpeed(0);
     setEditMode(false);
-  }, [song.id, song.chords, transpose, instrument]);
+    setFeedback(null);
+    setIsFav(getSongFavoriteState(song));
+    setUserRating(Number(song.user_rating ?? 0));
+    setAvgRating(getSongRatingSummary(song));
+  }, [song.id, song.chords, song.is_favorite, song.rating, song.rating_count, song.user_rating]);
+
+  useEffect(() => {
+    const chords = instrumentChords[instrument] || '';
+    setDisplayChords(transposeChords(chords, transpose));
+    setEditedChords(chords);
+  }, [instrument, instrumentChords, transpose]);
+
+  useEffect(() => {
+    loadComments();
+  }, [song.id, user]);
+
+  useEffect(() => {
+    if (!user) {
+      setIsFav(false);
+      setUserRating(0);
+      return;
+    }
+
+    if (song.is_favorite === undefined) {
+      loadFavorites();
+    }
+
+    if (song.user_rating === undefined || song.rating === undefined || song.rating_count === undefined) {
+      loadRating();
+    }
+  }, [song.id, song.is_favorite, song.rating, song.rating_count, song.user_rating, user]);
+
+  useEffect(() => {
+    if (instrumentChords[instrument] || editMode) {
+      return;
+    }
+
+    let cancelled = false;
+
+    storage.getCachedChords(song.id, instrument).then((result) => {
+      if (cancelled || !result?.chords) {
+        return;
+      }
+
+      setInstrumentChords((current) => {
+        if (current[instrument]) {
+          return current;
+        }
+        return { ...current, [instrument]: result.chords };
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editMode, instrument, instrumentChords, song.id]);
 
   const loadRating = async () => {
     try {
-      const data = await api.ratings.get(song.id);
-      setAvgRating(data);
+      const [summary, mine] = await Promise.all([
+        api.ratings.get(song.id),
+        user ? api.ratings.getMine(song.id).catch(() => ({ score: null })) : Promise.resolve({ score: null }),
+      ]);
+      setAvgRating(summary);
+      setUserRating(mine.score ?? 0);
     } catch {}
   };
+
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    error instanceof Error && error.message ? error.message : fallback;
 
   const handleRating = async (score: number) => {
     if (!user) return;
@@ -79,14 +160,20 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     try {
       await api.ratings.save(song.id, score);
       loadRating();
-    } catch {}
+      setFeedback({ type: 'success', message: 'Puntuacion guardada.' });
+    } catch (error) {
+      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo guardar la puntuacion.') });
+    }
   };
 
   const loadFavorites = async () => {
-    if (user) {
-      const favs = await storage.getFavorites();
-      setIsFav(favs.some(f => f.id === song.id));
+    if (!user) {
+      setIsFav(false);
+      return;
     }
+
+    const favs = await storage.getFavorites();
+    setIsFav(favs.some(f => f.id === song.id));
   };
 
   const loadComments = async () => {
@@ -96,29 +183,43 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
 
   const handleToggleFav = async () => {
     if (!user) return;
-    const newState = await storage.toggleFavorite(song.id);
-    setIsFav(newState);
+    try {
+      const newState = await storage.toggleFavorite(song.id);
+      setIsFav(newState);
+      setFeedback({ type: 'success', message: newState ? 'Agregada a favoritos.' : 'Quitada de favoritos.' });
+    } catch (error) {
+      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo actualizar favoritos.') });
+    }
   };
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !user) return;
-    const added = await storage.addComment(song.id, newComment);
-    setComments([added, ...comments]);
-    setNewComment('');
+    setSubmittingComment(true);
+    try {
+      const added = await storage.addComment(song.id, newComment);
+      setComments([added, ...comments]);
+      setNewComment('');
+      setFeedback({ type: 'success', message: 'Comentario publicado.' });
+    } catch (error) {
+      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo publicar tu comentario.') });
+    } finally {
+      setSubmittingComment(false);
+    }
   };
 
   const handleGenerateChords = async () => {
     setLoadingChords(true);
+    setFeedback(null);
     try {
       const result = await storage.getChords(song.id, instrument);
-      setDisplayChords(transposeChords(result.chords, transpose));
-      setEditedChords(result.chords);
+      setInstrumentChords((current) => ({ ...current, [instrument]: result.chords }));
       if (onSongUpdated) {
         onSongUpdated({ ...song, chords: instrument === 'guitar' ? result.chords : song.chords });
       }
-    } catch (err) {
-      console.error('Failed to generate chords:', err);
+      setFeedback({ type: 'success', message: `Cifrado listo para ${INSTRUMENTS.find((item) => item.id === instrument)?.name || instrument}.` });
+    } catch (error) {
+      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo generar el cifrado con IA.') });
     } finally {
       setLoadingChords(false);
     }
@@ -126,22 +227,24 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
 
   const handleSaveChords = async () => {
     setSaving(true);
+    setFeedback(null);
     try {
       await storage.saveChords(song.id, editedChords, instrument);
-      setDisplayChords(transposeChords(editedChords, transpose));
+      setInstrumentChords((current) => ({ ...current, [instrument]: editedChords }));
       setEditMode(false);
       if (onSongUpdated) {
         onSongUpdated({ ...song, chords: instrument === 'guitar' ? editedChords : song.chords });
       }
-    } catch (err) {
-      console.error('Failed to save chords:', err);
+      setFeedback({ type: 'success', message: 'Cifrado guardado correctamente.' });
+    } catch (error) {
+      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo guardar el cifrado.') });
     } finally {
       setSaving(false);
     }
   };
 
   const handleCancelEdit = () => {
-    setEditedChords(instrument === 'guitar' ? song.chords || '' : displayChords);
+    setEditedChords(instrumentChords[instrument] || '');
     setEditMode(false);
   };
 
@@ -152,6 +255,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       reader.onload = (event) => {
         const text = event.target?.result as string;
         setEditedChords(text);
+        setFeedback({ type: 'success', message: 'Archivo cargado en el editor.' });
       };
       reader.readAsText(file);
     }
@@ -160,6 +264,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const handleImport = (chords: string) => {
     setEditedChords(chords);
     setEditMode(true);
+    setFeedback({ type: 'success', message: 'Cifrado importado. Revisa y guarda cuando quieras.' });
   };
 
   const handleDownload = () => {
@@ -219,6 +324,18 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       </div>
 
       <div className="sticky top-20 md:top-24 z-30 bg-dark-800/95 backdrop-blur-md rounded-xl border border-dark-600 shadow-xl p-3 gap-3 flex flex-col">
+        {feedback && (
+          <div className={`rounded-lg border px-3 py-2 text-sm ${
+            feedback.type === 'error'
+              ? 'border-red-700 bg-red-950/50 text-red-200'
+              : 'border-emerald-700 bg-emerald-950/40 text-emerald-200'
+          }`}>
+            <div className="flex items-center justify-between gap-3">
+              <span>{feedback.message}</span>
+              <button onClick={() => setFeedback(null)} className="text-current/80 hover:text-current">✕</button>
+            </div>
+          </div>
+        )}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
             {editMode ? (
@@ -296,7 +413,15 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-300">Editar cifrado</h3>
             <div className="flex gap-2">
-              <button onClick={async () => { const t = await navigator.clipboard.readText(); setEditedChords(t); }} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
+              <button onClick={async () => {
+                try {
+                  const text = await navigator.clipboard.readText();
+                  setEditedChords(text);
+                  setFeedback({ type: 'success', message: 'Texto pegado en el editor.' });
+                } catch (error) {
+                  setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo leer el portapapeles.') });
+                }
+              }} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
                 <Copy size={14} /> Pegar
               </button>
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".txt,.chords" className="hidden" />
@@ -354,8 +479,8 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
                 <form onSubmit={handleAddComment} className="mb-6">
                   <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="¿Qué te parece este cifrado?" className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none" rows={3} maxLength={500} />
                   <p className="text-right text-xs text-gray-600 mt-1">{newComment.length}/500</p>
-                  <button type="submit" disabled={!newComment.trim()} className="mt-2 w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition">
-                    Publicar Opinión
+                  <button type="submit" disabled={!newComment.trim() || submittingComment} className="mt-2 w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition">
+                    {submittingComment ? 'Publicando...' : 'Publicar Opinión'}
                   </button>
                 </form>
               ) : (
