@@ -4,10 +4,11 @@ import { Layout } from './components/Layout';
 import { SongViewer } from './components/SongViewer';
 import { AuthModal } from './components/AuthModal';
 import { CreateSongModal } from './components/CreateSongModal';
+import { AddFromCommunityModal } from './components/AddFromCommunityModal';
 import { useAuth } from './components/AuthContext';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
-import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart, LogIn, UserPlus, Users, Star, Plus } from 'lucide-react';
+import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart, LogIn, UserPlus, Users, Star, Plus, Globe } from 'lucide-react';
 
 const TRENDING_SEARCHES = [
   "Lamento Boliviano - Enanitos Verdes",
@@ -84,6 +85,7 @@ function AppContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAddFromCommunityModal, setShowAddFromCommunityModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   const activeTab = location.pathname === '/' ? 'HOME' :
@@ -152,6 +154,11 @@ function AppContent() {
   };
 
   const handleCreateSong = async (data: { title: string; artist: string; lyrics?: string }) => {
+    const song = await storage.createSong(data);
+    navigate(`/song/${song.id}`);
+  };
+
+  const handleAddFromCommunity = async (data: { title: string; artist: string }) => {
     const song = await storage.createSong(data);
     navigate(`/song/${song.id}`);
   };
@@ -414,13 +421,22 @@ function AppContent() {
         </div>
       )}
       {user && (
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="fixed bottom-6 right-6 z-40 bg-brand hover:bg-brand/90 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
-          title="Crear nueva canción"
-        >
-          <Plus size={24} />
-        </button>
+        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+          <button
+            onClick={() => setShowAddFromCommunityModal(true)}
+            className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg"
+            title="Buscar en iTunes"
+          >
+            <Globe size={20} />
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-brand hover:bg-brand/90 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+            title="Crear canción"
+          >
+            <Plus size={24} />
+          </button>
+        </div>
       )}
       <Layout
         activeTab={activeTab}
@@ -443,6 +459,11 @@ function AppContent() {
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)} 
         onSubmit={handleCreateSong} 
+      />
+      <AddFromCommunityModal 
+        isOpen={showAddFromCommunityModal} 
+        onClose={() => setShowAddFromCommunityModal(false)} 
+        onSelect={handleAddFromCommunity}
       />
     </>
   );
