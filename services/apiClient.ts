@@ -19,7 +19,7 @@ class ApiClient {
     return this.token;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -104,6 +104,15 @@ class ApiClient {
     add: (songId: string) =>
       this.request(`/history/${songId}`, { method: 'POST' }),
     clear: () => this.request('/history', { method: 'DELETE' }),
+  };
+
+  ratings = {
+    get: (songId: string) => this.request<{ average: string | null; count: number }>(`/ratings/${songId}`),
+    save: (songId: string, score: number) =>
+      this.request<{ message: string }>(`/ratings/${songId}`, {
+        method: 'POST',
+        body: JSON.stringify({ score }),
+      }),
   };
 }
 

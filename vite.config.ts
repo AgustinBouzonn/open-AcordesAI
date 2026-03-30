@@ -14,32 +14,42 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 4173,
+    host: '0.0.0.0',
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt'],
+      includeAssets: ['robots.txt', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'maskable-icon-512x512.png'],
       manifest: {
         name: 'AcordesAI',
         short_name: 'AcordesAI',
         description: 'Plataforma de cifrados y acordes con IA',
         theme_color: '#4f46e5',
-        background_color: '#0f0f0f',
+        background_color: '#111827',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.svg',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png'
           },
           {
-            src: 'pwa-192x192.svg',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml'
-          }
-        ]
+            type: 'image/png'
+          },
+          {
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
@@ -56,7 +66,10 @@ export default defineConfig({
             }
           }
         ]
-      }
+      },
+      devOptions: {
+        enabled: true,
+      },
     })
   ],
   resolve: {

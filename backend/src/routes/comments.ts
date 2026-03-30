@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -21,7 +22,7 @@ export default function createCommentsRouter(): Router {
     }
   });
 
-  router.post('/:songId', async (req: Request, res: Response) => {
+  router.post('/:songId', requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
@@ -43,7 +44,7 @@ export default function createCommentsRouter(): Router {
     }
   });
 
-  router.delete('/:commentId', async (req: Request, res: Response) => {
+  router.delete('/:commentId', requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });

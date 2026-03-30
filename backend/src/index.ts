@@ -18,7 +18,7 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/import', importRouter);
-app.use('/api/songs', requireAuth, songsRouter());
+app.use('/api/songs', songsRouter());
 app.use('/api/favorites', requireAuth, favoritesRouter());
 app.use('/api/history', requireAuth, historyRouter());
 app.use('/api/comments', commentsRouter());

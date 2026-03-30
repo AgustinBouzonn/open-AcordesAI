@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
 import { generateChords } from '../services/aiService';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -66,7 +67,7 @@ export default function createSongsRouter(): Router {
     }
   });
 
-  router.post('/', async (req: Request, res: Response) => {
+  router.post('/', requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
@@ -129,7 +130,7 @@ export default function createSongsRouter(): Router {
     }
   });
 
-  router.put('/:id/chords', async (req: Request, res: Response) => {
+  router.put('/:id/chords', requireAuth, async (req: Request, res: Response) => {
     const { id } = req.params;
     const { chords } = req.body;
     const userId = (req as any).user?.id;

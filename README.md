@@ -187,6 +187,32 @@ VITE_GEMINI_API_KEY=tu_api_key_aqui
 3. ¡Practica como un profesional!
 ```
 
+## 📱 Acceso Desde El Celular
+
+Para abrirla desde tu teléfono en la misma red Wi-Fi:
+
+```bash
+# frontend en desarrollo
+npm run dev
+
+# o build de producción servido por nginx + backend + postgres
+docker compose up --build
+```
+
+Luego entra desde tu celular a:
+
+```text
+http://TU_IP_LOCAL:3000     # modo desarrollo
+http://TU_IP_LOCAL:8081     # docker compose / producción local
+```
+
+Importante:
+
+- No uses `localhost` desde el celular; usa la IP local de tu computadora.
+- El frontend ya está configurado con `VITE_API_URL=/api` para que funcione bien detrás del mismo host.
+- En Android y Chrome vas a ver el botón `Instalar app` cuando el navegador permita instalar la PWA.
+- En iPhone, abre la web en Safari y usa `Compartir > Agregar a pantalla de inicio`.
+
 ---
 
 ## 📁 Estructura del Proyecto

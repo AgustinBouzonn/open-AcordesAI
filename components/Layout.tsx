@@ -1,6 +1,7 @@
 import React from 'react';
 import { Home, Search, Heart, Music2, Clock, LogIn, UserPlus, LogOut, Users, User } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { InstallAppButton } from './InstallAppButton';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -45,6 +46,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
           </nav>
 
           <div className="flex items-center gap-2">
+            <InstallAppButton />
             {user ? (
               <div className="flex items-center gap-3">
                 <button 

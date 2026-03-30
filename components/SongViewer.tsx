@@ -68,7 +68,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
 
   const loadRating = async () => {
     try {
-      const data = await api.request(`/ratings/${song.id}`) as { average: string; count: number };
+      const data = await api.ratings.get(song.id);
       setAvgRating(data);
     } catch {}
   };
@@ -77,10 +77,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     if (!user) return;
     setUserRating(score);
     try {
-      await api.request(`/ratings/${song.id}`, {
-        method: 'POST',
-        body: JSON.stringify({ score }),
-      });
+      await api.ratings.save(song.id, score);
       loadRating();
     } catch {}
   };
