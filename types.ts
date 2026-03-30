@@ -1,36 +1,37 @@
-export type Instrument = 'guitar' | 'ukulele' | 'piano';
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  provider?: string;
+  providerApiKey?: string;
+}
 
 export interface Song {
-  id: string; // usually artist-title-slug
+  id: string;
   title: string;
   artist: string;
-  content: string; // Default content (usually guitar) or currently displayed
-  chords?: Partial<Record<Instrument, string>>; // Cache for specific instruments
-  key: string;
+  lyrics?: string;
+  chords?: string;
   source?: string;
+  sourceUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  favoritedAt?: string;
+  viewedAt?: string;
 }
 
 export interface Comment {
   id: string;
   songId: string;
-  user: string;
-  text: string;
-  timestamp: number;
+  userId: string;
+  username: string;
+  content: string;
+  createdAt: string;
 }
 
-export interface UserState {
-  favorites: string[]; // List of song IDs
-}
-
-export enum ViewState {
-  HOME = 'HOME',
-  SEARCH = 'SEARCH',
-  SONG_DETAIL = 'SONG_DETAIL',
-  FAVORITES = 'FAVORITES'
-}
-
-export interface SongSearchResult {
+export interface SearchResult {
   title: string;
   artist: string;
-  id: string;
+  source: string;
+  url?: string;
 }
