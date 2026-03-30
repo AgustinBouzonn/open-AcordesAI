@@ -5,7 +5,10 @@ import { query } from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme-use-env-var';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL ERROR: JWT_SECRET environment variable is not set.');
+}
 
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
   const { email, username, password } = req.body;
