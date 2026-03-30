@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Star } from 'lucide-react';
+import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star } from 'lucide-react';
 import { Song, Comment } from '../types';
 import { useAuth } from './AuthContext';
 import { ImportModal } from './ImportModal';
@@ -10,6 +10,13 @@ interface SongViewerProps {
   song: Song;
   onSongUpdated?: (song: Song) => void;
 }
+
+const TRANSPOSITIONS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const INSTRUMENTS = [
+  { id: 'guitar', name: 'Guitarra' },
+  { id: 'ukulele', name: 'Ukulele' },
+  { id: 'piano', name: 'Piano' },
+];
 
 export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) => {
   const { user } = useAuth();
@@ -27,19 +34,35 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [showImport, setShowImport] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [avgRating, setAvgRating] = useState<{ average: string; count: number } | null>(null);
+  const [transpose, setTranspose] = useState(0);
+  const [instrument, setInstrument] = useState('guitar');
   
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const transposeChords = (text: string, steps: number): string => {
+    if (steps === 0) return text;
+    const chords = text.match(/[A-G][#b]?/g) || [];
+    let result = text;
+    chords.forEach(chord => {
+      let idx = TRANSPOSITIONS.indexOf(chord.replace('b', '#').replace(/##/g, '#'));
+      if (idx === -1) return;
+      idx = (idx + steps + 12) % 12;
+      result = result.replace(chord, TRANSPOSITIONS[idx]);
+    });
+    return result;
+  };
+
   useEffect(() => {
-    setDisplayChords(song.chords || '');
+    const chords = song.chords || '';
+    setDisplayChords(transposeChords(chords, transpose));
     setEditedChords(song.chords || '');
     loadFavorites();
     loadComments();
     loadRating();
     setAutoScrollSpeed(0);
     setEditMode(false);
-  }, [song.id]);
+  }, [song.id, transpose]);
 
   const loadRating = async () => {
     try {
@@ -59,15 +82,6 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       loadRating();
     } catch {}
   };
-
-  useEffect(() => {
-    if (autoScrollSpeed > 0) {
-      scrollInterval.current = setInterval(() => window.scrollBy(0, 1), 50 / autoScrollSpeed);
-    } else {
-      if (scrollInterval.current) clearInterval(scrollInterval.current);
-    }
-    return () => { if (scrollInterval.current) clearInterval(scrollInterval.current); };
-  }, [autoScrollSpeed]);
 
   const loadFavorites = async () => {
     if (user) {
@@ -99,7 +113,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     setLoadingChords(true);
     try {
       const result = await storage.getChords(song.id);
-      setDisplayChords(result.chords);
+      setDisplayChords(transposeChords(result.chords, transpose));
       setEditedChords(result.chords);
       if (onSongUpdated) {
         onSongUpdated({ ...song, chords: result.chords });
@@ -115,7 +129,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     setSaving(true);
     try {
       await storage.saveChords(song.id, editedChords);
-      setDisplayChords(editedChords);
+      setDisplayChords(transposeChords(editedChords, transpose));
       setEditMode(false);
       if (onSongUpdated) {
         onSongUpdated({ ...song, chords: editedChords });
@@ -128,7 +142,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   };
 
   const handleCancelEdit = () => {
-    setEditedChords(displayChords);
+    setEditedChords(song.chords || '');
     setEditMode(false);
   };
 
@@ -159,12 +173,15 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     URL.revokeObjectURL(url);
   };
 
-  const handlePasteFromClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      setEditedChords(text);
-    } catch (err) {
-      console.error('Failed to read clipboard:', err);
+  const handleShare = async () => {
+    const text = `${song.title} - ${song.artist}\n\n${displayChords}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: song.title, text });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+      alert('Cifrado copiado al portapapeles');
     }
   };
 
@@ -197,6 +214,9 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         </div>
         
         <div className="flex items-center gap-3">
+          <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition">
+            <Share2 size={20} />
+          </button>
           <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
@@ -207,42 +227,62 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         </div>
       </div>
 
-      <div className="sticky top-20 md:top-24 z-30 bg-dark-800/95 backdrop-blur-md rounded-xl border border-dark-600 shadow-xl flex flex-col md:flex-row items-center justify-between p-2 gap-3">
-        <div className="flex items-center gap-2">
-          {editMode ? (
-            <>
-              <button onClick={handleSaveChords} disabled={saving} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition">
-                <Save size={16} /> {saving ? 'Guardando...' : 'Guardar'}
-              </button>
-              <button onClick={handleCancelEdit} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-gray-300 text-sm font-medium transition">
-                <X size={16} /> Cancelar
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => setEditMode(true)} disabled={!user} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${!user ? 'opacity-50 cursor-not-allowed bg-dark-700 text-gray-400' : 'bg-brand hover:bg-brand/90 text-white'}`}>
-                <Edit2 size={16} /> {user ? 'Editar' : 'Inicia sesión'}
-              </button>
-              <button onClick={() => setShowImport(true)} disabled={!user} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${!user ? 'opacity-50 cursor-not-allowed bg-dark-700 text-gray-400' : 'bg-dark-700 hover:bg-dark-600 text-gray-300'}`}>
-                <Download size={16} /> Importar
-              </button>
-              {displayChords && (
-                <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300">
-                  <Upload size={16} /> Exportar
+      <div className="sticky top-20 md:top-24 z-30 bg-dark-800/95 backdrop-blur-md rounded-xl border border-dark-600 shadow-xl p-3 gap-3 flex flex-col">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            {editMode ? (
+              <>
+                <button onClick={handleSaveChords} disabled={saving} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition">
+                  <Save size={16} /> {saving ? 'Guardando...' : 'Guardar'}
                 </button>
-              )}
-            </>
-          )}
+                <button onClick={handleCancelEdit} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-gray-300 text-sm font-medium transition">
+                  <X size={16} /> Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setEditMode(true)} disabled={!user} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${!user ? 'opacity-50 cursor-not-allowed bg-dark-700 text-gray-400' : 'bg-brand hover:bg-brand/90 text-white'}`}>
+                  <Edit2 size={16} /> {user ? 'Editar' : 'Inicia sesión'}
+                </button>
+                <button onClick={() => setShowImport(true)} disabled={!user} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${!user ? 'opacity-50 cursor-not-allowed bg-dark-700 text-gray-400' : 'bg-dark-700 hover:bg-dark-600 text-gray-300'}`}>
+                  <Download size={16} /> Importar
+                </button>
+                {displayChords && (
+                  <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300">
+                    <Upload size={16} /> Exportar
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <select 
+              value={instrument} 
+              onChange={(e) => setInstrument(e.target.value)}
+              className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white"
+            >
+              {INSTRUMENTS.map(i => (
+                <option key={i.id} value={i.id}>{i.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-2 text-gray-400 hover:text-white"><Minus size={16} /></button>
             <Type size={18} className="text-brand" />
             <button onClick={() => setFontSize(s => Math.min(24, s + 2))} className="p-2 text-gray-400 hover:text-white"><Plus size={16} /></button>
           </div>
-          
-          <div className="w-px h-6 bg-dark-600 hidden md:block"></div>
+
+          <div className="flex items-center gap-2">
+            <button onClick={() => setTranspose(t => t - 1)} className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600">-1</button>
+            <span className="text-sm text-gray-400 min-w-[60px] text-center">
+              {transpose === 0 ? 'Original' : transpose > 0 ? `+${transpose}` : transpose}
+            </span>
+            <button onClick={() => setTranspose(t => t + 1)} className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600">+1</button>
+          </div>
 
           <div className="flex items-center gap-1">
             {autoScrollSpeed > 0 && (
@@ -265,12 +305,12 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-300">Editar cifrado</h3>
             <div className="flex gap-2">
-              <button onClick={handlePasteFromClipboard} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
+              <button onClick={async () => { const t = await navigator.clipboard.readText(); setEditedChords(t); }} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
                 <Copy size={14} /> Pegar
               </button>
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".txt,.chords" className="hidden" />
               <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
-                <Upload size={14} /> Importar archivo
+                <Upload size={14} /> Importar
               </button>
             </div>
           </div>
