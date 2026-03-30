@@ -5,6 +5,30 @@ import { generateChords } from '../services/aiService';
 const router = Router();
 
 export default function createSongsRouter(): Router {
+  router.get('/popular', async (req: Request, res: Response) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const result = await query(
+        `SELECT s.*, u.username as author,
+         COALESCE((SELECT AVG(score) FROM ratings WHERE song_id = s.id), 0) as rating,
+         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
+         (SELECT COUNT(*) FROM favorites WHERE song_id = s.id) as fav_count,
+         (SELECT COUNT(*) FROM history WHERE song_id = s.id) as view_count,
+         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
+         FROM songs s
+         LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN chord_cache cc ON s.id = cc.song_id
+         WHERE cc.id IS NOT NULL
+         ORDER BY rating_count DESC, fav_count DESC, view_count DESC
+         LIMIT $1`,
+        [limit]
+      );
+      res.json(result.rows);
+    } catch (e) {
+      res.status(500).json({ message: 'Error fetching popular songs' });
+    }
+  });
+
   router.get('/', async (req: Request, res: Response) => {
     try {
       const limit = parseInt(req.query.limit as string) || 50;

@@ -3,6 +3,7 @@ import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loade
 import { Song, Comment } from '../types';
 import { useAuth } from './AuthContext';
 import { ImportModal } from './ImportModal';
+import { ShareModal } from './ShareModal';
 import { api } from '../services/apiClient';
 import * as storage from '../services/storageService';
 
@@ -35,6 +36,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [userRating, setUserRating] = useState(0);
   const [avgRating, setAvgRating] = useState<{ average: string; count: number } | null>(null);
   const [transpose, setTranspose] = useState(0);
+  const [showShare, setShowShare] = useState(false);
   const [instrument, setInstrument] = useState('guitar');
   
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -174,15 +176,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   };
 
   const handleShare = async () => {
-    const text = `${song.title} - ${song.artist}\n\n${displayChords}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: song.title, text });
-      } catch {}
-    } else {
-      await navigator.clipboard.writeText(text);
-      alert('Cifrado copiado al portapapeles');
-    }
+    setShowShare(true);
   };
 
   return (
@@ -395,6 +389,11 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         isOpen={showImport}
         onClose={() => setShowImport(false)}
         onImport={handleImport}
+      />
+      <ShareModal
+        isOpen={showShare}
+        onClose={() => setShowShare(false)}
+        songId={song.id}
       />
     </div>
   );

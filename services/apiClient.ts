@@ -80,6 +80,7 @@ class ApiClient {
         body: JSON.stringify({ chords }),
       }),
     list: (limit?: number, offset?: number) => this.request(`/songs?limit=${limit || 50}&offset=${offset || 0}`),
+    getPopular: (limit?: number) => this.request(`/songs/popular?limit=${limit || 20}`),
     getComments: (id: string) => this.request(`/comments/${id}`),
     addComment: (id: string, content: string) =>
       this.request(`/comments/${id}`, {

@@ -86,6 +86,10 @@ export const getCommunitySongs = async (limit?: number, offset?: number): Promis
   return await api.songs.list(limit, offset);
 };
 
+export const getPopularSongs = async (limit?: number): Promise<Song[]> => {
+  return await api.songs.getPopular(limit);
+};
+
 export const searchLocalSongs = async (query: string): Promise<Song[]> => {
   try {
     const songs = await api.songs.list(100, 0);

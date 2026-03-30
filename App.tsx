@@ -80,7 +80,9 @@ function AppContent() {
   const [favorites, setFavorites] = useState<Song[]>([]);
   const [history, setHistory] = useState<Song[]>([]);
   const [communitySongs, setCommunitySongs] = useState<Song[]>([]);
+  const [popularSongs, setPopularSongs] = useState<Song[]>([]);
   const [loadingCommunity, setLoadingCommunity] = useState(false);
+  const [loadingPopular, setLoadingPopular] = useState(false);
   const [communityPage, setCommunityPage] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -104,6 +106,16 @@ function AppContent() {
       setHistory([]);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (activeTab === 'HOME') {
+      setLoadingPopular(true);
+      storage.getPopularSongs(10)
+        .then(setPopularSongs)
+        .catch(() => setPopularSongs([]))
+        .finally(() => setLoadingPopular(false));
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === 'COMMUNITY') {
@@ -206,6 +218,39 @@ function AppContent() {
           ))}
         </div>
       </div>
+
+      {popularSongs.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
+            <Star size={16} />
+            <span>Más Populares</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {popularSongs.slice(0, 6).map((song) => (
+              <div key={song.id} onClick={() => navigate(`/song/${song.id}`)} className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300">
+                <div className="flex items-center gap-4">
+                  <Artwork size={52} url={(song as any).artworkUrl} />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
+                    <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      {(song as any).rating && (
+                        <div className="flex items-center gap-1 text-yellow-500">
+                          <Star size={12} fill="currentColor" />
+                          <span className="text-xs">{(song as any).rating}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {(song as any).has_chords > 0 && (
+                    <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 
