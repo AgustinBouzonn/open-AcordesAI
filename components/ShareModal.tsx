@@ -13,7 +13,13 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
 
   if (!isOpen) return null;
 
-  const shareUrl = `${window.location.origin}/song/${songId}`;
+  const publicBaseUrl = import.meta.env.VITE_PUBLIC_APP_URL?.replace(/\/$/, '');
+  const shareBaseUrl = publicBaseUrl || window.location.origin;
+  const shareUrl = `${shareBaseUrl}/song/${songId}`;
+
+  const openExternal = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   const copyLink = async () => {
     try {
@@ -36,15 +42,15 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
   };
 
   const shareWhatsApp = () => {
-    window.open(`https://wa.me/?text=Mirá estos acordes: ${encodeURIComponent(shareUrl)}`, '_blank');
+    openExternal(`https://wa.me/?text=Mirá estos acordes: ${encodeURIComponent(shareUrl)}`);
   };
 
   const shareTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?text=Mirá estos acordes&url=${encodeURIComponent(shareUrl)}`, '_blank');
+    openExternal(`https://twitter.com/intent/tweet?text=Mirá estos acordes&url=${encodeURIComponent(shareUrl)}`);
   };
 
   const shareFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+    openExternal(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
   };
 
   return (

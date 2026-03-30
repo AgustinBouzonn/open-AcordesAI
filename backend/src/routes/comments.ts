@@ -35,10 +35,15 @@ export default function createCommentsRouter(): Router {
       }
 
       const result = await query(
-        'INSERT INTO comments (user_id, song_id, content) VALUES ($1, $2, $3) RETURNING *',
+        `INSERT INTO comments (user_id, song_id, content)
+         VALUES ($1, $2, $3)
+         RETURNING id, user_id, song_id, content, created_at`,
         [userId, songId, content.trim()]
       );
-      res.status(201).json(result.rows[0]);
+      res.status(201).json({
+        ...result.rows[0],
+        username: (req as Request & { user?: { username?: string } }).user?.username || 'Usuario',
+      });
     } catch (error) {
       res.status(500).json({ error: 'Failed to create comment' });
     }

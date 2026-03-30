@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { X, Search, Loader2, Music } from 'lucide-react';
+import { api } from '../services/apiClient';
+import { SearchResult } from '../types';
 
 interface Props {
   isOpen: boolean;
@@ -9,7 +11,7 @@ interface Props {
 
 export function AddFromCommunityModal({ isOpen, onClose, onSelect }: Props) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -21,8 +23,7 @@ export function AddFromCommunityModal({ isOpen, onClose, onSelect }: Props) {
     }
     setLoading(true);
     try {
-      const res = await fetch('/api/search?q=' + encodeURIComponent(q));
-      const data = await res.json();
+      const data = await api.request<{ results?: SearchResult[] }>(`/search?q=${encodeURIComponent(q)}`);
       setResults(data.results?.slice(0, 10) || []);
     } catch {
       setResults([]);
@@ -31,7 +32,7 @@ export function AddFromCommunityModal({ isOpen, onClose, onSelect }: Props) {
     }
   };
 
-  const handleSelect = (song: any) => {
+  const handleSelect = (song: SearchResult) => {
     onSelect({ title: song.title, artist: song.artist });
     onClose();
   };

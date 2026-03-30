@@ -213,6 +213,27 @@ Importante:
 - En Android y Chrome vas a ver el botón `Instalar app` cuando el navegador permita instalar la PWA.
 - En iPhone, abre la web en Safari y usa `Compartir > Agregar a pantalla de inicio`.
 
+## 🤖 Android Con Capacitor
+
+Para generar la app Android nativa:
+
+```bash
+# si tu backend vive en un dominio o IP pública/local accesible desde el teléfono
+echo "VITE_NATIVE_API_URL=https://tu-dominio.com/api" >> .env
+
+# compilar web y sincronizar Android
+npm run android:sync
+
+# abrir Android Studio
+npm run android:open
+```
+
+Notas:
+
+- `VITE_API_URL=/api` es ideal para web/PWA detrás de nginx.
+- `VITE_NATIVE_API_URL` se usa solo dentro de Capacitor, donde `/api` no existe por sí solo.
+- Si querés compartir links correctos desde la app nativa, configurá también `VITE_PUBLIC_APP_URL=https://tu-dominio.com`.
+
 ---
 
 ## 📁 Estructura del Proyecto

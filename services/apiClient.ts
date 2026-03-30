@@ -1,4 +1,10 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import { Capacitor } from '@capacitor/core';
+
+const isNativePlatform = Capacitor.isNativePlatform();
+const API_BASE =
+  (isNativePlatform ? import.meta.env.VITE_NATIVE_API_URL : undefined) ||
+  import.meta.env.VITE_API_URL ||
+  '/api';
 
 class ApiClient {
   private token: string | null = null;
