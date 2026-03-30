@@ -1,6 +1,15 @@
-const AI_API_KEY = process.env.AI_API_KEY || '';
-const AI_PROVIDER = process.env.AI_PROVIDER || 'gemini';
-const AI_MODEL = process.env.AI_MODEL || 'gemini-2.0-flash';
+const AI_PROVIDER =
+  process.env.AI_PROVIDER ||
+  (process.env.GEMINI_API_KEY ? 'gemini' : process.env.OPENAI_API_KEY ? 'openai' : 'gemini');
+const AI_API_KEY =
+  process.env.AI_API_KEY ||
+  (AI_PROVIDER === 'gemini' ? process.env.GEMINI_API_KEY : process.env.OPENAI_API_KEY) ||
+  process.env.GEMINI_API_KEY ||
+  process.env.OPENAI_API_KEY ||
+  '';
+const AI_MODEL =
+  process.env.AI_MODEL ||
+  (AI_PROVIDER === 'gemini' ? 'gemini-2.0-flash' : 'gpt-4o-mini');
 const AI_BASE_URL = process.env.AI_BASE_URL || 'https://api.openai.com/v1';
 
 export interface ChordResult {
