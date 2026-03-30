@@ -9,7 +9,7 @@ import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './components/AuthContext';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
-import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart, LogIn, UserPlus, Users, Star, Plus, Globe } from 'lucide-react';
+import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart, LogIn, UserPlus, Users, Star, Plus, Globe, Smartphone, Download, ShieldCheck } from 'lucide-react';
 
 const TRENDING_SEARCHES = [
   "Lamento Boliviano - Enanitos Verdes",
@@ -97,6 +97,7 @@ function AppContent() {
     location.pathname === '/favorites' ? 'FAVORITES' :
     location.pathname === '/history' ? 'HISTORY' :
     location.pathname === '/community' ? 'COMMUNITY' :
+    location.pathname === '/download' ? 'DOWNLOAD' :
     location.pathname.startsWith('/song/') ? 'SONG_DETAIL' : 'HOME';
 
   useEffect(() => {
@@ -209,6 +210,16 @@ function AppContent() {
           <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
           <button type="submit" className="hidden">Buscar</button>
         </form>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => navigate('/download')}
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand/90"
+          >
+            <Download size={18} />
+            Descargar APK
+          </button>
+          <span className="text-xs text-gray-500">Android instalable directo desde tu servidor</span>
+        </div>
       </div>
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
@@ -328,6 +339,69 @@ function AppContent() {
       )}
     </div>
   );
+
+  const renderDownload = () => {
+    const apkUrl = '/downloads/acordesai.apk';
+
+    return (
+      <div className="mx-auto max-w-3xl space-y-8 py-8">
+        <div className="overflow-hidden rounded-3xl border border-brand/20 bg-gradient-to-br from-brand/20 via-dark-800 to-dark-900 shadow-2xl">
+          <div className="space-y-6 px-6 py-10 md:px-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand">
+              <Smartphone size={14} />
+              Android
+            </div>
+            <div className="space-y-3">
+              <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">
+                Descarga AcordesAI en tu celu
+              </h1>
+              <p className="max-w-2xl text-sm text-gray-300 md:text-base">
+                Instala el APK firmado directamente desde este servidor. Si ya usas la web, esta es la forma más rápida de tener la app en pantalla de inicio con acceso nativo.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <a
+                href={apkUrl}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-4 text-base font-bold text-white transition hover:bg-brand/90"
+              >
+                <Download size={20} />
+                Descargar APK
+              </a>
+              <button
+                onClick={() => navigate('/')}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-dark-600 bg-dark-800 px-5 py-4 text-base font-semibold text-gray-200 transition hover:border-brand/40 hover:text-white"
+              >
+                Volver a la app
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-dark-700 bg-dark-800 p-5">
+            <Download size={20} className="mb-3 text-brand" />
+            <h2 className="mb-2 text-sm font-bold text-white">1. Descarga</h2>
+            <p className="text-sm text-gray-400">Abre esta página desde Android y descarga `acordesai.apk`.</p>
+          </div>
+          <div className="rounded-2xl border border-dark-700 bg-dark-800 p-5">
+            <ShieldCheck size={20} className="mb-3 text-brand" />
+            <h2 className="mb-2 text-sm font-bold text-white">2. Permite instalar</h2>
+            <p className="text-sm text-gray-400">Si Android lo pide, habilita temporalmente “Instalar apps desconocidas” para tu navegador.</p>
+          </div>
+          <div className="rounded-2xl border border-dark-700 bg-dark-800 p-5">
+            <Smartphone size={20} className="mb-3 text-brand" />
+            <h2 className="mb-2 text-sm font-bold text-white">3. Instala</h2>
+            <p className="text-sm text-gray-400">Abre el archivo descargado y toca “Instalar”. Luego podrás abrir AcordesAI como cualquier otra app.</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-dark-700 bg-dark-800 p-5 text-sm text-gray-400">
+          <p className="mb-2 font-semibold text-white">Ruta del APK</p>
+          <code className="break-all text-brand">{apkUrl}</code>
+        </div>
+      </div>
+    );
+  };
 
   const renderFavorites = () => (
     <div className="space-y-6">
@@ -506,6 +580,7 @@ function AppContent() {
           <Route path="/favorites" element={renderFavorites()} />
           <Route path="/history" element={renderHistory()} />
           <Route path="/community" element={renderCommunity()} />
+          <Route path="/download" element={renderDownload()} />
           <Route path="/song/:id" element={<SongDetailRoute />} />
         </Routes>
       </Layout>
