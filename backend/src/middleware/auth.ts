@@ -24,3 +24,11 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
     res.status(401).json({ message: 'Token inválido o expirado' });
   }
 };
+
+export const getRequiredUser = (req: AuthRequest): { id: number; username: string } => {
+  if (!req.user) {
+    throw new Error('Authenticated user missing on request');
+  }
+
+  return req.user;
+};

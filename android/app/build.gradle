@@ -1,5 +1,11 @@
 apply plugin: 'com.android.application'
 
+def releaseStoreFile = System.getenv('ACORDESAI_UPLOAD_STORE_FILE') ?: project.findProperty('ACORDESAI_UPLOAD_STORE_FILE')
+def releaseStorePassword = System.getenv('ACORDESAI_UPLOAD_STORE_PASSWORD') ?: project.findProperty('ACORDESAI_UPLOAD_STORE_PASSWORD')
+def releaseKeyAlias = System.getenv('ACORDESAI_UPLOAD_KEY_ALIAS') ?: project.findProperty('ACORDESAI_UPLOAD_KEY_ALIAS')
+def releaseKeyPassword = System.getenv('ACORDESAI_UPLOAD_KEY_PASSWORD') ?: project.findProperty('ACORDESAI_UPLOAD_KEY_PASSWORD')
+def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     namespace = "com.acordesai.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,9 +22,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled false
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

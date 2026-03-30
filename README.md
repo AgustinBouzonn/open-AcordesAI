@@ -233,6 +233,7 @@ Notas:
 - `VITE_API_URL=/api` es ideal para web/PWA detrás de nginx.
 - `VITE_NATIVE_API_URL` se usa solo dentro de Capacitor, donde `/api` no existe por sí solo.
 - Si querés compartir links correctos desde la app nativa, configurá también `VITE_PUBLIC_APP_URL=https://tu-dominio.com`.
+- Guía de release Android: [docs/android-release.md](docs/android-release.md)
 
 ---
 

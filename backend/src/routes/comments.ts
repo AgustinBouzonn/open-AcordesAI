@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
-import { requireAuth } from '../middleware/auth';
+import { AuthRequest, getRequiredUser, requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -22,10 +22,9 @@ export default function createCommentsRouter(): Router {
     }
   });
 
-  router.post('/:songId', requireAuth, async (req: Request, res: Response) => {
+  router.post('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const user = getRequiredUser(req);
       
       const { songId } = req.params;
       const { content } = req.body;
@@ -38,21 +37,20 @@ export default function createCommentsRouter(): Router {
         `INSERT INTO comments (user_id, song_id, content)
          VALUES ($1, $2, $3)
          RETURNING id, user_id, song_id, content, created_at`,
-        [userId, songId, content.trim()]
+        [user.id, songId, content.trim()]
       );
       res.status(201).json({
         ...result.rows[0],
-        username: (req as Request & { user?: { username?: string } }).user?.username || 'Usuario',
+        username: user.username || 'Usuario',
       });
     } catch (error) {
       res.status(500).json({ error: 'Failed to create comment' });
     }
   });
 
-  router.delete('/:commentId', requireAuth, async (req: Request, res: Response) => {
+  router.delete('/:commentId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const userId = getRequiredUser(req).id;
       
       const { commentId } = req.params;
       

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
 import { generateChords } from '../services/aiService';
-import { requireAuth } from '../middleware/auth';
+import { AuthRequest, getRequiredUser, requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -67,10 +67,9 @@ export default function createSongsRouter(): Router {
     }
   });
 
-  router.post('/', requireAuth, async (req: Request, res: Response) => {
+  router.post('/', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const userId = getRequiredUser(req).id;
       
       const { title, artist, lyrics } = req.body;
       
@@ -131,11 +130,11 @@ export default function createSongsRouter(): Router {
     }
   });
 
-  router.put('/:id/chords', requireAuth, async (req: Request, res: Response) => {
+  router.put('/:id/chords', requireAuth, async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { chords } = req.body;
     const instrument = typeof req.body?.instrument === 'string' ? req.body.instrument : 'guitar';
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       res.status(401).json({ message: 'Debes iniciar sesión para guardar cifrados' });

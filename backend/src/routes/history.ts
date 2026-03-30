@@ -1,13 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
+import { AuthRequest, getRequiredUser } from '../middleware/auth';
 
 const router = Router();
 
 export default function createHistoryRouter(): Router {
-  router.get('/', async (req: Request, res: Response) => {
+  router.get('/', async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const userId = getRequiredUser(req).id;
       
       const limit = parseInt(req.query.limit as string) || 50;
       const result = await query(
@@ -25,10 +25,9 @@ export default function createHistoryRouter(): Router {
     }
   });
 
-  router.post('/:songId', async (req: Request, res: Response) => {
+  router.post('/:songId', async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const userId = getRequiredUser(req).id;
       
       const { songId } = req.params;
       await query(
@@ -42,10 +41,9 @@ export default function createHistoryRouter(): Router {
     }
   });
 
-  router.delete('/', async (req: Request, res: Response) => {
+  router.delete('/', async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const userId = getRequiredUser(req).id;
       
       await query('DELETE FROM history WHERE user_id = $1', [userId]);
       res.json({ message: 'History cleared' });

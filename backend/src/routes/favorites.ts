@@ -1,13 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
+import { AuthRequest, getRequiredUser } from '../middleware/auth';
 
 const router = Router();
 
 export default function createFavoritesRouter(): Router {
-  router.get('/', async (req: Request, res: Response) => {
+  router.get('/', async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const userId = getRequiredUser(req).id;
       
       const result = await query(
         `SELECT s.*, f.created_at as favorited_at 
@@ -23,10 +23,9 @@ export default function createFavoritesRouter(): Router {
     }
   });
 
-  router.post('/:songId', async (req: Request, res: Response) => {
+  router.post('/:songId', async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const userId = getRequiredUser(req).id;
       
       const { songId } = req.params;
       await query(
@@ -39,10 +38,9 @@ export default function createFavoritesRouter(): Router {
     }
   });
 
-  router.delete('/:songId', async (req: Request, res: Response) => {
+  router.delete('/:songId', async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const userId = getRequiredUser(req).id;
       
       const { songId } = req.params;
       await query('DELETE FROM favorites WHERE user_id = $1 AND song_id = $2', [userId, songId]);

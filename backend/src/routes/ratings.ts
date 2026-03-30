@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
-import { requireAuth } from '../middleware/auth';
+import { AuthRequest, getRequiredUser, requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -21,13 +21,8 @@ export default function createRatingsRouter(): Router {
     }
   });
 
-  router.post('/:songId', requireAuth, async (req: Request, res: Response) => {
-    const userId = (req as any).user?.id;
-    if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
+  router.post('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
+    const userId = getRequiredUser(req).id;
     const { songId } = req.params;
     const { score } = req.body;
 
