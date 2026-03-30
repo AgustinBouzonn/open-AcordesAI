@@ -5,6 +5,7 @@ import { SongViewer } from './components/SongViewer';
 import { AuthModal } from './components/AuthModal';
 import { CreateSongModal } from './components/CreateSongModal';
 import { AddFromCommunityModal } from './components/AddFromCommunityModal';
+import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './components/AuthContext';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
@@ -88,6 +89,7 @@ function AppContent() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAddFromCommunityModal, setShowAddFromCommunityModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   const activeTab = location.pathname === '/' ? 'HOME' :
@@ -489,6 +491,7 @@ function AppContent() {
         user={user}
         onLoginClick={() => openAuth('login')}
         onRegisterClick={() => openAuth('register')}
+        onProfileClick={() => setShowProfileModal(true)}
       >
         <Routes>
           <Route path="/" element={renderHome()} />
@@ -509,6 +512,10 @@ function AppContent() {
         isOpen={showAddFromCommunityModal} 
         onClose={() => setShowAddFromCommunityModal(false)} 
         onSelect={handleAddFromCommunity}
+      />
+      <ProfileModal 
+        isOpen={showProfileModal} 
+        onClose={() => setShowProfileModal(false)} 
       />
     </>
   );

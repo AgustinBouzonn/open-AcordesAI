@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, Heart, Music2, Clock, LogIn, UserPlus, LogOut, Users } from 'lucide-react';
+import { Home, Search, Heart, Music2, Clock, LogIn, UserPlus, LogOut, Users, User } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 interface LayoutProps {
@@ -9,9 +9,10 @@ interface LayoutProps {
   user?: { username: string; email: string } | null;
   onLoginClick?: () => void;
   onRegisterClick?: () => void;
+  onProfileClick?: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate, user, onLoginClick, onRegisterClick }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate, user, onLoginClick, onRegisterClick, onProfileClick }) => {
   const { logout } = useAuth();
 
   return (
@@ -46,9 +47,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
           <div className="flex items-center gap-2">
             {user ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-400 hidden sm:block">{user.username}</span>
-                <button onClick={logout} className="p-2 rounded-lg hover:bg-dark-700 text-gray-400 hover:text-white transition" title="Cerrar sesión">
-                  <LogOut size={18} />
+                <button 
+                  onClick={onProfileClick}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-dark-700 hover:bg-dark-600 rounded-lg transition"
+                >
+                  <div className="w-7 h-7 bg-brand rounded-full flex items-center justify-center">
+                    <User size={14} className="text-white" />
+                  </div>
+                  <span className="text-sm text-gray-300 hidden sm:block">{user.username}</span>
                 </button>
               </div>
             ) : (
