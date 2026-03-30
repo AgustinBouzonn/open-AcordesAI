@@ -9,7 +9,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/migrations:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U acordesai"]
       interval: 5s
@@ -27,7 +27,7 @@ services:
       retries: 3
       start_period: 10s
     environment:
-      DATABASE_URL: postgres://acordesai:${DB_PASSWORD:-changeme}@postgres:5432/acordesai
+      DATABASE_URL: postgres://acordesai:${DB_PASSWORD:-changeme}@postgres:5433/acordesai
       JWT_SECRET: ${JWT_SECRET:-changeme}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
