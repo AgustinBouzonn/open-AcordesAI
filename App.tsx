@@ -143,7 +143,14 @@ function AppContent() {
         ...localResults.map((result) => ({ ...result, source: 'comunidad', id: `local-${result.id}` })),
         ...itunesResults.map((result) => ({ ...result, source: 'itunes', id: result.id }))
       ];
-      setSearchResults(allResults.map(r => ({ title: r.title, artist: r.artist, source: r.source, url: r.sourceUrl, id: r.id })));
+      setSearchResults(allResults.map((result) => ({
+        title: result.title,
+        artist: result.artist,
+        source: result.source,
+        url: result.sourceUrl,
+        id: result.id,
+        artworkUrl: result.artworkUrl,
+      })));
     } catch {
       setErrorMessage('Error en la búsqueda');
     } finally {
@@ -288,7 +295,7 @@ function AppContent() {
                 setErrorMessage('Error al crear canción');
               }
             }} className="bg-dark-800 hover:bg-dark-700 p-3 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex items-center gap-3">
-              <Artwork size={52} />
+              <Artwork size={52} url={result.artworkUrl} />
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-white truncate">{result.title}</h3>
                 <p className="text-sm text-brand truncate">{result.artist}</p>

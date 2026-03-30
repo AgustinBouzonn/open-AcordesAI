@@ -1,4 +1,7 @@
 import { Router, Request, Response } from 'express';
+import dns from 'node:dns/promises';
+import net from 'node:net';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -57,11 +60,61 @@ const SOURCES = [
   }
 ];
 
+const isPrivateHostname = (hostname: string): boolean =>
+  hostname === 'localhost' ||
+  hostname.endsWith('.local') ||
+  hostname === '0.0.0.0';
+
+const isPrivateIp = (ip: string): boolean => {
+  if (net.isIP(ip) === 4) {
+    return (
+      ip.startsWith('10.') ||
+      ip.startsWith('127.') ||
+      ip.startsWith('192.168.') ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)
+    );
+  }
+
+  if (net.isIP(ip) === 6) {
+    return ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80:');
+  }
+
+  return false;
+};
+
+const validateImportUrl = async (rawUrl: string): Promise<URL> => {
+  let parsed: URL;
+
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error('La URL no es válida');
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error('Solo se permiten URLs http o https');
+  }
+
+  if (isPrivateHostname(parsed.hostname)) {
+    throw new Error('No se permiten URLs locales o privadas');
+  }
+
+  const addresses = await dns.lookup(parsed.hostname, { all: true });
+  if (addresses.some((entry) => isPrivateIp(entry.address))) {
+    throw new Error('No se permiten destinos de red privada');
+  }
+
+  return parsed;
+};
+
+const detectSourceFromUrl = (url: URL): string | undefined =>
+  SOURCES.find((source) => url.hostname.includes(new URL(source.baseUrl).hostname.replace(/^www\./, '')))?.id;
+
 router.get('/sources', (_, res) => {
   res.json(SOURCES.map(s => ({ id: s.id, name: s.name, baseUrl: s.baseUrl })));
 });
 
-router.post('/fetch', async (req: Request, res: Response) => {
+router.post('/fetch', requireAuth, async (req: Request, res: Response) => {
   const { url, source } = req.body;
   
   if (!url) {
@@ -70,17 +123,15 @@ router.post('/fetch', async (req: Request, res: Response) => {
   }
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    const validatedUrl = await validateImportUrl(url);
+    const sourceId = typeof source === 'string' && source ? source : detectSourceFromUrl(validatedUrl);
 
-    const response = await fetch(url, {
-      signal: controller.signal,
+    const response = await fetch(validatedUrl, {
+      signal: AbortSignal.timeout(10000),
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
-
-    clearTimeout(timeout);
 
     if (!response.ok) {
       res.status(502).json({ message: 'Error al obtener la página' });
@@ -90,7 +141,7 @@ router.post('/fetch', async (req: Request, res: Response) => {
     const html = await response.text();
     
     let chords = '';
-    const sourceConfig = SOURCES.find(s => s.id === source);
+    const sourceConfig = SOURCES.find(s => s.id === sourceId);
     
     if (sourceConfig) {
       const parsed = sourceConfig.parse(html);
@@ -109,7 +160,9 @@ router.post('/fetch', async (req: Request, res: Response) => {
     res.json({ chords: chords.substring(0, 50000) });
   } catch (e) {
     console.error('[import/fetch]', e);
-    res.status(500).json({ message: 'Error al importar cifrado' });
+    const message = e instanceof Error ? e.message : 'Error al importar cifrado';
+    const status = message.includes('URL') || message.includes('privad') || message.includes('http o https') ? 400 : 500;
+    res.status(status).json({ message });
   }
 });
 
@@ -131,6 +184,7 @@ router.get('/search/:source', async (req: Request, res: Response) => {
   try {
     const searchUrl = sourceConfig.searchUrl + encodeURIComponent(query);
     const response = await fetch(searchUrl, {
+      signal: AbortSignal.timeout(10000),
       headers: {
         'User-Agent': 'Mozilla/5.0'
       }

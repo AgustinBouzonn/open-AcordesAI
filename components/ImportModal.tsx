@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Loader2, ExternalLink, Copy, Check } from 'lucide-react';
+import { X, Loader2, ExternalLink, Copy } from 'lucide-react';
+import { api } from '../services/apiClient';
 
 interface Props {
   isOpen: boolean;
@@ -11,8 +12,6 @@ export function ImportModal({ isOpen, onClose, onImport }: Props) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
-
   if (!isOpen) return null;
 
   const handleImport = async () => {
@@ -21,17 +20,10 @@ export function ImportModal({ isOpen, onClose, onImport }: Props) {
     setError('');
 
     try {
-      const response = await fetch('/api/import/fetch', {
+      const data = await api.request<{ chords?: string }>('/import/fetch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
-
-      if (!response.ok) {
-        throw new Error('Error al importar');
-      }
-
-      const data = await response.json();
       if (data.chords) {
         onImport(data.chords);
         onClose();
@@ -39,8 +31,8 @@ export function ImportModal({ isOpen, onClose, onImport }: Props) {
       } else {
         setError('No se pudo extraer el cifrado');
       }
-    } catch (e) {
-      setError('Error al importar. Verificá la URL.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error al importar. Verificá la URL.');
     } finally {
       setLoading(false);
     }

@@ -42,4 +42,5 @@ export interface SearchResult {
   artist: string;
   source: string;
   url?: string;
+  artworkUrl?: string;
 }
