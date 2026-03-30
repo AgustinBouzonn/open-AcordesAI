@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, Loader2 } from 'lucide-react';
+import { X, Copy, Check } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -16,9 +16,11 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
   const shareUrl = `${window.location.origin}/song/${songId}`;
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
   };
 
   const shareNative = async () => {
@@ -79,7 +81,7 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
               <span style={{ fontSize: '24px' }}>🐦</span>
               <span className="text-xs">Twitter</span>
             </button>
-            <button onClick={shareFacebook} className="flex flex-col items-center gap-1 p-3 bg-[#4267B2] hover:#3B5998 rounded-lg transition">
+            <button onClick={shareFacebook} className="flex flex-col items-center gap-1 p-3 bg-[#4267B2] hover:bg-[#3B5998] rounded-lg transition">
               <span style={{ fontSize: '24px' }}>📘</span>
               <span className="text-xs">Facebook</span>
             </button>

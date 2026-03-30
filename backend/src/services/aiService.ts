@@ -19,6 +19,27 @@ export interface ChordResult {
   content: string;
 }
 
+const extractJson = (raw: string): string => {
+  const trimmed = raw.trim();
+
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    return trimmed;
+  }
+
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fenced?.[1]) {
+    return fenced[1].trim();
+  }
+
+  const first = trimmed.indexOf('{');
+  const last = trimmed.lastIndexOf('}');
+  if (first !== -1 && last !== -1 && last > first) {
+    return trimmed.slice(first, last + 1);
+  }
+
+  return trimmed;
+};
+
 const buildPrompt = (title: string, artist: string, instrument: string): string => {
   const instrumentInstructions: Record<string, string> = {
     guitar: 'Standard Guitar chords (e.g. G, Am, C, D).',
@@ -39,6 +60,7 @@ async function callGemini(prompt: string): Promise<string> {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(20000),
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { responseMimeType: 'application/json', temperature: 0.3 },
@@ -59,6 +81,7 @@ async function callOpenAI(prompt: string): Promise<string> {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${AI_API_KEY}`,
     },
+    signal: AbortSignal.timeout(20000),
     body: JSON.stringify({
       model: AI_MODEL,
       messages: [
@@ -88,10 +111,11 @@ export async function generateChords(
 
   const prompt = buildPrompt(title, artist, instrument);
   const rawJson = AI_PROVIDER === 'gemini' ? await callGemini(prompt) : await callOpenAI(prompt);
+  const parsedJson = extractJson(rawJson);
 
   let data: Partial<ChordResult>;
   try {
-    data = JSON.parse(rawJson);
+    data = JSON.parse(parsedJson);
   } catch {
     throw new Error('La IA devolvió una respuesta inválida. Intentá de nuevo.');
   }

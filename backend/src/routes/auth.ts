@@ -73,7 +73,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<
       res.status(404).json({ message: 'Usuario no encontrado' });
       return;
     }
-    res.json(result.rows[0]);
+    res.json({ user: result.rows[0] });
   } catch (e) {
     console.error('[auth/me]', e);
     res.status(500).json({ message: 'Error' });

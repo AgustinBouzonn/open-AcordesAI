@@ -14,6 +14,13 @@ export interface Song {
   chords?: string;
   source?: string;
   sourceUrl?: string;
+  artworkUrl?: string;
+  author?: string;
+  rating?: string | number | null;
+  rating_count?: string | number;
+  has_chords?: string | number;
+  user_id?: string | number;
+  view_count?: string | number;
   createdAt?: string;
   updatedAt?: string;
   favoritedAt?: string;
@@ -30,6 +37,7 @@ export interface Comment {
 }
 
 export interface SearchResult {
+  id: string;
   title: string;
   artist: string;
   source: string;

@@ -55,11 +55,6 @@ class ApiClient {
         body: JSON.stringify({ email, password }),
       }),
     me: () => this.request('/auth/me'),
-    updateProvider: (provider: string, apiKey: string) =>
-      this.request('/auth/provider', {
-        method: 'POST',
-        body: JSON.stringify({ provider, apiKey }),
-      }),
   };
 
   search = {
@@ -73,11 +68,15 @@ class ApiClient {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    getChords: (id: string) => this.request(`/songs/${id}/chords`, { method: 'POST' }),
-    saveChords: (id: string, chords: string) =>
+    getChords: (id: string, instrument: string) =>
+      this.request(`/songs/${id}/chords`, {
+        method: 'POST',
+        body: JSON.stringify({ instrument }),
+      }),
+    saveChords: (id: string, chords: string, instrument: string) =>
       this.request(`/songs/${id}/chords`, {
         method: 'PUT',
-        body: JSON.stringify({ chords }),
+        body: JSON.stringify({ chords, instrument }),
       }),
     list: (limit?: number, offset?: number) => this.request(`/songs?limit=${limit || 50}&offset=${offset || 0}`),
     getPopular: (limit?: number) => this.request(`/songs/popular?limit=${limit || 20}`),

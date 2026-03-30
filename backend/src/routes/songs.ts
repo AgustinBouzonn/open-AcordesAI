@@ -93,6 +93,7 @@ export default function createSongsRouter(): Router {
 
   router.post('/:id/chords', async (req: Request, res: Response) => {
     const { id } = req.params;
+    const instrument = typeof req.body?.instrument === 'string' ? req.body.instrument : 'guitar';
 
     const songResult = await query('SELECT * FROM songs WHERE id = $1', [id]);
     if (!songResult.rows.length) {
@@ -103,8 +104,8 @@ export default function createSongsRouter(): Router {
     const song = songResult.rows[0];
 
     const cached = await query(
-      'SELECT content FROM chord_cache WHERE song_id = $1',
-      [id]
+      'SELECT content FROM chord_cache WHERE song_id = $1 AND instrument = $2',
+      [id, instrument]
     );
 
     if (cached.rows.length) {
@@ -113,13 +114,13 @@ export default function createSongsRouter(): Router {
     }
 
     try {
-      const result = await generateChords(song.title, song.artist, 'guitar');
+      const result = await generateChords(song.title, song.artist, instrument);
 
       await query(
         `INSERT INTO chord_cache (song_id, instrument, title, artist, key, content)
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content, key = EXCLUDED.key`,
-        [id, 'guitar', result.title, result.artist, result.key, result.content]
+        [id, instrument, result.title, result.artist, result.key, result.content]
       );
 
       res.json({ chords: result.content });
@@ -133,6 +134,7 @@ export default function createSongsRouter(): Router {
   router.put('/:id/chords', requireAuth, async (req: Request, res: Response) => {
     const { id } = req.params;
     const { chords } = req.body;
+    const instrument = typeof req.body?.instrument === 'string' ? req.body.instrument : 'guitar';
     const userId = (req as any).user?.id;
 
     if (!userId) {
@@ -156,7 +158,7 @@ export default function createSongsRouter(): Router {
         `INSERT INTO chord_cache (song_id, instrument, title, artist, content)
          VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content`,
-        [id, 'guitar', songResult.rows[0].title, songResult.rows[0].artist, chords]
+        [id, instrument, songResult.rows[0].title, songResult.rows[0].artist, chords]
       );
 
       res.json({ message: 'Cifrado guardado correctamente' });

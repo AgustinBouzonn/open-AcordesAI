@@ -47,12 +47,12 @@ export const getSong = async (id: string): Promise<Song> => {
   return await api.songs.get(id);
 };
 
-export const getChords = async (id: string): Promise<{ chords: string }> => {
-  return await api.songs.getChords(id);
+export const getChords = async (id: string, instrument: string): Promise<{ chords: string }> => {
+  return await api.songs.getChords(id, instrument);
 };
 
-export const saveChords = async (id: string, chords: string): Promise<void> => {
-  await api.songs.saveChords(id, chords);
+export const saveChords = async (id: string, chords: string, instrument: string): Promise<void> => {
+  await api.songs.saveChords(id, chords, instrument);
 };
 
 export const searchSongs = async (query: string): Promise<Song[]> => {

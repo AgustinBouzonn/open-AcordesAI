@@ -1,19 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 
 interface Props {
   isOpen: boolean;
+  initialMode?: 'login' | 'register';
   onClose: () => void;
 }
 
-export function AuthModal({ isOpen, onClose }: Props) {
+export function AuthModal({ isOpen, initialMode = 'login', onClose }: Props) {
   const { login, register } = useAuth();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      setError('');
+    }
+  }, [initialMode, isOpen]);
 
   if (!isOpen) return null;
 
@@ -31,8 +39,8 @@ export function AuthModal({ isOpen, onClose }: Props) {
       setUsername('');
       setEmail('');
       setPassword('');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'No se pudo completar la autenticación');
     } finally {
       setLoading(false);
     }

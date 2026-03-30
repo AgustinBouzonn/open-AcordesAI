@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { HashRouter, Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { SongViewer } from './components/SongViewer';
 import { AuthModal } from './components/AuthModal';
@@ -140,8 +140,8 @@ function AppContent() {
         storage.searchLocalSongs(query).catch(() => [])
       ]);
       const allResults = [
-        ...localResults.map((r: any) => ({ ...r, source: 'comunidad', id: `local-${r.id}` })),
-        ...itunesResults.map((r: any) => ({ ...r, source: 'itunes', id: r.id }))
+        ...localResults.map((result) => ({ ...result, source: 'comunidad', id: `local-${result.id}` })),
+        ...itunesResults.map((result) => ({ ...result, source: 'itunes', id: result.id }))
       ];
       setSearchResults(allResults.map(r => ({ title: r.title, artist: r.artist, source: r.source, url: r.sourceUrl, id: r.id })));
     } catch {
@@ -231,20 +231,20 @@ function AppContent() {
             {popularSongs.slice(0, 6).map((song) => (
               <div key={song.id} onClick={() => navigate(`/song/${song.id}`)} className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300">
                 <div className="flex items-center gap-4">
-                  <Artwork size={52} url={(song as any).artworkUrl} />
+                  <Artwork size={52} url={song.artworkUrl} />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
                     <p className="text-gray-400 text-sm truncate">{song.artist}</p>
                     <div className="flex items-center gap-3 mt-1">
-                      {(song as any).rating && (
+                      {song.rating && (
                         <div className="flex items-center gap-1 text-yellow-500">
                           <Star size={12} fill="currentColor" />
-                          <span className="text-xs">{(song as any).rating}</span>
+                          <span className="text-xs">{song.rating}</span>
                         </div>
                       )}
                     </div>
                   </div>
-                  {(song as any).has_chords > 0 && (
+                  {Number(song.has_chords || 0) > 0 && (
                     <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
                   )}
                 </div>
@@ -410,18 +410,18 @@ function AppContent() {
                   <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
                   <p className="text-gray-400 text-sm truncate">{song.artist}</p>
                   <div className="flex items-center gap-3 mt-1">
-                    {(song as any).author && (
-                      <span className="text-xs text-gray-500">por {(song as any).author}</span>
+                    {song.author && (
+                      <span className="text-xs text-gray-500">por {song.author}</span>
                     )}
-                    {(song as any).rating && (
+                    {song.rating && (
                       <div className="flex items-center gap-1 text-yellow-500">
                         <Star size={12} fill="currentColor" />
-                        <span className="text-xs">{(song as any).rating}</span>
+                        <span className="text-xs">{song.rating}</span>
                       </div>
                     )}
                   </div>
                 </div>
-                {(song as any).has_chords > 0 && (
+                {Number(song.has_chords || 0) > 0 && (
                   <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
                 )}
               </div>
@@ -502,7 +502,11 @@ function AppContent() {
           <Route path="/song/:id" element={<SongDetailRoute />} />
         </Routes>
       </Layout>
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <AuthModal
+        isOpen={showAuthModal}
+        initialMode={authMode}
+        onClose={() => setShowAuthModal(false)}
+      />
       <CreateSongModal 
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)} 
@@ -522,5 +526,5 @@ function AppContent() {
 }
 
 export default function App() {
-  return <HashRouter><AppContent /></HashRouter>;
+  return <BrowserRouter><AppContent /></BrowserRouter>;
 }

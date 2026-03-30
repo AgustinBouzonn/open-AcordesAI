@@ -56,15 +56,15 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   };
 
   useEffect(() => {
-    const chords = song.chords || '';
+    const chords = instrument === 'guitar' ? song.chords || '' : '';
     setDisplayChords(transposeChords(chords, transpose));
-    setEditedChords(song.chords || '');
+    setEditedChords(chords);
     loadFavorites();
     loadComments();
     loadRating();
     setAutoScrollSpeed(0);
     setEditMode(false);
-  }, [song.id, transpose]);
+  }, [song.id, song.chords, transpose, instrument]);
 
   const loadRating = async () => {
     try {
@@ -111,11 +111,11 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const handleGenerateChords = async () => {
     setLoadingChords(true);
     try {
-      const result = await storage.getChords(song.id);
+      const result = await storage.getChords(song.id, instrument);
       setDisplayChords(transposeChords(result.chords, transpose));
       setEditedChords(result.chords);
       if (onSongUpdated) {
-        onSongUpdated({ ...song, chords: result.chords });
+        onSongUpdated({ ...song, chords: instrument === 'guitar' ? result.chords : song.chords });
       }
     } catch (err) {
       console.error('Failed to generate chords:', err);
@@ -127,11 +127,11 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const handleSaveChords = async () => {
     setSaving(true);
     try {
-      await storage.saveChords(song.id, editedChords);
+      await storage.saveChords(song.id, editedChords, instrument);
       setDisplayChords(transposeChords(editedChords, transpose));
       setEditMode(false);
       if (onSongUpdated) {
-        onSongUpdated({ ...song, chords: editedChords });
+        onSongUpdated({ ...song, chords: instrument === 'guitar' ? editedChords : song.chords });
       }
     } catch (err) {
       console.error('Failed to save chords:', err);
@@ -141,7 +141,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   };
 
   const handleCancelEdit = () => {
-    setEditedChords(song.chords || '');
+    setEditedChords(instrument === 'guitar' ? song.chords || '' : displayChords);
     setEditMode(false);
   };
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Music, Heart, Clock, Star, MessageSquare, Settings, LogOut, Loader2 } from 'lucide-react';
+import { X, User, Music, Heart, Clock, LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from './AuthContext';
-import { api } from '../services/apiClient';
 import * as storage from '../services/storageService';
+import { Song } from '../types';
 
 interface Props {
   isOpen: boolean;
@@ -27,15 +27,17 @@ export function ProfileModal({ isOpen, onClose }: Props) {
   }, [isOpen, user]);
 
   const loadStats = async () => {
+    setLoading(true);
     try {
       const [songs, favs] = await Promise.all([
         storage.getCommunitySongs(100, 0),
         storage.getFavorites()
       ]);
+      const ownSongs = songs.filter((song: Song & { user_id?: string | number }) => String(song.user_id ?? '') === String(user?.id ?? ''));
       setStats({
-        songsCreated: songs.filter((s: any) => s.user_id === user?.id).length,
+        songsCreated: ownSongs.length,
         favorites: favs.length,
-        views: songs.reduce((acc: number, s: any) => acc + (s.view_count || 0), 0)
+        views: ownSongs.reduce((acc, song: Song & { view_count?: number | string }) => acc + Number(song.view_count || 0), 0)
       });
     } catch {} finally {
       setLoading(false);
