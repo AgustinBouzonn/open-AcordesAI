@@ -146,18 +146,36 @@ function AppContent() {
       const dedupedItunes = itunesResults.filter(
         (result) => !normalizedLocalKeys.has(`${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
       );
-      const allResults = [
-        ...localResults.map((result) => ({ ...result, source: 'comunidad', id: `local-${result.id}` })),
-        ...dedupedItunes.map((result) => ({ ...result, source: 'itunes', id: result.id }))
-      ];
-      setSearchResults(allResults.map((result) => ({
-        title: result.title,
-        artist: result.artist,
-        source: result.source,
-        url: result.sourceUrl,
-        id: result.id,
-        artworkUrl: result.artworkUrl,
-      })));
+
+      // ⚡ Bolt: Single-pass accumulation to avoid intermediate array allocations
+      // Replaced chained .map() and spread operators with direct array pushes
+      const optimizedResults: SearchResult[] = [];
+
+      for (let i = 0; i < localResults.length; i++) {
+        const result = localResults[i];
+        optimizedResults.push({
+          title: result.title,
+          artist: result.artist,
+          source: 'comunidad',
+          url: result.sourceUrl,
+          id: `local-${result.id}`,
+          artworkUrl: result.artworkUrl,
+        });
+      }
+
+      for (let i = 0; i < dedupedItunes.length; i++) {
+        const result = dedupedItunes[i];
+        optimizedResults.push({
+          title: result.title,
+          artist: result.artist,
+          source: 'itunes',
+          url: result.sourceUrl,
+          id: result.id,
+          artworkUrl: result.artworkUrl,
+        });
+      }
+
+      setSearchResults(optimizedResults);
     } catch {
       setErrorMessage('Error en la búsqueda');
     } finally {
