@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility of Icon-Only Controls in Song Viewer
+**Learning:** The dense control panels in the Song Viewer (rating, sharing, text sizing, transposing, auto-scrolling) relied entirely on Lucide icons for their visual affordance, lacking accessible names (`aria-label`) and tooltips (`title`). This creates a significant barrier for screen reader users and users unsure of the icon's meaning.
+**Action:** Always ensure every icon-only `<button>` has a descriptive `aria-label` (for screen readers) and a `title` (for mouse hover tooltips) to provide full context across all interaction modes.
