@@ -140,24 +140,43 @@ function AppContent() {
         storage.searchSongs(query).catch(() => []),
         storage.searchLocalSongs(query).catch(() => [])
       ]);
+      // PERFORMANCE OPTIMIZATION (Bolt):
+      // Replaced chained array operations (.map, .filter, spreading) with a single pass accumulation
+      // to reduce memory allocation and garbage collection overhead in this hot path.
       const normalizedLocalKeys = new Set(
         localResults.map((result) => `${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
       );
-      const dedupedItunes = itunesResults.filter(
-        (result) => !normalizedLocalKeys.has(`${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
-      );
-      const allResults = [
-        ...localResults.map((result) => ({ ...result, source: 'comunidad', id: `local-${result.id}` })),
-        ...dedupedItunes.map((result) => ({ ...result, source: 'itunes', id: result.id }))
-      ];
-      setSearchResults(allResults.map((result) => ({
-        title: result.title,
-        artist: result.artist,
-        source: result.source,
-        url: result.sourceUrl,
-        id: result.id,
-        artworkUrl: result.artworkUrl,
-      })));
+
+      const combinedResults: SearchResult[] = [];
+
+      for (let i = 0; i < localResults.length; i++) {
+        const result = localResults[i];
+        combinedResults.push({
+          title: result.title,
+          artist: result.artist,
+          source: 'comunidad',
+          url: result.sourceUrl,
+          id: `local-${result.id}`,
+          artworkUrl: result.artworkUrl,
+        });
+      }
+
+      for (let i = 0; i < itunesResults.length; i++) {
+        const result = itunesResults[i];
+        const key = `${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`;
+        if (!normalizedLocalKeys.has(key)) {
+          combinedResults.push({
+            title: result.title,
+            artist: result.artist,
+            source: 'itunes',
+            url: result.sourceUrl,
+            id: result.id,
+            artworkUrl: result.artworkUrl,
+          });
+        }
+      }
+
+      setSearchResults(combinedResults);
     } catch {
       setErrorMessage('Error en la búsqueda');
     } finally {
