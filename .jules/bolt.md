@@ -1,0 +1,3 @@
+## 2025-03-09 - [Reduce garbage collection overhead in hot paths]
+**Learning:** Chained array operations (`.map`, `.filter`, and array spreading) generate unnecessary intermediate array allocations, which can cause significant garbage collection overhead, particularly in frequently executed functions (hot paths) like search result processing.
+**Action:** Replace chained array operations with a single pass accumulation (e.g., using a single `for` loop or `.reduce`) to eliminate intermediate array allocations and reduce iteration overhead, especially for search and list generation logic.
