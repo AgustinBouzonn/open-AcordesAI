@@ -1,0 +1,3 @@
+## 2024-04-02 - [Eliminated Chained Array Allocations in Search]
+**Learning:** Combining multiple array operations (`.map`, `.filter`, and array spreading) generates unnecessary intermediate array allocations. In hot paths like search processing, chaining these methods creates significant memory pressure and garbage collection overhead, especially when iterating over large datasets from APIs or local storage.
+**Action:** Replace chained array operations with a single-pass accumulation (e.g., using a single `for` loop or `.reduce`) to eliminate intermediate array allocations, reducing iteration overhead and making the operation computationally faster and more memory-efficient.
