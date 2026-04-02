@@ -140,24 +140,35 @@ function AppContent() {
         storage.searchSongs(query).catch(() => []),
         storage.searchLocalSongs(query).catch(() => [])
       ]);
-      const normalizedLocalKeys = new Set(
-        localResults.map((result) => `${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
-      );
-      const dedupedItunes = itunesResults.filter(
-        (result) => !normalizedLocalKeys.has(`${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
-      );
-      const allResults = [
-        ...localResults.map((result) => ({ ...result, source: 'comunidad', id: `local-${result.id}` })),
-        ...dedupedItunes.map((result) => ({ ...result, source: 'itunes', id: result.id }))
-      ];
-      setSearchResults(allResults.map((result) => ({
-        title: result.title,
-        artist: result.artist,
-        source: result.source,
-        url: result.sourceUrl,
-        id: result.id,
-        artworkUrl: result.artworkUrl,
-      })));
+      const normalizedLocalKeys = new Set<string>();
+      const finalResults: SearchResult[] = [];
+
+      for (const result of localResults) {
+        normalizedLocalKeys.add(`${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`);
+        finalResults.push({
+          title: result.title,
+          artist: result.artist,
+          source: 'comunidad',
+          url: result.sourceUrl,
+          id: `local-${result.id}`,
+          artworkUrl: result.artworkUrl,
+        });
+      }
+
+      for (const result of itunesResults) {
+        if (!normalizedLocalKeys.has(`${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)) {
+          finalResults.push({
+            title: result.title,
+            artist: result.artist,
+            source: 'itunes',
+            url: result.sourceUrl,
+            id: result.id,
+            artworkUrl: result.artworkUrl,
+          });
+        }
+      }
+
+      setSearchResults(finalResults);
     } catch {
       setErrorMessage('Error en la búsqueda');
     } finally {
