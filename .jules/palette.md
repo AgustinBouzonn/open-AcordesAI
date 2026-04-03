@@ -1,0 +1,3 @@
+## 2026-04-03 - [Añadidas etiquetas ARIA a botones de icono]
+**Learning:** Se descubrió que varios botones de interacción principales (Compartir, Favoritos, Comentarios) en el visualizador de canciones (SongViewer) dependían exclusivamente de iconos sin proveer `aria-label`, lo que los hacía inaccesibles para lectores de pantalla.
+**Action:** Siempre revisar y añadir explícitamente `aria-label` (en español, ya que la interfaz está en español) a los componentes `<button>` que solo contienen iconos (ej. Lucide React icons) para asegurar que la acción principal sea entendida por todos los usuarios.
