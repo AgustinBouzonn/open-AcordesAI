@@ -143,21 +143,35 @@ function AppContent() {
       const normalizedLocalKeys = new Set(
         localResults.map((result) => `${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
       );
-      const dedupedItunes = itunesResults.filter(
-        (result) => !normalizedLocalKeys.has(`${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
-      );
-      const allResults = [
-        ...localResults.map((result) => ({ ...result, source: 'comunidad', id: `local-${result.id}` })),
-        ...dedupedItunes.map((result) => ({ ...result, source: 'itunes', id: result.id }))
-      ];
-      setSearchResults(allResults.map((result) => ({
-        title: result.title,
-        artist: result.artist,
-        source: result.source,
-        url: result.sourceUrl,
-        id: result.id,
-        artworkUrl: result.artworkUrl,
-      })));
+      // ⚡ Bolt: Optimize search results processing by reducing multiple array maps and spreads
+      // into a single pass using reduce, eliminating intermediate array allocations.
+      const processedResults = localResults.reduce<SearchResult[]>((acc, result) => {
+        acc.push({
+          title: result.title,
+          artist: result.artist,
+          source: 'comunidad',
+          url: result.sourceUrl,
+          id: `local-${result.id}`,
+          artworkUrl: result.artworkUrl,
+        });
+        return acc;
+      }, []);
+
+      itunesResults.forEach((result) => {
+        const key = `${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`;
+        if (!normalizedLocalKeys.has(key)) {
+          processedResults.push({
+            title: result.title,
+            artist: result.artist,
+            source: 'itunes',
+            url: result.sourceUrl,
+            id: result.id,
+            artworkUrl: result.artworkUrl,
+          });
+        }
+      });
+
+      setSearchResults(processedResults);
     } catch {
       setErrorMessage('Error en la búsqueda');
     } finally {
