@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Music, Heart, Clock, Star, MessageSquare, Settings, LogOut, Loader2 } from 'lucide-react';
+import { X, User, Music, Heart, Clock, LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { api } from '../services/apiClient';
-import * as storage from '../services/storageService';
+import { ProfileStats } from '../types';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface Stats {
-  songsCreated: number;
-  favorites: number;
-  views: number;
-}
-
 export function ProfileModal({ isOpen, onClose }: Props) {
   const { user, logout } = useAuth();
-  const [stats, setStats] = useState<Stats>({ songsCreated: 0, favorites: 0, views: 0 });
+  const [stats, setStats] = useState<ProfileStats>({ songsCreated: 0, favorites: 0, views: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,16 +21,9 @@ export function ProfileModal({ isOpen, onClose }: Props) {
   }, [isOpen, user]);
 
   const loadStats = async () => {
+    setLoading(true);
     try {
-      const [songs, favs] = await Promise.all([
-        storage.getCommunitySongs(100, 0),
-        storage.getFavorites()
-      ]);
-      setStats({
-        songsCreated: songs.filter((s: any) => s.user_id === user?.id).length,
-        favorites: favs.length,
-        views: songs.reduce((acc: number, s: any) => acc + (s.view_count || 0), 0)
-      });
+      setStats(await api.auth.stats());
     } catch {} finally {
       setLoading(false);
     }

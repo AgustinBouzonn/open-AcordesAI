@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
-
-const router = Router();
+import { requireAuth, AuthRequest } from '../middleware/auth';
 
 export default function createRatingsRouter(): Router {
+  const router = Router();
+
   router.get('/:songId', async (req: Request, res: Response) => {
     try {
       const { songId } = req.params;
@@ -20,8 +21,8 @@ export default function createRatingsRouter(): Router {
     }
   });
 
-  router.post('/:songId', async (req: Request, res: Response) => {
-    const userId = (req as any).user?.id;
+  router.post('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
       return;

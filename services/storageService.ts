@@ -1,5 +1,5 @@
 import { api } from './apiClient';
-import { Song, Comment } from '../types';
+import { Song, Comment, Instrument } from '../types';
 
 export const getFavorites = async (): Promise<Song[]> => {
   try {
@@ -47,20 +47,20 @@ export const getSong = async (id: string): Promise<Song> => {
   return await api.songs.get(id);
 };
 
-export const getChords = async (id: string): Promise<{ chords: string }> => {
-  return await api.songs.getChords(id);
+export const getChords = async (id: string, instrument: Instrument): Promise<{ chords: string }> => {
+  return await api.songs.getChords(id, instrument);
 };
 
-export const saveChords = async (id: string, chords: string): Promise<void> => {
-  await api.songs.saveChords(id, chords);
+export const saveChords = async (id: string, chords: string, instrument: Instrument): Promise<void> => {
+  await api.songs.saveChords(id, chords, instrument);
 };
 
 export const searchSongs = async (query: string): Promise<Song[]> => {
-  const response = await api.search.songs(query) as { results: Song[] };
+  const response = await api.search.songs(query);
   return response.results || [];
 };
 
-export const createSong = async (data: { title: string; artist: string; lyrics: string }): Promise<Song> => {
+export const createSong = async (data: { title: string; artist: string; lyrics?: string }): Promise<Song> => {
   return await api.songs.create(data);
 };
 
@@ -92,12 +92,7 @@ export const getPopularSongs = async (limit?: number): Promise<Song[]> => {
 
 export const searchLocalSongs = async (query: string): Promise<Song[]> => {
   try {
-    const songs = await api.songs.list(100, 0);
-    const q = query.toLowerCase();
-    return songs.filter(s => 
-      s.title.toLowerCase().includes(q) || 
-      s.artist.toLowerCase().includes(q)
-    );
+    return await api.songs.list(20, 0, query);
   } catch {
     return [];
   }

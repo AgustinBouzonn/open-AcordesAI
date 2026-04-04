@@ -57,6 +57,17 @@
 
 **AcordesAI** es una Progressive Web App (PWA) revolucionaria diseñada para músicos de todos los niveles. A diferencia de las bases de datos tradicionales que solo contienen canciones preexistentes, AcordesAI utiliza la **inteligencia artificial de Google Gemini** para generar cifrados, acordes y letras de **cualquier canción**, incluso si nunca antes fue transcrita.
 
+## 🏗️ Arquitectura
+
+La app hoy funciona como una arquitectura full-stack:
+
+- `frontend`: React + Vite en la raíz del repo
+- `backend`: Express + TypeScript en `backend/`
+- `db`: PostgreSQL con migraciones en `backend/migrations`
+- `proxy`: Nginx para servir frontend y enrutar `/api`
+
+La generación de cifrados y las integraciones de IA viven en el backend. El frontend consume la API mediante `services/apiClient.ts`.
+
 ### 🌟 ¿Por qué AcordesAI?
 
 - 🎯 **Sin límites:** No estás restringido a una base de datos preexistente
@@ -151,17 +162,52 @@ Biblioteca Inteligente:
 git clone https://github.com/AgustinBouzonn/open-AcordesAI.git
 cd open-AcordesAI
 
-# 2. Instalar dependencias
+# 2. Instalar dependencias del frontend y backend
 npm install
+npm --prefix backend install
 
-# 3. Configurar API Key
-echo "VITE_GEMINI_API_KEY=tu_api_key_aqui" > .env
+# 3. Configurar entorno
+copy .env.example .env
 
-# 4. Iniciar desarrollo
+# 4. Levantar frontend
 npm run dev
+
+# 5. Levantar backend en otra terminal
+npm --prefix backend run dev
 ```
 
-**¿No tienes API Key?** [Obtén una gratis aquí](https://ai.google.dev/) 🆓
+Para correr la app completa también necesitás PostgreSQL y variables reales para `DATABASE_URL` y `JWT_SECRET`.
+
+## 🧪 Scripts Útiles
+
+```bash
+# Frontend
+npm run dev
+npm run build
+npm run typecheck
+
+# Full build
+npm run build:all
+
+# Backend
+npm --prefix backend run dev
+npm --prefix backend run build
+npm --prefix backend test
+```
+
+## 🔍 Verificación Rápida
+
+```bash
+npm run typecheck
+npm run build:all
+npm --prefix backend test
+```
+
+Notas:
+- El backend requiere `DATABASE_URL` y `JWT_SECRET` reales.
+- `JWT_SECRET` debe tener al menos 32 caracteres.
+- Si frontend y backend corren en orígenes distintos, definir `CORS_ORIGIN`.
+- La generación de acordes usa variables backend como `AI_API_KEY`, `AI_PROVIDER`, `AI_MODEL` y `AI_BASE_URL`.
 
 ---
 
@@ -193,20 +239,20 @@ VITE_GEMINI_API_KEY=tu_api_key_aqui
 
 ```
 open-AcordesAI/
-├── 📂 src/
-│   ├── 🎨 components/          # Componentes UI reutilizables
-│   │   ├── Layout.tsx         # Layout principal
-│   │   └── SongViewer.tsx     # Visualizador de canciones
-│   ├── 🔧 services/            # Lógica de negocio
-│   │   ├── geminiService.ts   # Conexión Gemini API
-│   │   └── storageService.ts  # Gestión de caché
-│   ├── 📝 types/              # Tipos TypeScript
-│   ├── ⚙️ App.tsx             # App principal
-│   └── 🚀 main.tsx            # Entry point
-├── 📂 public/                 # Archivos estáticos
-├── 📂 docs/                   # Documentación
-├── 📄 .env.example            # Template de configuración
-└── 📄 package.json
+├── App.tsx
+├── components/
+├── services/
+├── types.ts
+├── backend/
+│   ├── src/
+│   ├── migrations/
+│   ├── test/
+│   └── package.json
+├── public/
+├── docker-compose.yml
+├── nginx.conf
+├── .env.example
+└── package.json
 ```
 
 ---
@@ -215,14 +261,26 @@ open-AcordesAI/
 
 ### Variables de Entorno
 ```bash
-# API Key de Google Gemini (requerido)
-VITE_GEMINI_API_KEY=tu_api_key_aqui
+# Frontend
+VITE_API_URL=http://localhost:3001/api
 
-# Configuración de caché (opcional)
-VITE_CACHE_EXPIRATION_HOURS=24      # Expiración de caché
-VITE_MAX_HISTORY_SIZE=10            # Tamaño del historial
-VITE_DEBUG=false                    # Modo debug
+# Backend obligatorias
+DATABASE_URL=postgres://acordesai:password@localhost:5432/acordesai
+JWT_SECRET=una-clave-larga-de-al-menos-32-caracteres
+
+# Backend opcionales
+PORT=3001
+CORS_ORIGIN=http://localhost:5173
+AI_API_KEY=
+AI_PROVIDER=gemini
+AI_MODEL=gemini-2.0-flash
+AI_BASE_URL=https://api.openai.com/v1
 ```
+
+Referencia rápida:
+- `DATABASE_URL` y `JWT_SECRET` son obligatorias.
+- `AI_API_KEY` es necesaria para generar cifrados con IA.
+- `VITE_API_URL` solo hace falta si el frontend no usa el proxy por defecto.
 
 ---
 

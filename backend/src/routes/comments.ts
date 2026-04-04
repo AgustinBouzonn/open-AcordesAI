@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
-
-const router = Router();
+import { requireAuth, AuthRequest } from '../middleware/auth';
 
 export default function createCommentsRouter(): Router {
+  const router = Router();
+
   router.get('/:songId', async (req: Request, res: Response) => {
     try {
       const { songId } = req.params;
@@ -15,15 +16,22 @@ export default function createCommentsRouter(): Router {
          ORDER BY c.created_at DESC`,
         [songId]
       );
-      res.json(result.rows);
+      res.json(result.rows.map(comment => ({
+        id: comment.id,
+        songId: comment.song_id,
+        userId: comment.user_id,
+        username: comment.username,
+        content: comment.content,
+        createdAt: comment.created_at,
+      })));
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch comments' });
     }
   });
 
-  router.post('/:songId', async (req: Request, res: Response) => {
+  router.post('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const { songId } = req.params;
@@ -34,18 +42,28 @@ export default function createCommentsRouter(): Router {
       }
 
       const result = await query(
-        'INSERT INTO comments (user_id, song_id, content) VALUES ($1, $2, $3) RETURNING *',
+        `INSERT INTO comments (user_id, song_id, content)
+         VALUES ($1, $2, $3)
+         RETURNING id, song_id, user_id, content, created_at`,
         [userId, songId, content.trim()]
       );
-      res.status(201).json(result.rows[0]);
+      const comment = result.rows[0];
+      res.status(201).json({
+        id: comment.id,
+        songId: comment.song_id,
+        userId: comment.user_id,
+        username: req.user?.username,
+        content: comment.content,
+        createdAt: comment.created_at,
+      });
     } catch (error) {
       res.status(500).json({ error: 'Failed to create comment' });
     }
   });
 
-  router.delete('/:commentId', async (req: Request, res: Response) => {
+  router.delete('/:commentId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const { commentId } = req.params;

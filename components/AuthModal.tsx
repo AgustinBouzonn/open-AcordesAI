@@ -4,16 +4,23 @@ import { useAuth } from './AuthContext';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  mode: 'login' | 'register';
 }
 
-export function AuthModal({ isOpen, onClose }: Props) {
+export function AuthModal({ isOpen, onClose, mode }: Props) {
   const { login, register } = useAuth();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [currentMode, setCurrentMode] = useState<'login' | 'register'>(mode);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setCurrentMode(mode);
+    }
+  }, [isOpen, mode]);
 
   if (!isOpen) return null;
 
@@ -22,7 +29,7 @@ export function AuthModal({ isOpen, onClose }: Props) {
     setError('');
     setLoading(true);
     try {
-      if (mode === 'login') {
+      if (currentMode === 'login') {
         await login(email, password);
       } else {
         await register(username, email, password);
@@ -31,8 +38,8 @@ export function AuthModal({ isOpen, onClose }: Props) {
       setUsername('');
       setEmail('');
       setPassword('');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'No se pudo completar la autenticación');
     } finally {
       setLoading(false);
     }
@@ -41,9 +48,9 @@ export function AuthModal({ isOpen, onClose }: Props) {
   return (
     <div style={overlayStyle}>
       <div style={modalStyle}>
-        <h2>{mode === 'login' ? 'Iniciar Sesión' : 'Registrarse'}</h2>
+        <h2>{currentMode === 'login' ? 'Iniciar Sesión' : 'Registrarse'}</h2>
         <form onSubmit={handleSubmit}>
-          {mode === 'register' && (
+          {currentMode === 'register' && (
             <input
               type="text"
               placeholder="Usuario"
@@ -71,17 +78,17 @@ export function AuthModal({ isOpen, onClose }: Props) {
           />
           {error && <p style={errorStyle}>{error}</p>}
           <button type="submit" disabled={loading} style={buttonStyle}>
-            {loading ? '...' : mode === 'login' ? 'Entrar' : 'Registrarse'}
+            {loading ? '...' : currentMode === 'login' ? 'Entrar' : 'Registrarse'}
           </button>
         </form>
         <p style={{ marginTop: '1rem', textAlign: 'center' }}>
-          {mode === 'login' ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
+          {currentMode === 'login' ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
           <button
             type="button"
-            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+            onClick={() => setCurrentMode(currentMode === 'login' ? 'register' : 'login')}
             style={linkStyle}
           >
-            {mode === 'login' ? 'Regístrate' : 'Entra'}
+            {currentMode === 'login' ? 'Regístrate' : 'Entra'}
           </button>
         </p>
         <button onClick={onClose} style={closeStyle}>✕</button>

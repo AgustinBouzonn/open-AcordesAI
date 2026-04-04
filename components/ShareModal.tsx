@@ -13,7 +13,7 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
 
   if (!isOpen) return null;
 
-  const shareUrl = `${window.location.origin}/song/${songId}`;
+  const shareUrl = `${window.location.origin}/#/song/${songId}`;
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(shareUrl);

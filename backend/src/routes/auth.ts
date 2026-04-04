@@ -3,11 +3,12 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
+import { JWT_SECRET } from '../env';
+import { authLimiter } from '../middleware/rateLimit';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme-use-env-var';
 
-router.post('/register', async (req: Request, res: Response): Promise<void> => {
+router.post('/register', authLimiter, async (req: Request, res: Response): Promise<void> => {
   const { email, username, password } = req.body;
 
   if (!email || !username || !password) {
@@ -41,7 +42,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
+router.post('/login', authLimiter, async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -73,10 +74,41 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<
       res.status(404).json({ message: 'Usuario no encontrado' });
       return;
     }
-    res.json(result.rows[0]);
+    res.json({ user: result.rows[0] });
   } catch (e) {
     console.error('[auth/me]', e);
     res.status(500).json({ message: 'Error' });
+  }
+});
+
+router.get('/stats', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ message: 'No autorizado' });
+      return;
+    }
+
+    const [songsCreated, favorites, views] = await Promise.all([
+      query('SELECT COUNT(*)::int AS count FROM songs WHERE user_id = $1', [userId]),
+      query('SELECT COUNT(*)::int AS count FROM favorites WHERE user_id = $1', [userId]),
+      query(
+        `SELECT COALESCE(COUNT(h.*), 0)::int AS count
+         FROM songs s
+         LEFT JOIN history h ON h.song_id = s.id
+         WHERE s.user_id = $1`,
+        [userId]
+      ),
+    ]);
+
+    res.json({
+      songsCreated: songsCreated.rows[0]?.count ?? 0,
+      favorites: favorites.rows[0]?.count ?? 0,
+      views: views.rows[0]?.count ?? 0,
+    });
+  } catch (e) {
+    console.error('[auth/stats]', e);
+    res.status(500).json({ message: 'Error al cargar estadísticas' });
   }
 });
 

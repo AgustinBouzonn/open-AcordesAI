@@ -1,10 +1,22 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
 import { generateChords } from '../services/aiService';
+import { requireAuth, AuthRequest } from '../middleware/auth';
+import { chordGenerationLimiter, chordSaveLimiter } from '../middleware/rateLimit';
+import { serializeSong } from '../serializers/song';
 
-const router = Router();
+const VALID_INSTRUMENTS = new Set(['guitar', 'ukulele', 'piano']);
+
+const getInstrument = (value: unknown): 'guitar' | 'ukulele' | 'piano' => {
+  if (typeof value === 'string' && VALID_INSTRUMENTS.has(value)) {
+    return value as 'guitar' | 'ukulele' | 'piano';
+  }
+  return 'guitar';
+};
 
 export default function createSongsRouter(): Router {
+  const router = Router();
+
   router.get('/popular', async (req: Request, res: Response) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
@@ -23,7 +35,7 @@ export default function createSongsRouter(): Router {
          LIMIT $1`,
         [limit]
       );
-      res.json(result.rows);
+      res.json(result.rows.map(serializeSong));
     } catch (e) {
       res.status(500).json({ message: 'Error fetching popular songs' });
     }
@@ -33,6 +45,7 @@ export default function createSongsRouter(): Router {
     try {
       const limit = parseInt(req.query.limit as string) || 50;
       const offset = parseInt(req.query.offset as string) || 0;
+      const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
       const result = await query(
         `SELECT s.*, u.username as author, 
          (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
@@ -40,11 +53,31 @@ export default function createSongsRouter(): Router {
          (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
          FROM songs s 
          LEFT JOIN users u ON s.user_id = u.id
-         ORDER BY s.created_at DESC 
-         LIMIT $1 OFFSET $2`,
-        [limit, offset]
+         WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
+         ORDER BY
+           CASE
+             WHEN $1 = '' THEN 0
+             WHEN LOWER(s.title) = LOWER($1) THEN 0
+             WHEN LOWER(s.title) LIKE LOWER($1) || '%' THEN 1
+             WHEN LOWER(s.artist) = LOWER($1) THEN 2
+             WHEN LOWER(s.artist) LIKE LOWER($1) || '%' THEN 3
+             WHEN s.title ILIKE '%' || $1 || '%' THEN 4
+             WHEN s.artist ILIKE '%' || $1 || '%' THEN 5
+             ELSE 6
+           END,
+           CASE
+             WHEN s.title ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.title))
+             ELSE 999999
+           END,
+           CASE
+             WHEN s.artist ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.artist))
+             ELSE 999999
+           END,
+           s.created_at DESC
+         LIMIT $2 OFFSET $3`,
+        [q, limit, offset]
       );
-      res.json(result.rows);
+      res.json(result.rows.map(serializeSong));
     } catch (e) {
       res.status(500).json({ message: 'Error fetching songs' });
     }
@@ -53,22 +86,28 @@ export default function createSongsRouter(): Router {
   router.get('/:id', async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const result = await query('SELECT * FROM songs WHERE id = $1', [id]);
+      const result = await query(
+        `SELECT s.*, cc.content AS chords
+         FROM songs s
+         LEFT JOIN chord_cache cc ON cc.song_id = s.id AND cc.instrument = 'guitar'
+         WHERE s.id = $1`,
+        [id]
+      );
       
       if (!result.rows.length) {
         res.status(404).json({ message: 'Song not found' });
         return;
       }
       
-      res.json(result.rows[0]);
+      res.json(serializeSong(result.rows[0]));
     } catch (e) {
       res.status(500).json({ message: 'Error fetching song' });
     }
   });
 
-  router.post('/', async (req: Request, res: Response) => {
+  router.post('/', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const { title, artist, lyrics } = req.body;
@@ -83,15 +122,16 @@ export default function createSongsRouter(): Router {
         [title, artist, lyrics || null, userId]
       );
       
-      res.status(201).json(result.rows[0]);
+      res.status(201).json(serializeSong(result.rows[0]));
     } catch (e) {
       console.error('[songs/create]', e);
       res.status(500).json({ message: 'Error creating song' });
     }
   });
 
-  router.post('/:id/chords', async (req: Request, res: Response) => {
+  router.post('/:id/chords', requireAuth, chordGenerationLimiter, async (req: Request, res: Response) => {
     const { id } = req.params;
+    const instrument = getInstrument(req.body?.instrument);
 
     const songResult = await query('SELECT * FROM songs WHERE id = $1', [id]);
     if (!songResult.rows.length) {
@@ -102,8 +142,8 @@ export default function createSongsRouter(): Router {
     const song = songResult.rows[0];
 
     const cached = await query(
-      'SELECT content FROM chord_cache WHERE song_id = $1',
-      [id]
+      'SELECT content FROM chord_cache WHERE song_id = $1 AND instrument = $2',
+      [id, instrument]
     );
 
     if (cached.rows.length) {
@@ -112,13 +152,13 @@ export default function createSongsRouter(): Router {
     }
 
     try {
-      const result = await generateChords(song.title, song.artist, 'guitar');
+      const result = await generateChords(song.title, song.artist, instrument);
 
       await query(
         `INSERT INTO chord_cache (song_id, instrument, title, artist, key, content)
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content, key = EXCLUDED.key`,
-        [id, 'guitar', result.title, result.artist, result.key, result.content]
+        [id, instrument, result.title, result.artist, result.key, result.content]
       );
 
       res.json({ chords: result.content });
@@ -129,10 +169,11 @@ export default function createSongsRouter(): Router {
     }
   });
 
-  router.put('/:id/chords', async (req: Request, res: Response) => {
+  router.put('/:id/chords', requireAuth, chordSaveLimiter, async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { chords } = req.body;
-    const userId = (req as any).user?.id;
+    const instrument = getInstrument(req.body?.instrument);
+    const userId = req.user?.id;
 
     if (!userId) {
       res.status(401).json({ message: 'Debes iniciar sesión para guardar cifrados' });
@@ -151,11 +192,16 @@ export default function createSongsRouter(): Router {
         return;
       }
 
+      if (songResult.rows[0].user_id !== userId) {
+        res.status(403).json({ message: 'No puedes modificar el cifrado de otra canción' });
+        return;
+      }
+
       await query(
         `INSERT INTO chord_cache (song_id, instrument, title, artist, content)
          VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content`,
-        [id, 'guitar', songResult.rows[0].title, songResult.rows[0].artist, chords]
+        [id, instrument, songResult.rows[0].title, songResult.rows[0].artist, chords]
       );
 
       res.json({ message: 'Cifrado guardado correctamente' });

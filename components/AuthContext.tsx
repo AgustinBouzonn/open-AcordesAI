@@ -1,13 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from '../services/apiClient';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  provider?: string;
-  providerApiKey?: string;
-}
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -28,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = api.getToken();
     if (token) {
       api.auth.me()
-        .then((data: any) => setUser(data.user))
+        .then((data) => setUser(data.user))
         .catch(() => api.setToken(null))
         .finally(() => setLoading(false));
     } else {
@@ -37,13 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const data: any = await api.auth.login(email, password);
+    const data = await api.auth.login(email, password);
     api.setToken(data.token);
     setUser(data.user);
   };
 
   const register = async (username: string, email: string, password: string) => {
-    const data: any = await api.auth.register(username, email, password);
+    const data = await api.auth.register(username, email, password);
     api.setToken(data.token);
     setUser(data.user);
   };
@@ -55,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProvider = async (provider: string, apiKey: string) => {
     await api.auth.updateProvider(provider, apiKey);
-    const data: any = await api.auth.me();
+    const data = await api.auth.me();
     setUser(data.user);
   };
 

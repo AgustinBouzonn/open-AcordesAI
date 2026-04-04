@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star } from 'lucide-react';
-import { Song, Comment } from '../types';
+import { Song, Comment, RatingSummary, Instrument } from '../types';
 import { useAuth } from './AuthContext';
 import { ImportModal } from './ImportModal';
 import { ShareModal } from './ShareModal';
@@ -13,11 +13,12 @@ interface SongViewerProps {
 }
 
 const TRANSPOSITIONS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const CHORD_TOKEN = /^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus|add)?\d*(?:[#b](?:5|9|11|13))*(?:\/[A-G](?:#|b)?)?$/i;
 const INSTRUMENTS = [
   { id: 'guitar', name: 'Guitarra' },
   { id: 'ukulele', name: 'Ukulele' },
   { id: 'piano', name: 'Piano' },
-];
+] as const;
 
 export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) => {
   const { user } = useAuth();
@@ -34,25 +35,76 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [saving, setSaving] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [userRating, setUserRating] = useState(0);
-  const [avgRating, setAvgRating] = useState<{ average: string; count: number } | null>(null);
+  const [avgRating, setAvgRating] = useState<RatingSummary | null>(null);
   const [transpose, setTranspose] = useState(0);
   const [showShare, setShowShare] = useState(false);
-  const [instrument, setInstrument] = useState('guitar');
+  const [instrument, setInstrument] = useState<Instrument>('guitar');
   
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const transposeRoot = (root: string, steps: number): string => {
+    const normalizedRoot = root.toUpperCase().replace('B#', 'C').replace('E#', 'F');
+    const sharpRoot = normalizedRoot.endsWith('B') && normalizedRoot.length === 2
+      ? `${normalizedRoot[0]}#`
+      : normalizedRoot;
+    let idx = TRANSPOSITIONS.indexOf(sharpRoot);
+    if (idx === -1) {
+      idx = TRANSPOSITIONS.indexOf(sharpRoot.replace('b', '#').replace(/##/g, '#'));
+    }
+    if (idx === -1) {
+      return root;
+    }
+    return TRANSPOSITIONS[(idx + steps + 12) % 12];
+  };
+
+  const transposeChordToken = (token: string, steps: number): string => {
+    const match = token.match(/^(\[|\()?([A-G](?:#|b)?)(.*?)(?:\/([A-G](?:#|b)?))?(\]|\))?$/i);
+    if (!match) {
+      return token;
+    }
+
+    const [, prefix, root, suffixWithoutBass, bass, closing] = match;
+    const normalizedSuffix = bass ? suffixWithoutBass.replace(/\/$/, '') : suffixWithoutBass;
+    const transposedBass = bass ? `/${transposeRoot(bass, steps)}` : '';
+    return `${prefix}${transposeRoot(root, steps)}${normalizedSuffix}${transposedBass}${closing}`;
+  };
+
+  const isChordLine = (line: string): boolean => {
+    const tokens = line.trim().split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) {
+      return false;
+    }
+
+    const chordTokens = tokens.filter((token) => {
+      const cleaned = token.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
+      return CHORD_TOKEN.test(cleaned);
+    });
+
+    return chordTokens.length > 0 && chordTokens.length >= Math.ceil(tokens.length * 0.6);
+  };
+
   const transposeChords = (text: string, steps: number): string => {
     if (steps === 0) return text;
-    const chords = text.match(/[A-G][#b]?/g) || [];
-    let result = text;
-    chords.forEach(chord => {
-      let idx = TRANSPOSITIONS.indexOf(chord.replace('b', '#').replace(/##/g, '#'));
-      if (idx === -1) return;
-      idx = (idx + steps + 12) % 12;
-      result = result.replace(chord, TRANSPOSITIONS[idx]);
-    });
-    return result;
+
+    return text
+      .split('\n')
+      .map((line) => {
+        const withInlineChords = line.replace(/\[([^[\]]+)\]/g, (fullMatch, token: string) => {
+          return CHORD_TOKEN.test(token) ? `[${transposeChordToken(token, steps)}]` : fullMatch;
+        });
+
+        if (!isChordLine(withInlineChords)) {
+          return withInlineChords;
+        }
+
+        return withInlineChords.replace(/(^|\s)(?:\[|\()?([A-G](?:#|b)?[^\s\]]*(?:\/[A-G](?:#|b)?)?)(?:\]|\))?(?=\s|$)/gi, (match, leading, token) => {
+          const candidate = match.slice(leading.length);
+          const cleaned = candidate.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
+          return CHORD_TOKEN.test(cleaned) ? `${leading}${transposeChordToken(candidate, steps)}` : match;
+        });
+      })
+      .join('\n');
   };
 
   useEffect(() => {
@@ -64,11 +116,50 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     loadRating();
     setAutoScrollSpeed(0);
     setEditMode(false);
-  }, [song.id, transpose]);
+  }, [song.id]);
+
+  useEffect(() => {
+    setDisplayChords(transposeChords(editedChords || song.chords || '', transpose));
+  }, [editedChords, song.chords, transpose]);
+
+  useEffect(() => {
+    if (instrument === 'guitar') {
+      setEditedChords(song.chords || '');
+      return;
+    }
+
+    if (!user || editMode) {
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingChords(true);
+
+    storage.getChords(song.id, instrument)
+      .then((result) => {
+        if (!cancelled) {
+          setEditedChords(result.chords);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setEditedChords('');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingChords(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editMode, instrument, song.chords, song.id, user]);
 
   const loadRating = async () => {
     try {
-      const data = await api.request(`/ratings/${song.id}`) as { average: string; count: number };
+      const data = await api.ratings.get(song.id);
       setAvgRating(data);
     } catch {}
   };
@@ -77,10 +168,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     if (!user) return;
     setUserRating(score);
     try {
-      await api.request(`/ratings/${song.id}`, {
-        method: 'POST',
-        body: JSON.stringify({ score }),
-      });
+      await api.ratings.save(song.id, score);
       loadRating();
     } catch {}
   };
@@ -114,7 +202,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const handleGenerateChords = async () => {
     setLoadingChords(true);
     try {
-      const result = await storage.getChords(song.id);
+      const result = await storage.getChords(song.id, instrument);
       setDisplayChords(transposeChords(result.chords, transpose));
       setEditedChords(result.chords);
       if (onSongUpdated) {
@@ -130,7 +218,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const handleSaveChords = async () => {
     setSaving(true);
     try {
-      await storage.saveChords(song.id, editedChords);
+      await storage.saveChords(song.id, editedChords, instrument);
       setDisplayChords(transposeChords(editedChords, transpose));
       setEditMode(false);
       if (onSongUpdated) {
@@ -253,7 +341,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           <div className="flex items-center gap-2">
             <select 
               value={instrument} 
-              onChange={(e) => setInstrument(e.target.value)}
+               onChange={(e) => setInstrument(e.target.value as Instrument)}
               className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white"
             >
               {INSTRUMENTS.map(i => (

@@ -1,9 +1,17 @@
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./test/setup.ts'],
+    globals: true,
+    clearMocks: true,
+    restoreMocks: true,
+    include: ['test/**/*.test.ts', 'test/**/*.test.tsx'],
+  },
   server: {
     port: 3000,
     host: '0.0.0.0',

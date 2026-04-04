@@ -3,7 +3,7 @@ services:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: acordesai
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       POSTGRES_DB: acordesai
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -27,8 +27,8 @@ services:
       retries: 3
       start_period: 10s
     environment:
-      DATABASE_URL: postgres://acordesai:${DB_PASSWORD:-changeme}@postgres:5433/acordesai
-      JWT_SECRET: ${JWT_SECRET:-changeme}
+      DATABASE_URL: postgres://acordesai:${DB_PASSWORD:?DB_PASSWORD must be set}@postgres:5432/acordesai
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:

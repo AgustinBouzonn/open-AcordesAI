@@ -1,12 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
-
-const router = Router();
+import { requireAuth, AuthRequest } from '../middleware/auth';
+import { serializeSong } from '../serializers/song';
 
 export default function createFavoritesRouter(): Router {
-  router.get('/', async (req: Request, res: Response) => {
+  const router = Router();
+
+  router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const result = await query(
@@ -17,15 +19,15 @@ export default function createFavoritesRouter(): Router {
          ORDER BY f.created_at DESC`,
         [userId]
       );
-      res.json(result.rows);
+      res.json(result.rows.map(serializeSong));
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch favorites' });
     }
   });
 
-  router.post('/:songId', async (req: Request, res: Response) => {
+  router.post('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const { songId } = req.params;
@@ -39,9 +41,9 @@ export default function createFavoritesRouter(): Router {
     }
   });
 
-  router.delete('/:songId', async (req: Request, res: Response) => {
+  router.delete('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const { songId } = req.params;

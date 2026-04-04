@@ -1,12 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../env';
 
 export interface AuthRequest extends Request {
   user?: { id: number; username: string };
   userId?: number;
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme-use-env-var';
 
 export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const token = req.headers.authorization?.replace('Bearer ', '');

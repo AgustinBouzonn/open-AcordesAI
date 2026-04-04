@@ -1,12 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
-
-const router = Router();
+import { requireAuth, AuthRequest } from '../middleware/auth';
+import { serializeSong } from '../serializers/song';
 
 export default function createHistoryRouter(): Router {
-  router.get('/', async (req: Request, res: Response) => {
+  const router = Router();
+
+  router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const limit = parseInt(req.query.limit as string) || 50;
@@ -19,15 +21,15 @@ export default function createHistoryRouter(): Router {
          LIMIT $2`,
         [userId, limit]
       );
-      res.json(result.rows);
+      res.json(result.rows.map(serializeSong));
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch history' });
     }
   });
 
-  router.post('/:songId', async (req: Request, res: Response) => {
+  router.post('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const { songId } = req.params;
@@ -42,9 +44,9 @@ export default function createHistoryRouter(): Router {
     }
   });
 
-  router.delete('/', async (req: Request, res: Response) => {
+  router.delete('/', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       await query('DELETE FROM history WHERE user_id = $1', [userId]);

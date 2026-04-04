@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build:all": "npm run build && npm --prefix backend run build",
+    "test:backend": "npm --prefix backend test"
   },
   "dependencies": {
     "@google/genai": "^1.39.0",
@@ -15,18 +20,26 @@
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.0"
   },
+  "overrides": {
+    "serialize-javascript": "^7.0.5"
+  },
   "devDependencies": {
     "@capacitor/android": "^8.3.0",
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@tailwindcss/postcss": "^4.2.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.27",
+    "jsdom": "^29.0.1",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.2"
   }
 }

@@ -5,7 +5,8 @@ const config: CapacitorConfig = {
   appName: 'AcordesAI',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    url: 'https://tu-dominio.com'
   }
 };
 
