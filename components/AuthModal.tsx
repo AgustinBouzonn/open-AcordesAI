@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Github, Chrome } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 interface Props {
@@ -8,7 +9,7 @@ interface Props {
 }
 
 export function AuthModal({ isOpen, onClose, mode }: Props) {
-  const { login, register } = useAuth();
+  const { login, register, loginWithOAuth } = useAuth();
   const [currentMode, setCurrentMode] = useState<'login' | 'register'>(mode);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -81,6 +82,15 @@ export function AuthModal({ isOpen, onClose, mode }: Props) {
             {loading ? '...' : currentMode === 'login' ? 'Entrar' : 'Registrarse'}
           </button>
         </form>
+        <div style={dividerStyle}>o continúa con</div>
+        <div style={oauthButtonsStyle}>
+          <button type="button" onClick={() => loginWithOAuth('google')} style={oauthButtonStyle}>
+            <Chrome size={18} /> Google
+          </button>
+          <button type="button" onClick={() => loginWithOAuth('github')} style={oauthButtonStyle}>
+            <Github size={18} /> GitHub
+          </button>
+        </div>
         <p style={{ marginTop: '1rem', textAlign: 'center' }}>
           {currentMode === 'login' ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
           <button
@@ -137,6 +147,33 @@ const buttonStyle: React.CSSProperties = {
 };
 
 const errorStyle: React.CSSProperties = { color: '#ef4444', marginBottom: '1rem' };
+
+const dividerStyle: React.CSSProperties = {
+  marginTop: '1rem',
+  marginBottom: '0.75rem',
+  color: '#9ca3af',
+  textAlign: 'center',
+  fontSize: '0.875rem',
+};
+
+const oauthButtonsStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '0.75rem',
+};
+
+const oauthButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '0.5rem',
+  padding: '0.75rem',
+  background: '#2a2a2a',
+  color: '#fff',
+  border: '1px solid #333',
+  borderRadius: '4px',
+  cursor: 'pointer',
+};
 
 const linkStyle: React.CSSProperties = {
   background: 'none',

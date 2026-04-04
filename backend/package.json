@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
+    "migrate": "node scripts/migrate.js",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest"

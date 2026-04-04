@@ -9,6 +9,8 @@ const { authState, storageMock } = vi.hoisted(() => ({
   loading: false,
   login: vi.fn(),
   register: vi.fn(),
+  loginWithOAuth: vi.fn(),
+  completeOAuth: vi.fn(),
   logout: vi.fn(),
   updateProvider: vi.fn(),
   },
@@ -54,6 +56,8 @@ describe('App', () => {
     authState.loading = false;
     authState.login.mockReset();
     authState.register.mockReset();
+    authState.loginWithOAuth.mockReset();
+    authState.completeOAuth.mockReset().mockResolvedValue(undefined);
     authState.logout.mockReset();
     authState.updateProvider.mockReset();
 

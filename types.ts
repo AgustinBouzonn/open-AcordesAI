@@ -6,6 +6,8 @@ export interface User {
   providerApiKey?: string;
 }
 
+export type OAuthProvider = 'google' | 'github';
+
 export type Instrument = 'guitar' | 'ukulele' | 'piano';
 
 export interface Song {

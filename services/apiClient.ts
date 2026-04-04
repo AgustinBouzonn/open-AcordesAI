@@ -1,4 +1,4 @@
-import { Comment, Instrument, ProfileStats, RatingSummary, Song, User } from '../types';
+import { Comment, Instrument, OAuthProvider, ProfileStats, RatingSummary, Song, User } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -25,6 +25,14 @@ interface MessageResponse {
 
 class ApiClient {
   private token: string | null = null;
+
+  private getAbsoluteApiBase(): string {
+    if (/^https?:\/\//.test(API_BASE)) {
+      return API_BASE.replace(/\/$/, '');
+    }
+
+    return `${window.location.origin}${API_BASE}`.replace(/\/$/, '');
+  }
 
   setToken(token: string | null) {
     this.token = token;
@@ -79,6 +87,7 @@ class ApiClient {
       }),
     me: () => this.request<MeResponse>('/auth/me'),
     stats: () => this.request<ProfileStats>('/auth/stats'),
+    getOAuthStartUrl: (provider: OAuthProvider) => `${this.getAbsoluteApiBase()}/auth/oauth/${provider}/start`,
     updateProvider: (provider: string, apiKey: string) =>
       this.request<MessageResponse>('/auth/provider', {
         method: 'POST',

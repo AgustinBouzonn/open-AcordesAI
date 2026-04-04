@@ -6,6 +6,10 @@ import { AuthModal } from '../../components/AuthModal';
 const authMock = {
   login: vi.fn(),
   register: vi.fn(),
+  loginWithOAuth: vi.fn(),
+  completeOAuth: vi.fn(),
+  logout: vi.fn(),
+  updateProvider: vi.fn(),
 };
 
 vi.mock('../../components/AuthContext', () => ({

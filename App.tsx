@@ -70,6 +70,49 @@ function SongDetailRoute() {
   return <SongViewer song={song} onSongUpdated={setSong} />;
 }
 
+function AuthCallbackRoute() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { completeOAuth } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token');
+    const oauthError = params.get('error');
+
+    if (oauthError) {
+      setError(oauthError);
+      return;
+    }
+
+    if (!token) {
+      setError('No se recibió el token de autenticación social');
+      return;
+    }
+
+    completeOAuth(token)
+      .then(() => navigate('/'))
+      .catch(() => setError('No se pudo completar el inicio de sesión social'));
+  }, [completeOAuth, location.search, navigate]);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+      {error ? (
+        <>
+          <p className="text-red-400 mb-4">{error}</p>
+          <button onClick={() => navigate('/')} className="text-brand">Volver al inicio</button>
+        </>
+      ) : (
+        <>
+          <Loader2 size={40} className="animate-spin text-brand mb-4" />
+          <p className="text-white">Completando autenticación...</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -500,6 +543,7 @@ function AppContent() {
           <Route path="/history" element={renderHistory()} />
           <Route path="/community" element={renderCommunity()} />
           <Route path="/song/:id" element={<SongDetailRoute />} />
+          <Route path="/auth/callback" element={<AuthCallbackRoute />} />
         </Routes>
       </Layout>
       <AuthModal isOpen={showAuthModal} mode={authMode} onClose={() => setShowAuthModal(false)} />

@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from '../services/apiClient';
-import { User } from '../types';
+import { OAuthProvider, User } from '../types';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
+  loginWithOAuth: (provider: OAuthProvider) => void;
+  completeOAuth: (token: string) => Promise<void>;
   logout: () => void;
   updateProvider: (provider: string, apiKey: string) => Promise<void>;
 }
@@ -41,6 +43,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   };
 
+  const loginWithOAuth = (provider: OAuthProvider) => {
+    window.location.assign(api.auth.getOAuthStartUrl(provider));
+  };
+
+  const completeOAuth = async (token: string) => {
+    api.setToken(token);
+    const data = await api.auth.me();
+    setUser(data.user);
+  };
+
   const logout = () => {
     api.setToken(null);
     setUser(null);
@@ -53,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProvider }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithOAuth, completeOAuth, logout, updateProvider }}>
       {children}
     </AuthContext.Provider>
   );

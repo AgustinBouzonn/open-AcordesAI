@@ -192,6 +192,7 @@ npm run build:all
 # Backend
 npm --prefix backend run dev
 npm --prefix backend run build
+npm --prefix backend run migrate
 npm --prefix backend test
 ```
 
@@ -200,6 +201,7 @@ npm --prefix backend test
 ```bash
 npm run typecheck
 npm run build:all
+npm --prefix backend run migrate
 npm --prefix backend test
 ```
 
