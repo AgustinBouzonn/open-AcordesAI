@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { SongViewer } from './components/SongViewer';
 import { AuthModal } from './components/AuthModal';
@@ -9,7 +9,7 @@ import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './components/AuthContext';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
-import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart, LogIn, UserPlus, Users, Star, Plus, Globe, Smartphone, Download, ShieldCheck } from 'lucide-react';
+import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart, LogIn, UserPlus, Users, Star, Plus, Globe } from 'lucide-react';
 
 const TRENDING_SEARCHES = [
   "Lamento Boliviano - Enanitos Verdes",
@@ -97,7 +97,6 @@ function AppContent() {
     location.pathname === '/favorites' ? 'FAVORITES' :
     location.pathname === '/history' ? 'HISTORY' :
     location.pathname === '/community' ? 'COMMUNITY' :
-    location.pathname === '/download' ? 'DOWNLOAD' :
     location.pathname.startsWith('/song/') ? 'SONG_DETAIL' : 'HOME';
 
   useEffect(() => {
@@ -140,24 +139,11 @@ function AppContent() {
         storage.searchSongs(query).catch(() => []),
         storage.searchLocalSongs(query).catch(() => [])
       ]);
-      const normalizedLocalKeys = new Set(
-        localResults.map((result) => `${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
-      );
-      const dedupedItunes = itunesResults.filter(
-        (result) => !normalizedLocalKeys.has(`${result.title.trim().toLowerCase()}::${result.artist.trim().toLowerCase()}`)
-      );
       const allResults = [
-        ...localResults.map((result) => ({ ...result, source: 'comunidad', id: `local-${result.id}` })),
-        ...dedupedItunes.map((result) => ({ ...result, source: 'itunes', id: result.id }))
+        ...localResults.map((result) => ({ ...result, source: 'comunidad' as const, id: `local-${result.id}` })),
+        ...itunesResults.map((result) => ({ ...result, source: 'itunes' as const, id: result.id }))
       ];
-      setSearchResults(allResults.map((result) => ({
-        title: result.title,
-        artist: result.artist,
-        source: result.source,
-        url: result.sourceUrl,
-        id: result.id,
-        artworkUrl: result.artworkUrl,
-      })));
+      setSearchResults(allResults.map(r => ({ title: r.title, artist: r.artist, source: r.source, url: r.sourceUrl, id: r.id })));
     } catch {
       setErrorMessage('Error en la búsqueda');
     } finally {
@@ -181,33 +167,9 @@ function AppContent() {
     setFavorites(newFavs);
   };
 
-  const handleCreateSong = async (data: { title: string; artist: string; lyrics?: string; chords?: string }) => {
-    const { chords, ...songData } = data;
-    const song = await storage.createSong(songData);
-    if (chords?.trim()) {
-      await storage.saveChords(song.id, chords, 'guitar');
-    }
+  const handleCreateSong = async (data: { title: string; artist: string; lyrics?: string }) => {
+    const song = await storage.createSong(data);
     navigate(`/song/${song.id}`);
-  };
-
-  const openSearchResult = async (result: SearchResult) => {
-    if (result.source === 'comunidad') {
-      navigate(`/song/${result.id.replace(/^local-/, '')}`);
-      return;
-    }
-
-    if (!user) {
-      setAuthMode('login');
-      setShowAuthModal(true);
-      return;
-    }
-
-    try {
-      const song = await storage.createSong({ title: result.title, artist: result.artist });
-      navigate(`/song/${song.id}`);
-    } catch {
-      setErrorMessage('Error al abrir la canción');
-    }
   };
 
   const handleAddFromCommunity = async (data: { title: string; artist: string }) => {
@@ -240,16 +202,6 @@ function AppContent() {
           <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
           <button type="submit" className="hidden">Buscar</button>
         </form>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <button
-            onClick={() => navigate('/download')}
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand/90"
-          >
-            <Download size={18} />
-            Descargar APK
-          </button>
-          <span className="text-xs text-gray-500">Android instalable directo desde tu servidor</span>
-        </div>
       </div>
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
@@ -292,7 +244,7 @@ function AppContent() {
                       )}
                     </div>
                   </div>
-                  {Number(song.has_chords || 0) > 0 && (
+                  {(song.hasChords || 0) > 0 && (
                     <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
                   )}
                 </div>
@@ -323,21 +275,23 @@ function AppContent() {
       {searchResults.length > 0 ? (
         <div className="space-y-2">
           {searchResults.map((result, idx) => (
-            <div key={idx} onClick={() => openSearchResult(result)} className="bg-dark-800 hover:bg-dark-700 p-3 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex items-center gap-3">
-              <Artwork size={52} url={result.artworkUrl} />
+            <div key={idx} onClick={async () => {
+              if (!user) {
+                setAuthMode('login');
+                setShowAuthModal(true);
+                return;
+              }
+              try {
+                const song = await storage.createSong({ title: result.title, artist: result.artist, lyrics: '' });
+                navigate(`/song/${song.id}`);
+              } catch (e) {
+                setErrorMessage('Error al crear canción');
+              }
+            }} className="bg-dark-800 hover:bg-dark-700 p-3 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex items-center gap-3">
+              <Artwork size={52} />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-white truncate">{result.title}</h3>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                    result.source === 'comunidad' ? 'bg-brand/20 text-brand' : 'bg-dark-700 text-gray-400'
-                  }`}>
-                    {result.source === 'comunidad' ? 'Comunidad' : 'iTunes'}
-                  </span>
-                </div>
+                <h3 className="font-bold text-white truncate">{result.title}</h3>
                 <p className="text-sm text-brand truncate">{result.artist}</p>
-                <p className="mt-1 text-xs text-gray-500">
-                  {result.source === 'comunidad' ? 'Abrir canción existente' : user ? 'Agregar a tu biblioteca' : 'Inicia sesión para agregarla'}
-                </p>
               </div>
               <ChevronRight size={16} className="text-gray-500 shrink-0" />
             </div>
@@ -359,7 +313,7 @@ function AppContent() {
                 onClick={() => user ? setShowCreateModal(true) : (setAuthMode('login'), setShowAuthModal(true))}
                 className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
               >
-                Crear y pegar cifrado
+                Subir cifrado propio
               </button>
             </div>
           </div>
@@ -367,69 +321,6 @@ function AppContent() {
       )}
     </div>
   );
-
-  const renderDownload = () => {
-    const apkUrl = '/downloads/acordesai.apk';
-
-    return (
-      <div className="mx-auto max-w-3xl space-y-8 py-8">
-        <div className="overflow-hidden rounded-3xl border border-brand/20 bg-gradient-to-br from-brand/20 via-dark-800 to-dark-900 shadow-2xl">
-          <div className="space-y-6 px-6 py-10 md:px-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand">
-              <Smartphone size={14} />
-              Android
-            </div>
-            <div className="space-y-3">
-              <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">
-                Descarga AcordesAI en tu celu
-              </h1>
-              <p className="max-w-2xl text-sm text-gray-300 md:text-base">
-                Instala el APK firmado directamente desde este servidor. Si ya usas la web, esta es la forma más rápida de tener la app en pantalla de inicio con acceso nativo.
-              </p>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <a
-                href={apkUrl}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-4 text-base font-bold text-white transition hover:bg-brand/90"
-              >
-                <Download size={20} />
-                Descargar APK
-              </a>
-              <button
-                onClick={() => navigate('/')}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-dark-600 bg-dark-800 px-5 py-4 text-base font-semibold text-gray-200 transition hover:border-brand/40 hover:text-white"
-              >
-                Volver a la app
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-dark-700 bg-dark-800 p-5">
-            <Download size={20} className="mb-3 text-brand" />
-            <h2 className="mb-2 text-sm font-bold text-white">1. Descarga</h2>
-            <p className="text-sm text-gray-400">Abre esta página desde Android y descarga `acordesai.apk`.</p>
-          </div>
-          <div className="rounded-2xl border border-dark-700 bg-dark-800 p-5">
-            <ShieldCheck size={20} className="mb-3 text-brand" />
-            <h2 className="mb-2 text-sm font-bold text-white">2. Permite instalar</h2>
-            <p className="text-sm text-gray-400">Si Android lo pide, habilita temporalmente “Instalar apps desconocidas” para tu navegador.</p>
-          </div>
-          <div className="rounded-2xl border border-dark-700 bg-dark-800 p-5">
-            <Smartphone size={20} className="mb-3 text-brand" />
-            <h2 className="mb-2 text-sm font-bold text-white">3. Instala</h2>
-            <p className="text-sm text-gray-400">Abre el archivo descargado y toca “Instalar”. Luego podrás abrir AcordesAI como cualquier otra app.</p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-dark-700 bg-dark-800 p-5 text-sm text-gray-400">
-          <p className="mb-2 font-semibold text-white">Ruta del APK</p>
-          <code className="break-all text-brand">{apkUrl}</code>
-        </div>
-      </div>
-    );
-  };
 
   const renderFavorites = () => (
     <div className="space-y-6">
@@ -530,7 +421,7 @@ function AppContent() {
                     )}
                   </div>
                 </div>
-                {Number(song.has_chords || 0) > 0 && (
+                {(song.hasChords || 0) > 0 && (
                   <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
                 )}
               </div>
@@ -608,15 +499,10 @@ function AppContent() {
           <Route path="/favorites" element={renderFavorites()} />
           <Route path="/history" element={renderHistory()} />
           <Route path="/community" element={renderCommunity()} />
-          <Route path="/download" element={renderDownload()} />
           <Route path="/song/:id" element={<SongDetailRoute />} />
         </Routes>
       </Layout>
-      <AuthModal
-        isOpen={showAuthModal}
-        initialMode={authMode}
-        onClose={() => setShowAuthModal(false)}
-      />
+      <AuthModal isOpen={showAuthModal} mode={authMode} onClose={() => setShowAuthModal(false)} />
       <CreateSongModal 
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)} 
@@ -636,5 +522,5 @@ function AppContent() {
 }
 
 export default function App() {
-  return <BrowserRouter><AppContent /></BrowserRouter>;
+  return <HashRouter><AppContent /></HashRouter>;
 }

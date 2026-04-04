@@ -3,7 +3,7 @@ services:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: acordesai
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       POSTGRES_DB: acordesai
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -21,14 +21,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     healthcheck:
-      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:3001/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3003/api/health"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
     environment:
-      DATABASE_URL: postgres://acordesai:${DB_PASSWORD:-changeme}@postgres:5432/acordesai
-      JWT_SECRET: ${JWT_SECRET:-changeme}
+      DATABASE_URL: postgres://acordesai:${DB_PASSWORD:?DB_PASSWORD must be set}@postgres:5432/acordesai
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
@@ -45,8 +45,7 @@ services:
     ports:
       - "8081:80"
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     restart: unless-stopped

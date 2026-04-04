@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star } from 'lucide-react';
-import { Song, Comment } from '../types';
+import { Song, Comment, RatingSummary, Instrument } from '../types';
 import { useAuth } from './AuthContext';
 import { ImportModal } from './ImportModal';
 import { ShareModal } from './ShareModal';
@@ -13,34 +13,16 @@ interface SongViewerProps {
 }
 
 const TRANSPOSITIONS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const CHORD_TOKEN = /^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus|add)?\d*(?:[#b](?:5|9|11|13))*(?:\/[A-G](?:#|b)?)?$/i;
 const INSTRUMENTS = [
   { id: 'guitar', name: 'Guitarra' },
   { id: 'ukulele', name: 'Ukulele' },
   { id: 'piano', name: 'Piano' },
-];
-
-const getSongRatingSummary = (song: Song): { average: string; count: number } | null => {
-  const count = Number(song.rating_count ?? 0);
-  if (!count) {
-    return null;
-  }
-
-  const average =
-    typeof song.rating === 'number'
-      ? song.rating.toFixed(1)
-      : typeof song.rating === 'string'
-        ? song.rating
-        : '0.0';
-
-  return { average, count };
-};
-
-const getSongFavoriteState = (song: Song): boolean =>
-  song.is_favorite === true || song.is_favorite === 'true' || song.is_favorite === 1 || song.is_favorite === '1';
+] as const;
 
 export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) => {
   const { user } = useAuth();
-  const [isFav, setIsFav] = useState(() => getSongFavoriteState(song));
+  const [isFav, setIsFav] = useState(false);
   const [fontSize, setFontSize] = useState(16);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(0);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -52,107 +34,135 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [editedChords, setEditedChords] = useState(song.chords || '');
   const [saving, setSaving] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [userRating, setUserRating] = useState(() => Number(song.user_rating ?? 0));
-  const [avgRating, setAvgRating] = useState<{ average: string; count: number } | null>(() => getSongRatingSummary(song));
+  const [userRating, setUserRating] = useState(0);
+  const [avgRating, setAvgRating] = useState<RatingSummary | null>(null);
   const [transpose, setTranspose] = useState(0);
   const [showShare, setShowShare] = useState(false);
-  const [instrument, setInstrument] = useState('guitar');
-  const [instrumentChords, setInstrumentChords] = useState<Record<string, string>>(() =>
-    song.chords ? { guitar: song.chords } : {}
-  );
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [submittingComment, setSubmittingComment] = useState(false);
+  const [instrument, setInstrument] = useState<Instrument>('guitar');
   
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const transposeRoot = (root: string, steps: number): string => {
+    const normalizedRoot = root.toUpperCase().replace('B#', 'C').replace('E#', 'F');
+    const sharpRoot = normalizedRoot.endsWith('B') && normalizedRoot.length === 2
+      ? `${normalizedRoot[0]}#`
+      : normalizedRoot;
+    let idx = TRANSPOSITIONS.indexOf(sharpRoot);
+    if (idx === -1) {
+      idx = TRANSPOSITIONS.indexOf(sharpRoot.replace('b', '#').replace(/##/g, '#'));
+    }
+    if (idx === -1) {
+      return root;
+    }
+    return TRANSPOSITIONS[(idx + steps + 12) % 12];
+  };
+
+  const transposeChordToken = (token: string, steps: number): string => {
+    const match = token.match(/^(\[|\()?([A-G](?:#|b)?)(.*?)(?:\/([A-G](?:#|b)?))?(\]|\))?$/i);
+    if (!match) {
+      return token;
+    }
+
+    const [, prefix, root, suffixWithoutBass, bass, closing] = match;
+    const normalizedSuffix = bass ? suffixWithoutBass.replace(/\/$/, '') : suffixWithoutBass;
+    const transposedBass = bass ? `/${transposeRoot(bass, steps)}` : '';
+    return `${prefix}${transposeRoot(root, steps)}${normalizedSuffix}${transposedBass}${closing}`;
+  };
+
+  const isChordLine = (line: string): boolean => {
+    const tokens = line.trim().split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) {
+      return false;
+    }
+
+    const chordTokens = tokens.filter((token) => {
+      const cleaned = token.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
+      return CHORD_TOKEN.test(cleaned);
+    });
+
+    return chordTokens.length > 0 && chordTokens.length >= Math.ceil(tokens.length * 0.6);
+  };
+
   const transposeChords = (text: string, steps: number): string => {
     if (steps === 0) return text;
-    const chords = text.match(/[A-G][#b]?/g) || [];
-    let result = text;
-    chords.forEach(chord => {
-      let idx = TRANSPOSITIONS.indexOf(chord.replace('b', '#').replace(/##/g, '#'));
-      if (idx === -1) return;
-      idx = (idx + steps + 12) % 12;
-      result = result.replace(chord, TRANSPOSITIONS[idx]);
-    });
-    return result;
+
+    return text
+      .split('\n')
+      .map((line) => {
+        const withInlineChords = line.replace(/\[([^[\]]+)\]/g, (fullMatch, token: string) => {
+          return CHORD_TOKEN.test(token) ? `[${transposeChordToken(token, steps)}]` : fullMatch;
+        });
+
+        if (!isChordLine(withInlineChords)) {
+          return withInlineChords;
+        }
+
+        return withInlineChords.replace(/(^|\s)(?:\[|\()?([A-G](?:#|b)?[^\s\]]*(?:\/[A-G](?:#|b)?)?)(?:\]|\))?(?=\s|$)/gi, (match, leading, token) => {
+          const candidate = match.slice(leading.length);
+          const cleaned = candidate.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
+          return CHORD_TOKEN.test(cleaned) ? `${leading}${transposeChordToken(candidate, steps)}` : match;
+        });
+      })
+      .join('\n');
   };
 
   useEffect(() => {
-    setInstrumentChords(song.chords ? { guitar: song.chords } : {});
+    const chords = song.chords || '';
+    setDisplayChords(transposeChords(chords, transpose));
+    setEditedChords(song.chords || '');
+    loadFavorites();
+    loadComments();
+    loadRating();
     setAutoScrollSpeed(0);
     setEditMode(false);
-    setFeedback(null);
-    setIsFav(getSongFavoriteState(song));
-    setUserRating(Number(song.user_rating ?? 0));
-    setAvgRating(getSongRatingSummary(song));
-  }, [song.id, song.chords, song.is_favorite, song.rating, song.rating_count, song.user_rating]);
+  }, [song.id]);
 
   useEffect(() => {
-    const chords = instrumentChords[instrument] || '';
-    setDisplayChords(transposeChords(chords, transpose));
-    setEditedChords(chords);
-  }, [instrument, instrumentChords, transpose]);
+    setDisplayChords(transposeChords(editedChords || song.chords || '', transpose));
+  }, [editedChords, song.chords, transpose]);
 
   useEffect(() => {
-    loadComments();
-  }, [song.id, user]);
-
-  useEffect(() => {
-    if (!user) {
-      setIsFav(false);
-      setUserRating(0);
+    if (instrument === 'guitar') {
+      setEditedChords(song.chords || '');
       return;
     }
 
-    if (song.is_favorite === undefined) {
-      loadFavorites();
-    }
-
-    if (song.user_rating === undefined || song.rating === undefined || song.rating_count === undefined) {
-      loadRating();
-    }
-  }, [song.id, song.is_favorite, song.rating, song.rating_count, song.user_rating, user]);
-
-  useEffect(() => {
-    if (instrumentChords[instrument] || editMode) {
+    if (!user || editMode) {
       return;
     }
 
     let cancelled = false;
+    setLoadingChords(true);
 
-    storage.getCachedChords(song.id, instrument).then((result) => {
-      if (cancelled || !result?.chords) {
-        return;
-      }
-
-      setInstrumentChords((current) => {
-        if (current[instrument]) {
-          return current;
+    storage.getChords(song.id, instrument)
+      .then((result) => {
+        if (!cancelled) {
+          setEditedChords(result.chords);
         }
-        return { ...current, [instrument]: result.chords };
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setEditedChords('');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingChords(false);
+        }
       });
-    });
 
     return () => {
       cancelled = true;
     };
-  }, [editMode, instrument, instrumentChords, song.id]);
+  }, [editMode, instrument, song.chords, song.id, user]);
 
   const loadRating = async () => {
     try {
-      const [summary, mine] = await Promise.all([
-        api.ratings.get(song.id),
-        user ? api.ratings.getMine(song.id).catch(() => ({ score: null })) : Promise.resolve({ score: null }),
-      ]);
-      setAvgRating(summary);
-      setUserRating(mine.score ?? 0);
+      const data = await api.ratings.get(song.id);
+      setAvgRating(data);
     } catch {}
   };
-
-  const getErrorMessage = (error: unknown, fallback: string) =>
-    error instanceof Error && error.message ? error.message : fallback;
 
   const handleRating = async (score: number) => {
     if (!user) return;
@@ -160,20 +170,14 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     try {
       await api.ratings.save(song.id, score);
       loadRating();
-      setFeedback({ type: 'success', message: 'Puntuacion guardada.' });
-    } catch (error) {
-      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo guardar la puntuacion.') });
-    }
+    } catch {}
   };
 
   const loadFavorites = async () => {
-    if (!user) {
-      setIsFav(false);
-      return;
+    if (user) {
+      const favs = await storage.getFavorites();
+      setIsFav(favs.some(f => f.id === song.id));
     }
-
-    const favs = await storage.getFavorites();
-    setIsFav(favs.some(f => f.id === song.id));
   };
 
   const loadComments = async () => {
@@ -183,43 +187,29 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
 
   const handleToggleFav = async () => {
     if (!user) return;
-    try {
-      const newState = await storage.toggleFavorite(song.id);
-      setIsFav(newState);
-      setFeedback({ type: 'success', message: newState ? 'Agregada a favoritos.' : 'Quitada de favoritos.' });
-    } catch (error) {
-      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo actualizar favoritos.') });
-    }
+    const newState = await storage.toggleFavorite(song.id);
+    setIsFav(newState);
   };
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !user) return;
-    setSubmittingComment(true);
-    try {
-      const added = await storage.addComment(song.id, newComment);
-      setComments([added, ...comments]);
-      setNewComment('');
-      setFeedback({ type: 'success', message: 'Comentario publicado.' });
-    } catch (error) {
-      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo publicar tu comentario.') });
-    } finally {
-      setSubmittingComment(false);
-    }
+    const added = await storage.addComment(song.id, newComment);
+    setComments([added, ...comments]);
+    setNewComment('');
   };
 
   const handleGenerateChords = async () => {
     setLoadingChords(true);
-    setFeedback(null);
     try {
       const result = await storage.getChords(song.id, instrument);
-      setInstrumentChords((current) => ({ ...current, [instrument]: result.chords }));
+      setDisplayChords(transposeChords(result.chords, transpose));
+      setEditedChords(result.chords);
       if (onSongUpdated) {
-        onSongUpdated({ ...song, chords: instrument === 'guitar' ? result.chords : song.chords });
+        onSongUpdated({ ...song, chords: result.chords });
       }
-      setFeedback({ type: 'success', message: `Cifrado listo para ${INSTRUMENTS.find((item) => item.id === instrument)?.name || instrument}.` });
-    } catch (error) {
-      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo generar el cifrado con IA.') });
+    } catch (err) {
+      console.error('Failed to generate chords:', err);
     } finally {
       setLoadingChords(false);
     }
@@ -227,24 +217,22 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
 
   const handleSaveChords = async () => {
     setSaving(true);
-    setFeedback(null);
     try {
       await storage.saveChords(song.id, editedChords, instrument);
-      setInstrumentChords((current) => ({ ...current, [instrument]: editedChords }));
+      setDisplayChords(transposeChords(editedChords, transpose));
       setEditMode(false);
       if (onSongUpdated) {
-        onSongUpdated({ ...song, chords: instrument === 'guitar' ? editedChords : song.chords });
+        onSongUpdated({ ...song, chords: editedChords });
       }
-      setFeedback({ type: 'success', message: 'Cifrado guardado correctamente.' });
-    } catch (error) {
-      setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo guardar el cifrado.') });
+    } catch (err) {
+      console.error('Failed to save chords:', err);
     } finally {
       setSaving(false);
     }
   };
 
   const handleCancelEdit = () => {
-    setEditedChords(instrumentChords[instrument] || '');
+    setEditedChords(song.chords || '');
     setEditMode(false);
   };
 
@@ -255,7 +243,6 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       reader.onload = (event) => {
         const text = event.target?.result as string;
         setEditedChords(text);
-        setFeedback({ type: 'success', message: 'Archivo cargado en el editor.' });
       };
       reader.readAsText(file);
     }
@@ -264,7 +251,6 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const handleImport = (chords: string) => {
     setEditedChords(chords);
     setEditMode(true);
-    setFeedback({ type: 'success', message: 'Cifrado importado. Revisa y guarda cuando quieras.' });
   };
 
   const handleDownload = () => {
@@ -324,18 +310,6 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       </div>
 
       <div className="sticky top-20 md:top-24 z-30 bg-dark-800/95 backdrop-blur-md rounded-xl border border-dark-600 shadow-xl p-3 gap-3 flex flex-col">
-        {feedback && (
-          <div className={`rounded-lg border px-3 py-2 text-sm ${
-            feedback.type === 'error'
-              ? 'border-red-700 bg-red-950/50 text-red-200'
-              : 'border-emerald-700 bg-emerald-950/40 text-emerald-200'
-          }`}>
-            <div className="flex items-center justify-between gap-3">
-              <span>{feedback.message}</span>
-              <button onClick={() => setFeedback(null)} className="text-current/80 hover:text-current">✕</button>
-            </div>
-          </div>
-        )}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
             {editMode ? (
@@ -367,7 +341,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           <div className="flex items-center gap-2">
             <select 
               value={instrument} 
-              onChange={(e) => setInstrument(e.target.value)}
+               onChange={(e) => setInstrument(e.target.value as Instrument)}
               className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white"
             >
               {INSTRUMENTS.map(i => (
@@ -413,15 +387,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-300">Editar cifrado</h3>
             <div className="flex gap-2">
-              <button onClick={async () => {
-                try {
-                  const text = await navigator.clipboard.readText();
-                  setEditedChords(text);
-                  setFeedback({ type: 'success', message: 'Texto pegado en el editor.' });
-                } catch (error) {
-                  setFeedback({ type: 'error', message: getErrorMessage(error, 'No se pudo leer el portapapeles.') });
-                }
-              }} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
+              <button onClick={async () => { const t = await navigator.clipboard.readText(); setEditedChords(t); }} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
                 <Copy size={14} /> Pegar
               </button>
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".txt,.chords" className="hidden" />
@@ -479,8 +445,8 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
                 <form onSubmit={handleAddComment} className="mb-6">
                   <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="¿Qué te parece este cifrado?" className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none" rows={3} maxLength={500} />
                   <p className="text-right text-xs text-gray-600 mt-1">{newComment.length}/500</p>
-                  <button type="submit" disabled={!newComment.trim() || submittingComment} className="mt-2 w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition">
-                    {submittingComment ? 'Publicando...' : 'Publicar Opinión'}
+                  <button type="submit" disabled={!newComment.trim()} className="mt-2 w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition">
+                    Publicar Opinión
                   </button>
                 </form>
               ) : (

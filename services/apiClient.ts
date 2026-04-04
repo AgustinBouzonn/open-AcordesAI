@@ -1,10 +1,27 @@
-import { Capacitor } from '@capacitor/core';
+import { Comment, Instrument, ProfileStats, RatingSummary, Song, User } from '../types';
 
-const isNativePlatform = Capacitor.isNativePlatform();
-const API_BASE =
-  (isNativePlatform ? import.meta.env.VITE_NATIVE_API_URL : undefined) ||
-  import.meta.env.VITE_API_URL ||
-  '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
+interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+interface MeResponse {
+  user: User;
+}
+
+interface SearchSongsResponse {
+  results: Song[];
+}
+
+interface ImportResponse {
+  chords?: string;
+}
+
+interface MessageResponse {
+  message: string;
+}
 
 class ApiClient {
   private token: string | null = null;
@@ -25,7 +42,7 @@ class ApiClient {
     return this.token;
   }
 
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -46,80 +63,88 @@ class ApiClient {
       throw new Error(error.message || error.error || 'Request failed');
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   auth = {
     register: (username: string, email: string, password: string) =>
-      this.request('/auth/register', {
+      this.request<AuthResponse>('/auth/register', {
         method: 'POST',
         body: JSON.stringify({ username, email, password }),
       }),
     login: (email: string, password: string) =>
-      this.request('/auth/login', {
+      this.request<AuthResponse>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       }),
-    me: () => this.request('/auth/me'),
+    me: () => this.request<MeResponse>('/auth/me'),
+    stats: () => this.request<ProfileStats>('/auth/stats'),
+    updateProvider: (provider: string, apiKey: string) =>
+      this.request<MessageResponse>('/auth/provider', {
+        method: 'POST',
+        body: JSON.stringify({ provider, apiKey }),
+      }),
   };
 
   search = {
-    songs: (query: string) => this.request(`/search?q=${encodeURIComponent(query)}`),
-    localSongs: (query: string, limit?: number) =>
-      this.request(`/search/local?q=${encodeURIComponent(query)}${limit ? `&limit=${limit}` : ''}`),
+    songs: (query: string) => this.request<SearchSongsResponse>(`/search?q=${encodeURIComponent(query)}`),
+  };
+
+  imports = {
+    fetch: (url: string, source?: string) =>
+      this.request<ImportResponse>('/import/fetch', {
+        method: 'POST',
+        body: JSON.stringify({ url, source }),
+      }),
   };
 
   songs = {
-    get: (id: string) => this.request(`/songs/${id}`),
+    get: (id: string) => this.request<Song>(`/songs/${id}`),
     create: (data: { title: string; artist: string; lyrics?: string }) =>
-      this.request('/songs', {
+      this.request<Song>('/songs', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    getCachedChords: (id: string, instrument: string) =>
-      this.request(`/songs/${id}/chords?instrument=${encodeURIComponent(instrument)}`),
-    getChords: (id: string, instrument: string) =>
-      this.request(`/songs/${id}/chords`, {
-        method: 'POST',
-        body: JSON.stringify({ instrument }),
-      }),
-    saveChords: (id: string, chords: string, instrument: string) =>
-      this.request(`/songs/${id}/chords`, {
+    getChords: (id: string, instrument: Instrument) => this.request<{ chords: string }>(`/songs/${id}/chords`, {
+      method: 'POST',
+      body: JSON.stringify({ instrument }),
+    }),
+    saveChords: (id: string, chords: string, instrument: Instrument) =>
+      this.request<MessageResponse>(`/songs/${id}/chords`, {
         method: 'PUT',
         body: JSON.stringify({ chords, instrument }),
       }),
-    list: (limit?: number, offset?: number) => this.request(`/songs?limit=${limit || 50}&offset=${offset || 0}`),
-    getPopular: (limit?: number) => this.request(`/songs/popular?limit=${limit || 20}`),
-    getComments: (id: string) => this.request(`/comments/${id}`),
+    list: (limit?: number, offset?: number, q?: string) => this.request<Song[]>(`/songs?limit=${limit || 50}&offset=${offset || 0}${q ? `&q=${encodeURIComponent(q)}` : ''}`),
+    getPopular: (limit?: number) => this.request<Song[]>(`/songs/popular?limit=${limit || 20}`),
+    getComments: (id: string) => this.request<Comment[]>(`/comments/${id}`),
     addComment: (id: string, content: string) =>
-      this.request(`/comments/${id}`, {
+      this.request<Comment>(`/comments/${id}`, {
         method: 'POST',
         body: JSON.stringify({ content }),
       }),
     deleteComment: (songId: string, commentId: string) =>
-      this.request(`/comments/${commentId}`, { method: 'DELETE' }),
+      this.request<MessageResponse>(`/comments/${commentId}`, { method: 'DELETE' }),
   };
 
   favorites = {
-    list: () => this.request('/favorites'),
+    list: () => this.request<Song[]>('/favorites'),
     add: (songId: string) =>
-      this.request(`/favorites/${songId}`, { method: 'POST' }),
+      this.request<MessageResponse>(`/favorites/${songId}`, { method: 'POST' }),
     remove: (songId: string) =>
-      this.request(`/favorites/${songId}`, { method: 'DELETE' }),
+      this.request<MessageResponse>(`/favorites/${songId}`, { method: 'DELETE' }),
   };
 
   history = {
-    list: (limit?: number) => this.request(`/history${limit ? `?limit=${limit}` : ''}`),
+    list: (limit?: number) => this.request<Song[]>(`/history${limit ? `?limit=${limit}` : ''}`),
     add: (songId: string) =>
-      this.request(`/history/${songId}`, { method: 'POST' }),
-    clear: () => this.request('/history', { method: 'DELETE' }),
+      this.request<MessageResponse>(`/history/${songId}`, { method: 'POST' }),
+    clear: () => this.request<MessageResponse>('/history', { method: 'DELETE' }),
   };
 
   ratings = {
-    get: (songId: string) => this.request<{ average: string | null; count: number }>(`/ratings/${songId}`),
-    getMine: (songId: string) => this.request<{ score: number | null }>(`/ratings/${songId}/me`),
+    get: (songId: string) => this.request<RatingSummary>(`/ratings/${songId}`),
     save: (songId: string, score: number) =>
-      this.request<{ message: string }>(`/ratings/${songId}`, {
+      this.request<MessageResponse>(`/ratings/${songId}`, {
         method: 'POST',
         body: JSON.stringify({ score }),
       }),

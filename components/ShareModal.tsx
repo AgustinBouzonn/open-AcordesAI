@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, Check } from 'lucide-react';
+import { X, Copy, Check, Loader2 } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -13,20 +13,12 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
 
   if (!isOpen) return null;
 
-  const publicBaseUrl = import.meta.env.VITE_PUBLIC_APP_URL?.replace(/\/$/, '');
-  const shareBaseUrl = publicBaseUrl || window.location.origin;
-  const shareUrl = `${shareBaseUrl}/song/${songId}`;
-
-  const openExternal = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
+  const shareUrl = `${window.location.origin}/#/song/${songId}`;
 
   const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const shareNative = async () => {
@@ -42,15 +34,15 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
   };
 
   const shareWhatsApp = () => {
-    openExternal(`https://wa.me/?text=Mirá estos acordes: ${encodeURIComponent(shareUrl)}`);
+    window.open(`https://wa.me/?text=Mirá estos acordes: ${encodeURIComponent(shareUrl)}`, '_blank');
   };
 
   const shareTwitter = () => {
-    openExternal(`https://twitter.com/intent/tweet?text=Mirá estos acordes&url=${encodeURIComponent(shareUrl)}`);
+    window.open(`https://twitter.com/intent/tweet?text=Mirá estos acordes&url=${encodeURIComponent(shareUrl)}`, '_blank');
   };
 
   const shareFacebook = () => {
-    openExternal(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
   };
 
   return (
@@ -87,7 +79,7 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
               <span style={{ fontSize: '24px' }}>🐦</span>
               <span className="text-xs">Twitter</span>
             </button>
-            <button onClick={shareFacebook} className="flex flex-col items-center gap-1 p-3 bg-[#4267B2] hover:bg-[#3B5998] rounded-lg transition">
+            <button onClick={shareFacebook} className="flex flex-col items-center gap-1 p-3 bg-[#4267B2] hover:#3B5998 rounded-lg transition">
               <span style={{ fontSize: '24px' }}>📘</span>
               <span className="text-xs">Facebook</span>
             </button>

@@ -1,13 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
-import { AuthRequest, getRequiredUser } from '../middleware/auth';
-
-const router = Router();
+import { requireAuth, AuthRequest } from '../middleware/auth';
+import { serializeSong } from '../serializers/song';
 
 export default function createFavoritesRouter(): Router {
-  router.get('/', async (req: AuthRequest, res: Response) => {
+  const router = Router();
+
+  router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = getRequiredUser(req).id;
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const result = await query(
         `SELECT s.*, f.created_at as favorited_at 
@@ -17,15 +19,16 @@ export default function createFavoritesRouter(): Router {
          ORDER BY f.created_at DESC`,
         [userId]
       );
-      res.json(result.rows);
+      res.json(result.rows.map(serializeSong));
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch favorites' });
     }
   });
 
-  router.post('/:songId', async (req: AuthRequest, res: Response) => {
+  router.post('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = getRequiredUser(req).id;
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const { songId } = req.params;
       await query(
@@ -38,9 +41,10 @@ export default function createFavoritesRouter(): Router {
     }
   });
 
-  router.delete('/:songId', async (req: AuthRequest, res: Response) => {
+  router.delete('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = getRequiredUser(req).id;
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
       
       const { songId } = req.params;
       await query('DELETE FROM favorites WHERE user_id = $1 AND song_id = $2', [userId, songId]);

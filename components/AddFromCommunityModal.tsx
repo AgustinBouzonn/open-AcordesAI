@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { X, Search, Loader2, Music } from 'lucide-react';
-import { api } from '../services/apiClient';
 import { SearchResult } from '../types';
 
 interface Props {
@@ -23,7 +22,8 @@ export function AddFromCommunityModal({ isOpen, onClose, onSelect }: Props) {
     }
     setLoading(true);
     try {
-      const data = await api.request<{ results?: SearchResult[] }>(`/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+      const data = await res.json() as { results?: SearchResult[] };
       setResults(data.results?.slice(0, 10) || []);
     } catch {
       setResults([]);

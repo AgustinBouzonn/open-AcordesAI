@@ -20,10 +20,7 @@ export function ImportModal({ isOpen, onClose, onImport }: Props) {
     setError('');
 
     try {
-      const data = await api.request<{ chords?: string }>('/import/fetch', {
-        method: 'POST',
-        body: JSON.stringify({ url }),
-      });
+      const data = await api.imports.fetch(url);
       if (data.chords) {
         onImport(data.chords);
         onClose();

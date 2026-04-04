@@ -1,5 +1,5 @@
 import { api } from './apiClient';
-import { Song, Comment } from '../types';
+import { Song, Comment, Instrument } from '../types';
 
 export const getFavorites = async (): Promise<Song[]> => {
   try {
@@ -47,24 +47,16 @@ export const getSong = async (id: string): Promise<Song> => {
   return await api.songs.get(id);
 };
 
-export const getChords = async (id: string, instrument: string): Promise<{ chords: string }> => {
+export const getChords = async (id: string, instrument: Instrument): Promise<{ chords: string }> => {
   return await api.songs.getChords(id, instrument);
 };
 
-export const getCachedChords = async (id: string, instrument: string): Promise<{ chords: string } | null> => {
-  try {
-    return await api.songs.getCachedChords(id, instrument);
-  } catch {
-    return null;
-  }
-};
-
-export const saveChords = async (id: string, chords: string, instrument: string): Promise<void> => {
+export const saveChords = async (id: string, chords: string, instrument: Instrument): Promise<void> => {
   await api.songs.saveChords(id, chords, instrument);
 };
 
 export const searchSongs = async (query: string): Promise<Song[]> => {
-  const response = await api.search.songs(query) as { results: Song[] };
+  const response = await api.search.songs(query);
   return response.results || [];
 };
 
@@ -100,8 +92,7 @@ export const getPopularSongs = async (limit?: number): Promise<Song[]> => {
 
 export const searchLocalSongs = async (query: string): Promise<Song[]> => {
   try {
-    const response = await api.search.localSongs(query, 20) as { results: Song[] };
-    return response.results || [];
+    return await api.songs.list(20, 0, query);
   } catch {
     return [];
   }

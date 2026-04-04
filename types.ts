@@ -6,24 +6,23 @@ export interface User {
   providerApiKey?: string;
 }
 
+export type Instrument = 'guitar' | 'ukulele' | 'piano';
+
 export interface Song {
   id: string;
   title: string;
   artist: string;
   lyrics?: string;
   chords?: string;
-  source?: string;
-  sourceUrl?: string;
   artworkUrl?: string;
   author?: string;
-  rating?: string | number | null;
-  rating_count?: string | number;
-  has_chords?: string | number;
-  comments_count?: string | number;
-  is_favorite?: boolean | string | number;
-  user_rating?: string | number | null;
-  user_id?: string | number;
-  view_count?: string | number;
+  rating?: string | number;
+  ratingCount?: number;
+  hasChords?: number;
+  userId?: string;
+  viewCount?: number;
+  source?: string;
+  sourceUrl?: string;
   createdAt?: string;
   updatedAt?: string;
   favoritedAt?: string;
@@ -40,10 +39,21 @@ export interface Comment {
 }
 
 export interface SearchResult {
-  id: string;
+  id?: string;
   title: string;
   artist: string;
   source: string;
   url?: string;
   artworkUrl?: string;
+}
+
+export interface RatingSummary {
+  average: string | null;
+  count: number;
+}
+
+export interface ProfileStats {
+  songsCreated: number;
+  favorites: number;
+  views: number;
 }

@@ -1,24 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
-import { AuthRequest, getRequiredUser, requireAuth } from '../middleware/auth';
-
-const router = Router();
+import { requireAuth, AuthRequest } from '../middleware/auth';
 
 export default function createRatingsRouter(): Router {
-  router.get('/:songId/me', requireAuth, async (req: AuthRequest, res: Response) => {
-    try {
-      const userId = getRequiredUser(req).id;
-      const { songId } = req.params;
-      const result = await query(
-        'SELECT score FROM ratings WHERE user_id = $1 AND song_id = $2 LIMIT 1',
-        [userId, songId]
-      );
-
-      res.json({ score: result.rows[0]?.score ?? null });
-    } catch (e) {
-      res.status(500).json({ error: 'Error fetching user rating' });
-    }
-  });
+  const router = Router();
 
   router.get('/:songId', async (req: Request, res: Response) => {
     try {
@@ -37,7 +22,12 @@ export default function createRatingsRouter(): Router {
   });
 
   router.post('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
-    const userId = getRequiredUser(req).id;
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     const { songId } = req.params;
     const { score } = req.body;
 

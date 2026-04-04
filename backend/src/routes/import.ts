@@ -1,9 +1,39 @@
 import { Router, Request, Response } from 'express';
-import dns from 'node:dns/promises';
-import net from 'node:net';
-import { requireAuth } from '../middleware/auth';
+import { importLimiter } from '../middleware/rateLimit';
 
 const router = Router();
+
+const ALLOWED_HOSTS = new Set([
+  'www.ultimateguitar.com',
+  'www.cifraclub.com',
+  'cifraspot.com',
+]);
+
+const isAllowedImportUrl = (value: string, source?: string): boolean => {
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password) {
+      return false;
+    }
+
+    if (!ALLOWED_HOSTS.has(parsed.hostname)) {
+      return false;
+    }
+
+    if (!source) {
+      return true;
+    }
+
+    const sourceConfig = SOURCES.find(s => s.id === source);
+    if (!sourceConfig) {
+      return false;
+    }
+
+    return new URL(sourceConfig.baseUrl).hostname === parsed.hostname;
+  } catch {
+    return false;
+  }
+};
 
 const SOURCES = [
   {
@@ -33,14 +63,39 @@ const SOURCES = [
     searchUrl: 'https://www.cifraclub.com/?q=',
     parse: (html: string) => {
       const chords: string[] = [];
-      const preMatch = html.match(/<div[^>]*class="cifra"[^>]*>([\s\S]*?)<\/div>/);
+      
+      const preMatch = html.match(/<pre[^>]*class="[^"]*chords[^"]*"[^>]*>([\s\S]*?)<\/pre>/i);
       if (preMatch) {
         const clean = preMatch[1]
           .replace(/<[^>]+>/g, '')
           .replace(/&nbsp;/g, ' ')
-          .replace(/&amp;/g, '&');
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>');
         chords.push(clean);
       }
+
+      if (chords.length === 0) {
+        const divMatch = html.match(/<div[^>]*data-sheet[^>]*>([\s\S]*?)<\/div>/i);
+        if (divMatch) {
+          const clean = divMatch[1]
+            .replace(/<[^>]+>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&');
+          chords.push(clean);
+        }
+      }
+
+      if (chords.length === 0) {
+        const scriptMatch = html.match(/__INITIAL_DATA__["\s:]*({[\s\S]*?"chords"[\s\S]*?})/);
+        if (scriptMatch) {
+          try {
+            const data = JSON.parse(scriptMatch[1]);
+            if (data.chords) chords.push(data.chords);
+          } catch {}
+        }
+      }
+
       return chords;
     }
   },
@@ -60,61 +115,11 @@ const SOURCES = [
   }
 ];
 
-const isPrivateHostname = (hostname: string): boolean =>
-  hostname === 'localhost' ||
-  hostname.endsWith('.local') ||
-  hostname === '0.0.0.0';
-
-const isPrivateIp = (ip: string): boolean => {
-  if (net.isIP(ip) === 4) {
-    return (
-      ip.startsWith('10.') ||
-      ip.startsWith('127.') ||
-      ip.startsWith('192.168.') ||
-      /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)
-    );
-  }
-
-  if (net.isIP(ip) === 6) {
-    return ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80:');
-  }
-
-  return false;
-};
-
-const validateImportUrl = async (rawUrl: string): Promise<URL> => {
-  let parsed: URL;
-
-  try {
-    parsed = new URL(rawUrl);
-  } catch {
-    throw new Error('La URL no es válida');
-  }
-
-  if (!['http:', 'https:'].includes(parsed.protocol)) {
-    throw new Error('Solo se permiten URLs http o https');
-  }
-
-  if (isPrivateHostname(parsed.hostname)) {
-    throw new Error('No se permiten URLs locales o privadas');
-  }
-
-  const addresses = await dns.lookup(parsed.hostname, { all: true });
-  if (addresses.some((entry) => isPrivateIp(entry.address))) {
-    throw new Error('No se permiten destinos de red privada');
-  }
-
-  return parsed;
-};
-
-const detectSourceFromUrl = (url: URL): string | undefined =>
-  SOURCES.find((source) => url.hostname.includes(new URL(source.baseUrl).hostname.replace(/^www\./, '')))?.id;
-
 router.get('/sources', (_, res) => {
   res.json(SOURCES.map(s => ({ id: s.id, name: s.name, baseUrl: s.baseUrl })));
 });
 
-router.post('/fetch', requireAuth, async (req: Request, res: Response) => {
+router.post('/fetch', importLimiter, async (req: Request, res: Response) => {
   const { url, source } = req.body;
   
   if (!url) {
@@ -122,16 +127,24 @@ router.post('/fetch', requireAuth, async (req: Request, res: Response) => {
     return;
   }
 
-  try {
-    const validatedUrl = await validateImportUrl(url);
-    const sourceId = typeof source === 'string' && source ? source : detectSourceFromUrl(validatedUrl);
+  if (!isAllowedImportUrl(url, source)) {
+    res.status(400).json({ message: 'URL no permitida' });
+    return;
+  }
 
-    const response = await fetch(validatedUrl, {
-      signal: AbortSignal.timeout(10000),
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      redirect: 'error',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       res.status(502).json({ message: 'Error al obtener la página' });
@@ -141,7 +154,7 @@ router.post('/fetch', requireAuth, async (req: Request, res: Response) => {
     const html = await response.text();
     
     let chords = '';
-    const sourceConfig = SOURCES.find(s => s.id === sourceId);
+    const sourceConfig = SOURCES.find(s => s.id === source);
     
     if (sourceConfig) {
       const parsed = sourceConfig.parse(html);
@@ -160,15 +173,13 @@ router.post('/fetch', requireAuth, async (req: Request, res: Response) => {
     res.json({ chords: chords.substring(0, 50000) });
   } catch (e) {
     console.error('[import/fetch]', e);
-    const message = e instanceof Error ? e.message : 'Error al importar cifrado';
-    const status = message.includes('URL') || message.includes('privad') || message.includes('http o https') ? 400 : 500;
-    res.status(status).json({ message });
+    res.status(500).json({ message: 'Error al importar cifrado' });
   }
 });
 
-router.get('/search/:source', async (req: Request, res: Response) => {
+router.get('/search/:source', importLimiter, async (req: Request, res: Response) => {
   const { source } = req.params;
-  const query = req.query.q as string;
+  const query = typeof req.query.q === 'string' ? req.query.q : '';
   
   if (!query) {
     res.status(400).json({ message: 'Query requerida' });
@@ -184,7 +195,6 @@ router.get('/search/:source', async (req: Request, res: Response) => {
   try {
     const searchUrl = sourceConfig.searchUrl + encodeURIComponent(query);
     const response = await fetch(searchUrl, {
-      signal: AbortSignal.timeout(10000),
       headers: {
         'User-Agent': 'Mozilla/5.0'
       }
