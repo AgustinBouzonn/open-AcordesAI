@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility for Interactive Controls in SongViewer
+**Learning:** In this application's dark theme, interactive icon-only buttons require explicit `aria-label`, `title` (for tooltips), and `focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none` styles to be both accessible and visually discernible for keyboard users. Furthermore, dynamic text spans that display state (like autoscroll speed and transpose amount) must use `aria-live="polite"` so screen readers can announce when they update.
+**Action:** When adding or modifying interactive controls in the application, apply these ARIA and focus-visible classes to ensure compliance with the application's UX accessibility guidelines.
