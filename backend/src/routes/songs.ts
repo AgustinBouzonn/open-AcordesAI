@@ -20,18 +20,23 @@ export default function createSongsRouter(): Router {
   router.get('/popular', async (req: Request, res: Response) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
+      // BOLT: Replaced correlated subqueries with LEFT JOIN LATERAL to eliminate per-row query execution and enable better PostgreSQL optimization
       const result = await query(
         `SELECT s.*, u.username as author,
-         COALESCE((SELECT AVG(score) FROM ratings WHERE song_id = s.id), 0) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-         (SELECT COUNT(*) FROM favorites WHERE song_id = s.id) as fav_count,
-         (SELECT COUNT(*) FROM history WHERE song_id = s.id) as view_count,
-         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
+         COALESCE(r_stats.avg_rating, 0) as rating,
+         COALESCE(r_stats.rating_count, 0) as rating_count,
+         COALESCE(f_stats.fav_count, 0) as fav_count,
+         COALESCE(h_stats.view_count, 0) as view_count,
+         COALESCE(c_stats.has_chords, 0) as has_chords
          FROM songs s
          LEFT JOIN users u ON s.user_id = u.id
          LEFT JOIN chord_cache cc ON s.id = cc.song_id
+         LEFT JOIN LATERAL (SELECT AVG(score) as avg_rating, COUNT(*) as rating_count FROM ratings WHERE song_id = s.id) r_stats ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) as fav_count FROM favorites WHERE song_id = s.id) f_stats ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) as view_count FROM history WHERE song_id = s.id) h_stats ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) as has_chords FROM chord_cache WHERE song_id = s.id) c_stats ON true
          WHERE cc.id IS NOT NULL
-         ORDER BY rating_count DESC, fav_count DESC, view_count DESC
+         ORDER BY COALESCE(r_stats.rating_count, 0) DESC, COALESCE(f_stats.fav_count, 0) DESC, COALESCE(h_stats.view_count, 0) DESC
          LIMIT $1`,
         [limit]
       );
@@ -46,13 +51,16 @@ export default function createSongsRouter(): Router {
       const limit = parseInt(req.query.limit as string) || 50;
       const offset = parseInt(req.query.offset as string) || 0;
       const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+      // BOLT: Replaced correlated subqueries with LEFT JOIN LATERAL for better performance on large datasets
       const result = await query(
         `SELECT s.*, u.username as author, 
-         (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
+         r_stats.avg_rating as rating,
+         COALESCE(r_stats.rating_count, 0) as rating_count,
+         COALESCE(c_stats.has_chords, 0) as has_chords
          FROM songs s 
          LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN LATERAL (SELECT AVG(score) as avg_rating, COUNT(*) as rating_count FROM ratings WHERE song_id = s.id) r_stats ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) as has_chords FROM chord_cache WHERE song_id = s.id) c_stats ON true
          WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
          ORDER BY
            CASE
