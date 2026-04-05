@@ -1,0 +1,3 @@
+## 2024-05-24 - PostgreSQL Correlated Subqueries Bottleneck
+**Learning:** Using correlated subqueries in the SELECT list (e.g., `(SELECT COUNT(*) FROM ratings WHERE song_id = s.id)`) forces PostgreSQL to execute the subquery for every single row returned, which leads to N+1 query performance issues, especially when sorting by those computed values or processing large datasets.
+**Action:** Replace correlated subqueries with `LEFT JOIN LATERAL` aggregations. While LATERAL joins still execute per-row, this approach consolidates multiple separate aggregations (like AVG and COUNT on the same table) into a single scan per row, significantly reducing overhead.
