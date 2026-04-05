@@ -29,6 +29,11 @@ services:
     environment:
       DATABASE_URL: postgres://acordesai:${DB_PASSWORD:?DB_PASSWORD must be set}@postgres:5432/acordesai
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      FRONTEND_URL: ${FRONTEND_URL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
@@ -42,13 +47,23 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8081:80"
+    expose:
+      - "80"
     depends_on:
       - backend
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     restart: unless-stopped
+    networks:
+      - default
+      - easypanel-webpage
+      - easypanel
+
+networks:
+  easypanel-webpage:
+    external: true
+  easypanel:
+    external: true
 
 volumes:
   postgres_data:

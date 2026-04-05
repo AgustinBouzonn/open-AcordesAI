@@ -72,12 +72,13 @@ function SongDetailRoute() {
 
 function AuthCallbackRoute() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { completeOAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+    const hash = window.location.hash;
+    const questionIndex = hash.indexOf('?');
+    const params = new URLSearchParams(questionIndex !== -1 ? hash.substring(questionIndex + 1) : '');
     const token = params.get('token');
     const oauthError = params.get('error');
 
@@ -94,7 +95,7 @@ function AuthCallbackRoute() {
     completeOAuth(token)
       .then(() => navigate('/'))
       .catch(() => setError('No se pudo completar el inicio de sesión social'));
-  }, [completeOAuth, location.search, navigate]);
+  }, [completeOAuth, navigate]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">

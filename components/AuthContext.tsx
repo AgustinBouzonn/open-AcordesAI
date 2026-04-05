@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithOAuth = (provider: OAuthProvider) => {
-    window.location.assign(api.auth.getOAuthStartUrl(provider));
+    window.location.replace(`${window.location.origin}/api/auth/oauth/${provider}/start`);
   };
 
   const completeOAuth = async (token: string) => {

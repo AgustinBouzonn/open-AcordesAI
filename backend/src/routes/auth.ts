@@ -39,7 +39,7 @@ const getFrontendUrl = (req: Request): string => {
 };
 
 const getOAuthConfig = (provider: OAuthProvider, req: Request) => {
-  const callbackUrl = `${req.protocol}://${req.get('host')}/api/auth/oauth/${provider}/callback`;
+  const callbackUrl = `https://acordesai.bthings.com.ar/api/auth/google/callback`;
 
   if (provider === 'google') {
     return {
@@ -149,10 +149,11 @@ const upsertOAuthUser = async ({
 };
 
 const redirectWithAuthResult = (req: Request, res: Response, params: Record<string, string>) => {
-  const redirectUrl = new URL(`${getFrontendUrl(req)}/#/auth/callback`);
-  Object.entries(params).forEach(([key, value]) => redirectUrl.searchParams.set(key, value));
-  res.clearCookie(OAUTH_COOKIE, { httpOnly: true, sameSite: 'lax', secure: req.secure });
-  res.redirect(redirectUrl.toString());
+  const frontendUrl = getFrontendUrl(req);
+  const queryString = new URLSearchParams(params).toString();
+  const redirectUrl = `${frontendUrl}/#/auth/callback?${queryString}`;
+  res.clearCookie(OAUTH_COOKIE, { httpOnly: true, sameSite: 'none', secure: true });
+  res.redirect(redirectUrl);
 };
 
 router.post('/register', authLimiter, async (req: Request, res: Response): Promise<void> => {
@@ -242,11 +243,11 @@ router.get('/oauth/:provider/start', authLimiter, async (req: Request, res: Resp
 
   res.cookie(OAUTH_COOKIE, state, {
     httpOnly: true,
-    sameSite: 'lax',
-    secure: req.secure,
+    sameSite: 'none',
+    secure: true,
     maxAge: 10 * 60 * 1000,
   });
-  res.redirect(authorizeUrl.toString());
+  res.redirect(302, authorizeUrl.toString());
 });
 
 router.get('/oauth/:provider/callback', async (req: Request, res: Response): Promise<void> => {
@@ -258,10 +259,9 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response): Pro
 
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
-  const cookies = parseCookies(req.headers.cookie);
 
-  if (!code || !state || cookies[OAUTH_COOKIE] !== state) {
-    redirectWithAuthResult(req, res, { error: 'No se pudo validar la autenticación social' });
+  if (!code || !state) {
+    redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
     return;
   }
 
@@ -342,6 +342,133 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response): Pro
   } catch (e) {
     console.error(`[auth/oauth/${provider}]`, e);
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+  }
+});
+
+router.get('/google/callback', async (req: Request, res: Response): Promise<void> => {
+  const state = typeof req.query.state === 'string' ? req.query.state : '';
+  const code = typeof req.query.code === 'string' ? req.query.code : '';
+
+  if (!code || !state) {
+    redirectWithAuthResult(req, res, { error: 'No se pudo validar la autenticación social' });
+    return;
+  }
+
+  try {
+    const provider = 'google';
+    const config = getOAuthConfig(provider, req);
+    if (!config.clientId || !config.clientSecret) {
+      redirectWithAuthResult(req, res, { error: `OAuth de ${provider} no está configurado` });
+      return;
+    }
+
+    const tokenResponse = await fetch(config.tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ client_id: config.clientId, client_secret: config.clientSecret, code, redirect_uri: config.callbackUrl, grant_type: 'authorization_code' }).toString(),
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error(`oauth token exchange failed: ${tokenResponse.status}`);
+    }
+
+    const tokenData = await tokenResponse.json() as { access_token?: string };
+    if (!tokenData.access_token) {
+      throw new Error('oauth token missing');
+    }
+
+    const userResponse = await fetch(config.userUrl, {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const userData = await userResponse.json() as { sub?: string; email?: string; name?: string; given_name?: string };
+    
+    const email = userData.email || '';
+    const username = userData.name || userData.given_name || userData.email?.split('@')[0] || 'google-user';
+    const providerId = userData.sub || '';
+
+    if (!email || !providerId) {
+      throw new Error('oauth profile incomplete');
+    }
+
+    const user = await upsertOAuthUser({ email, username, provider, providerId });
+    const token = buildJwt(user);
+    redirectWithAuthResult(req, res, { token });
+  } catch (e) {
+    console.error('[auth/google/callback]', e);
+    redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación con Google' });
+  }
+});
+
+router.get('/github/callback', async (req: Request, res: Response): Promise<void> => {
+  const state = typeof req.query.state === 'string' ? req.query.state : '';
+  const code = typeof req.query.code === 'string' ? req.query.code : '';
+
+  if (!code || !state) {
+    redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  try {
+    const provider = 'github';
+    const config = getOAuthConfig(provider, req);
+    if (!config.clientId || !config.clientSecret) {
+      redirectWithAuthResult(req, res, { error: `OAuth de ${provider} no está configurado` });
+      return;
+    }
+
+    const tokenResponse = await fetch(config.tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ client_id: config.clientId, client_secret: config.clientSecret, code, redirect_uri: config.callbackUrl, state }),
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error(`oauth token exchange failed: ${tokenResponse.status}`);
+    }
+
+    const tokenData = await tokenResponse.json() as { access_token?: string };
+    if (!tokenData.access_token) {
+      throw new Error('oauth token missing');
+    }
+
+    const userResponse = await fetch(config.userUrl, {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+        'User-Agent': 'AcordesAI',
+        Accept: 'application/vnd.github+json',
+      },
+    });
+    const userData = await userResponse.json() as { id?: number; login?: string; name?: string; email?: string };
+    
+    let email = userData.email || '';
+    const username = userData.name || userData.login || 'github-user';
+    const providerId = userData.id?.toString() || '';
+
+    if (!email) {
+      const emailResponse = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+          'User-Agent': 'AcordesAI',
+          Accept: 'application/vnd.github+json',
+        },
+      });
+      const emails = await emailResponse.json() as Array<{ email?: string; primary?: boolean; verified?: boolean }>;
+      email = emails.find((item) => item.primary && item.verified)?.email
+        || emails.find((item) => item.verified)?.email
+        || emails[0]?.email
+        || '';
+    }
+
+    if (!email || !providerId) {
+      throw new Error('oauth profile incomplete');
+    }
+
+    const user = await upsertOAuthUser({ email, username, provider, providerId });
+    const token = buildJwt(user);
+    redirectWithAuthResult(req, res, { token });
+  } catch (e) {
+    console.error('[auth/github/callback]', e);
+    redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación con GitHub' });
   }
 });
 

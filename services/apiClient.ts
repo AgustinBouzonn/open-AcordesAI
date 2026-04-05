@@ -88,6 +88,15 @@ class ApiClient {
     me: () => this.request<MeResponse>('/auth/me'),
     stats: () => this.request<ProfileStats>('/auth/stats'),
     getOAuthStartUrl: (provider: OAuthProvider) => `${this.getAbsoluteApiBase()}/auth/oauth/${provider}/start`,
+    getOAuthRedirect: async (provider: OAuthProvider) => {
+      const response = await fetch(`${this.getAbsoluteApiBase()}/auth/oauth/${provider}/start`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const url = response.url;
+      window.location.href = url;
+      return url;
+    },
     updateProvider: (provider: string, apiKey: string) =>
       this.request<MessageResponse>('/auth/provider', {
         method: 'POST',
