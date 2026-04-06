@@ -183,11 +183,19 @@ function AppContent() {
         storage.searchSongs(query).catch(() => []),
         storage.searchLocalSongs(query).catch(() => [])
       ]);
-      const allResults = [
-        ...localResults.map((result) => ({ ...result, source: 'comunidad' as const, id: `local-${result.id}` })),
-        ...itunesResults.map((result) => ({ ...result, source: 'itunes' as const, id: result.id }))
-      ];
-      setSearchResults(allResults.map(r => ({ title: r.title, artist: r.artist, source: r.source, url: r.sourceUrl, id: r.id })));
+
+      // Optimize: Use a single accumulation array to avoid intermediate array allocations
+      // from multiple .map() calls and array spread operator (...).
+      const finalResults: SearchResult[] = [];
+      for (let i = 0; i < localResults.length; i++) {
+        const r = localResults[i];
+        finalResults.push({ title: r.title, artist: r.artist, source: 'comunidad', url: r.sourceUrl, id: `local-${r.id}` });
+      }
+      for (let i = 0; i < itunesResults.length; i++) {
+        const r = itunesResults[i];
+        finalResults.push({ title: r.title, artist: r.artist, source: 'itunes', url: r.sourceUrl, id: r.id });
+      }
+      setSearchResults(finalResults);
     } catch {
       setErrorMessage('Error en la búsqueda');
     } finally {
