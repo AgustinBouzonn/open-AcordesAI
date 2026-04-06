@@ -105,7 +105,9 @@ const SONG_URLS = [
   'https://www.cifraclub.com.br/cafe-tacvba/eres-para-mi/',
 ];
 
-async function fetchSongWithPuppeteer(url: string, browser: puppeteer.Browser) {
+import type { Browser } from 'puppeteer';
+
+async function fetchSongWithPuppeteer(url: string, browser: Browser) {
   try {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
@@ -193,7 +195,7 @@ async function main() {
   console.log('🎸 CifraClub Mass Importer (Direct DB)\n');
 
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   });
 
