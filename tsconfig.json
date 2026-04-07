@@ -26,5 +26,7 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist", "backend", "scripts", "backend/scripts"]
 }
