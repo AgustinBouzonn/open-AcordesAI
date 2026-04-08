@@ -26,5 +26,10 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "scripts",
+    "scripts",
+    "backend/scripts"
+  ]
 }
