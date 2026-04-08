@@ -1,0 +1,3 @@
+## 2026-04-04 - Accesibilidad en botones de iconos
+**Learning:** En una interfaz oscura, los botones que solo contienen iconos suelen carecer de contexto para lectores de pantalla y usuarios de teclado. Es vital agregar `aria-label`, `title` en español, usar `aria-hidden="true"` en el icono decorativo y aplicar estilos explícitos de foco (`focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none`) para garantizar la navegabilidad y accesibilidad completas.
+**Action:** Al implementar o revisar botones sin texto visible, siempre verificar la presencia de atributos de accesibilidad ARIA en español, y asegurar que los estilos de foco de teclado sean claramente visibles contra fondos oscuros.
