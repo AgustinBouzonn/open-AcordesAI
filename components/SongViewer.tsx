@@ -280,7 +280,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} disabled={!user} onClick={() => handleRating(star)} className={`${!user ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition`}>
+                  <button key={star} aria-label={`Calificar con ${star} estrellas`} disabled={!user} onClick={() => handleRating(star)} className={`${!user ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition`}>
                     <Star size={16} className={star <= userRating ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-gray-500'} />
                   </button>
                 ))}
@@ -296,13 +296,13 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         </div>
         
         <div className="flex items-center gap-3">
-          <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition">
+          <button aria-label="Compartir" onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition">
             <Share2 size={20} />
           </button>
-          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
+          <button aria-label={isFav ? "Quitar de favoritos" : "Agregar a favoritos"} onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
-          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative">
+          <button aria-label="Opiniones" onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative">
             <MessageSquare size={20} />
             {comments.length > 0 && <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
           </button>
@@ -353,25 +353,25 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <button onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-2 text-gray-400 hover:text-white"><Minus size={16} /></button>
+            <button aria-label="Reducir tamaño de letra" onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-2 text-gray-400 hover:text-white"><Minus size={16} /></button>
             <Type size={18} className="text-brand" />
-            <button onClick={() => setFontSize(s => Math.min(24, s + 2))} className="p-2 text-gray-400 hover:text-white"><Plus size={16} /></button>
+            <button aria-label="Aumentar tamaño de letra" onClick={() => setFontSize(s => Math.min(24, s + 2))} className="p-2 text-gray-400 hover:text-white"><Plus size={16} /></button>
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={() => setTranspose(t => t - 1)} className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600">-1</button>
+            <button aria-label="Bajar semitono" onClick={() => setTranspose(t => t - 1)} className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600">-1</button>
             <span className="text-sm text-gray-400 min-w-[60px] text-center">
               {transpose === 0 ? 'Original' : transpose > 0 ? `+${transpose}` : transpose}
             </span>
-            <button onClick={() => setTranspose(t => t + 1)} className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600">+1</button>
+            <button aria-label="Subir semitono" onClick={() => setTranspose(t => t + 1)} className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600">+1</button>
           </div>
 
           <div className="flex items-center gap-1">
             {autoScrollSpeed > 0 && (
               <>
-                <button onClick={() => setAutoScrollSpeed(s => Math.max(1, s - 1))} className="p-1 text-gray-400 hover:text-white"><Minus size={13} /></button>
+                <button aria-label="Reducir velocidad de autoscroll" onClick={() => setAutoScrollSpeed(s => Math.max(1, s - 1))} className="p-1 text-gray-400 hover:text-white"><Minus size={13} /></button>
                 <span className="text-xs text-brand font-mono w-4 text-center">{autoScrollSpeed}</span>
-                <button onClick={() => setAutoScrollSpeed(s => Math.min(5, s + 1))} className="p-1 text-gray-400 hover:text-white"><Plus size={13} /></button>
+                <button aria-label="Aumentar velocidad de autoscroll" onClick={() => setAutoScrollSpeed(s => Math.min(5, s + 1))} className="p-1 text-gray-400 hover:text-white"><Plus size={13} /></button>
               </>
             )}
             <button onClick={() => setAutoScrollSpeed(s => s === 0 ? 1 : 0)} className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition ${autoScrollSpeed > 0 ? 'bg-brand text-white' : 'bg-dark-700 text-gray-300'}`}>
