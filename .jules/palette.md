@@ -1,0 +1,3 @@
+## 2024-04-08 - Added ARIA labels to SongViewer icon buttons
+**Learning:** Found multiple instances of icon-only buttons (like Share, Favorites, Increase Font, Autoscroll) in the SongViewer toolbar missing accessible names. These buttons relied entirely on visual Lucide icons.
+**Action:** When adding new icon-only buttons to toolbars, especially in media viewer components, always include a localized `aria-label` attribute (in Spanish for this project) to ensure screen reader users understand the action. For dynamic buttons like 'Favorites', make sure the `aria-label` changes based on state (e.g., "Agregar a favoritos" vs "Quitar de favoritos").
