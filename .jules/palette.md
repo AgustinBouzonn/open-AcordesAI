@@ -1,0 +1,3 @@
+## 2024-03-30 - Missing ARIA Labels on Icon-Only Actions
+**Learning:** Sighted users and screen readers alike struggle with icon-only action buttons (like Share, Favorite, Comments) in media viewers when they lack `aria-label`s, `title` tooltips, and clear keyboard focus states. The standard Lucide React icons are read aloud confusingly without `aria-hidden="true"`.
+**Action:** When working on media components, always pair icon-only `<button>`s with descriptive `aria-label`s and `title`s. Hide the internal icon from screen readers using `aria-hidden="true"`. Use `focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none` for consistent keyboard navigation.
