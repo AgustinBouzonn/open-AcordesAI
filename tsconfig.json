@@ -28,6 +28,8 @@
     "noEmit": true
   },
   "exclude": [
-    "scripts"
+    "scripts",
+    "scripts",
+    "backend/scripts"
   ]
 }
