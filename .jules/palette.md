@@ -1,0 +1,3 @@
+## 2026-04-02 - Missing ARIA labels and focus styles on icon buttons
+**Learning:** Found a pattern where interactive icon-only buttons (Share, Favorite, Comments, Stars, Text resize) lacked `aria-label` attributes and explicit keyboard focus styles in this app's dark theme, making them inaccessible to screen readers and keyboard users.
+**Action:** Always verify icon-only buttons have descriptive Spanish `aria-label`/`title` attributes, add `focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none` for keyboard navigation, and apply `aria-hidden="true"` to the nested decorative SVG icons.
