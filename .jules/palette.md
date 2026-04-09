@@ -1,0 +1,3 @@
+## 2024-05-15 - Icon-Only Button Accessibility in Media Controls
+**Learning:** Icon-only buttons used for media controls (like share, favorite, comments, font sizing, transposing, and autoscroll) must explicitly declare `aria-label`s to be screen reader accessible. Additionally, the nested SVG icons within these buttons should receive `aria-hidden="true"` to prevent duplicate or confusing announcements by screen readers.
+**Action:** Always add `aria-label` to `<button>` elements that only contain an icon, and add `aria-hidden="true"` to the inner icon component (e.g. `<Share2 aria-hidden="true" />`).
