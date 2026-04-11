@@ -1,0 +1,3 @@
+## 2024-04-11 - Accessible icon buttons and focus states in dark theme
+**Learning:** Icon-only buttons lack screen reader context, and keyboard focus states are crucial for navigation in the dark theme. Dynamic text updates (like transpose and font size) need `aria-live` to be announced properly.
+**Action:** Always add Spanish `aria-label` and `title` to icon-only controls. Apply `focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none` to interactive elements to ensure clear keyboard focus in the dark UI. Add `aria-live="polite"` to dynamic text spans displaying current state (e.g., transpose value).
