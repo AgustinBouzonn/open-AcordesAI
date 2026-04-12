@@ -1,3 +1,5 @@
+import { sanitizeInput } from '../utils/security';
+
 const AI_PROVIDER =
   process.env.AI_PROVIDER ||
   (process.env.GEMINI_API_KEY ? 'gemini' : process.env.OPENAI_API_KEY ? 'openai' : 'gemini');
@@ -41,14 +43,18 @@ const extractJson = (raw: string): string => {
 };
 
 const buildPrompt = (title: string, artist: string, instrument: string): string => {
+  const safeTitle = sanitizeInput(title);
+  const safeArtist = sanitizeInput(artist);
+  const safeInstrument = sanitizeInput(instrument);
+
   const instrumentInstructions: Record<string, string> = {
     guitar: 'Standard Guitar chords (e.g. G, Am, C, D).',
     ukulele: 'Ukulele chords in standard GCEA tuning.',
     piano: 'Piano/Keyboard chords, include bass note where appropriate (e.g. C/G).',
   };
-  const instr = instrumentInstructions[instrument] || instrumentInstructions.guitar;
+  const instr = instrumentInstructions[safeInstrument] || instrumentInstructions.guitar;
 
-  return `Generate the ${instrument} chord sheet with lyrics for "${title}" by "${artist}".
+  return `Generate the """${safeInstrument}""" chord sheet with lyrics for """${safeTitle}""" by """${safeArtist}""".
 ${instr}
 Format: chords placed above the corresponding lyrics on separate lines (standard chord sheet format).
 Determine the musical key.
