@@ -1,0 +1,3 @@
+## 2025-03-05 - Accessibility enhancements for interactive controls in dark themes
+**Learning:** Dynamic text states that function alongside icon-only controls (e.g., autoscroll speed or transposing controls) are not announced by screen readers without `aria-live="polite"`. Furthermore, standard focus states are difficult to perceive against dark theme backgrounds, making explicit tailwind configuration (`focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none`) necessary.
+**Action:** Always verify that state labels adjacent to buttons receive `aria-live` tags to ensure accessibility, and implement high-contrast `focus-visible` outlines on all interactive elements in dark-mode interfaces to maintain keyboard navigation visibility.
