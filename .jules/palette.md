@@ -1,0 +1,3 @@
+## 2026-04-13 - ARIA Labels for Dynamic Icon Buttons
+**Learning:** When dealing with icon-only buttons that toggle states (like 'Favoritos' or 'Comentarios'), the `aria-label` and `title` should dynamically reflect the *action* that will happen or the *current state*, rather than just a static description. Also, the lucide-react icons within these buttons must explicitly have `aria-hidden="true"` to prevent screen readers from announcing them in addition to the button's label.
+**Action:** Always apply dynamic `aria-label` and `title` attributes to stateful icon-only buttons, and ensure decorative child SVG icons receive `aria-hidden="true`.
