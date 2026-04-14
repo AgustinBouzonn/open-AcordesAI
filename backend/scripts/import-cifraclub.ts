@@ -1,3 +1,4 @@
+// @ts-ignore
 import puppeteer from 'puppeteer';
 import { Pool } from 'pg';
 
@@ -105,6 +106,7 @@ const SONG_URLS = [
   'https://www.cifraclub.com.br/cafe-tacvba/eres-para-mi/',
 ];
 
+// @ts-ignore
 async function fetchSongWithPuppeteer(url: string, browser: puppeteer.Browser) {
   try {
     const page = await browser.newPage();
@@ -193,7 +195,7 @@ async function main() {
   console.log('🎸 CifraClub Mass Importer (Direct DB)\n');
 
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   });
 
