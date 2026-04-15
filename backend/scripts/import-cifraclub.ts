@@ -106,7 +106,7 @@ const SONG_URLS = [
   'https://www.cifraclub.com.br/cafe-tacvba/eres-para-mi/',
 ];
 
-async function fetchSongWithPuppeteer(url: string, browser: puppeteer.Browser) {
+async function fetchSongWithPuppeteer(url: string, browser: any) {
   try {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
