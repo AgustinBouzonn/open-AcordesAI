@@ -21,17 +21,23 @@ export default function createSongsRouter(): Router {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
       const result = await query(
+        /* ⚡ Bolt: Consolidated ratings subqueries into a single LEFT JOIN LATERAL to reduce per-row scans */
         `SELECT s.*, u.username as author,
-         COALESCE((SELECT AVG(score) FROM ratings WHERE song_id = s.id), 0) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
+         COALESCE(r.rating, 0) as rating,
+         r.rating_count,
          (SELECT COUNT(*) FROM favorites WHERE song_id = s.id) as fav_count,
          (SELECT COUNT(*) FROM history WHERE song_id = s.id) as view_count,
          (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
          FROM songs s
          LEFT JOIN users u ON s.user_id = u.id
          LEFT JOIN chord_cache cc ON s.id = cc.song_id
+         LEFT JOIN LATERAL (
+           SELECT AVG(score) as rating, COUNT(*) as rating_count
+           FROM ratings
+           WHERE song_id = s.id
+         ) r ON true
          WHERE cc.id IS NOT NULL
-         ORDER BY rating_count DESC, fav_count DESC, view_count DESC
+         ORDER BY r.rating_count DESC, fav_count DESC, view_count DESC
          LIMIT $1`,
         [limit]
       );
@@ -47,12 +53,18 @@ export default function createSongsRouter(): Router {
       const offset = parseInt(req.query.offset as string) || 0;
       const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
       const result = await query(
+        /* ⚡ Bolt: Consolidated ratings subqueries into a single LEFT JOIN LATERAL to reduce per-row scans */
         `SELECT s.*, u.username as author, 
-         (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
+         COALESCE(r.rating, 0) as rating,
+         r.rating_count,
          (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
          FROM songs s 
          LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN LATERAL (
+           SELECT AVG(score) as rating, COUNT(*) as rating_count
+           FROM ratings
+           WHERE song_id = s.id
+         ) r ON true
          WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
          ORDER BY
            CASE
