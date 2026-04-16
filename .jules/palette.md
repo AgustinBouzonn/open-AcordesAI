@@ -1,0 +1,3 @@
+## 2024-04-16 - Accessible Playback and Action Controls
+**Learning:** Icon-only action buttons (Share, Favorite, Comments) and dynamic playback controls (Autoscroll, Transpose) in the SongViewer lack accessible names, hover/focus boundaries, and screen reader announcements for state changes, leading to a poor keyboard and screen reader experience in the dark theme.
+**Action:** Always add `aria-label` and `title` to icon-only buttons, use `aria-hidden="true"` on the icons themselves, apply `focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none` for keyboard navigation, and ensure dynamic text indicators (like speed or transpose value) use `aria-live="polite"` so state changes are announced.
