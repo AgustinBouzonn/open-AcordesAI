@@ -296,14 +296,31 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         </div>
         
         <div className="flex items-center gap-3">
-          <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition">
-            <Share2 size={20} />
+          <button
+            onClick={handleShare}
+            className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
+            aria-label="Compartir canción"
+            title="Compartir canción"
+          >
+            <Share2 size={20} aria-hidden="true" />
           </button>
-          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
-            <Heart size={20} fill={isFav ? "currentColor" : "none"} />
+          <button
+            onClick={handleToggleFav}
+            disabled={!user}
+            className={`p-3 rounded-full transition focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
+            aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+            title={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          >
+            <Heart size={20} fill={isFav ? "currentColor" : "none"} aria-hidden="true" />
           </button>
-          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative">
-            <MessageSquare size={20} />
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
+            aria-label={showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'}
+            title={showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'}
+            aria-expanded={showComments}
+          >
+            <MessageSquare size={20} aria-hidden="true" />
             {comments.length > 0 && <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
           </button>
         </div>
