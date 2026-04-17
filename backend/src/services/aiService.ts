@@ -1,3 +1,5 @@
+import { sanitizeInput, safeJSONParse } from '../utils/security';
+
 const AI_PROVIDER =
   process.env.AI_PROVIDER ||
   (process.env.GEMINI_API_KEY ? 'gemini' : process.env.OPENAI_API_KEY ? 'openai' : 'gemini');
@@ -11,8 +13,6 @@ const AI_MODEL =
   process.env.AI_MODEL ||
   (AI_PROVIDER === 'gemini' ? 'gemini-2.0-flash' : 'gpt-4o-mini');
 const AI_BASE_URL = process.env.AI_BASE_URL || 'https://api.openai.com/v1';
-
-import { sanitizeInput, safeJSONParse } from '../utils/security';
 
 export interface ChordResult {
   title: string;
@@ -119,7 +119,7 @@ export async function generateChords(
   const rawJson = AI_PROVIDER === 'gemini' ? await callGemini(prompt) : await callOpenAI(prompt);
   const parsedJson = extractJson(rawJson);
 
-  const data = safeJSONParse<Partial<ChordResult>>(parsedJson, {});
+  const data = safeJSONParse<Partial<ChordResult> | null>(parsedJson, null);
   if (!data || typeof data !== 'object') {
     throw new Error('La IA devolvió una respuesta inválida. Intentá de nuevo.');
   }
