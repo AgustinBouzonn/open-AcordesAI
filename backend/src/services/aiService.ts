@@ -12,6 +12,8 @@ const AI_MODEL =
   (AI_PROVIDER === 'gemini' ? 'gemini-2.0-flash' : 'gpt-4o-mini');
 const AI_BASE_URL = process.env.AI_BASE_URL || 'https://api.openai.com/v1';
 
+import { sanitizeInput, safeJSONParse } from '../utils/security';
+
 export interface ChordResult {
   title: string;
   artist: string;
@@ -41,14 +43,18 @@ const extractJson = (raw: string): string => {
 };
 
 const buildPrompt = (title: string, artist: string, instrument: string): string => {
+  const cleanTitle = sanitizeInput(title);
+  const cleanArtist = sanitizeInput(artist);
+  const cleanInstrument = sanitizeInput(instrument);
+
   const instrumentInstructions: Record<string, string> = {
     guitar: 'Standard Guitar chords (e.g. G, Am, C, D).',
     ukulele: 'Ukulele chords in standard GCEA tuning.',
     piano: 'Piano/Keyboard chords, include bass note where appropriate (e.g. C/G).',
   };
-  const instr = instrumentInstructions[instrument] || instrumentInstructions.guitar;
+  const instr = instrumentInstructions[cleanInstrument] || instrumentInstructions.guitar;
 
-  return `Generate the ${instrument} chord sheet with lyrics for "${title}" by "${artist}".
+  return `Generate the ${cleanInstrument} chord sheet with lyrics for """${cleanTitle}""" by """${cleanArtist}""".
 ${instr}
 Format: chords placed above the corresponding lyrics on separate lines (standard chord sheet format).
 Determine the musical key.
@@ -113,10 +119,8 @@ export async function generateChords(
   const rawJson = AI_PROVIDER === 'gemini' ? await callGemini(prompt) : await callOpenAI(prompt);
   const parsedJson = extractJson(rawJson);
 
-  let data: Partial<ChordResult>;
-  try {
-    data = JSON.parse(parsedJson);
-  } catch {
+  const data = safeJSONParse<Partial<ChordResult>>(parsedJson, {});
+  if (!data || typeof data !== 'object') {
     throw new Error('La IA devolvió una respuesta inválida. Intentá de nuevo.');
   }
 
