@@ -1,3 +1,4 @@
+// @ts-ignore
 import puppeteer from 'puppeteer';
 import fetch from 'node-fetch';
 
