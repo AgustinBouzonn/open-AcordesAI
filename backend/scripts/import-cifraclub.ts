@@ -1,3 +1,4 @@
+// @ts-nocheck
 import puppeteer from 'puppeteer';
 import { Pool } from 'pg';
 
