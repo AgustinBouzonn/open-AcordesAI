@@ -260,7 +260,10 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response): Pro
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
 
-  if (!code || !state) {
+  const cookies = parseCookies(req.headers.cookie);
+  const storedState = cookies[OAUTH_COOKIE];
+
+  if (!code || !state || state !== storedState) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
     return;
   }
@@ -349,7 +352,10 @@ router.get('/google/callback', async (req: Request, res: Response): Promise<void
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
 
-  if (!code || !state) {
+  const cookies = parseCookies(req.headers.cookie);
+  const storedState = cookies[OAUTH_COOKIE];
+
+  if (!code || !state || state !== storedState) {
     redirectWithAuthResult(req, res, { error: 'No se pudo validar la autenticación social' });
     return;
   }
@@ -403,7 +409,10 @@ router.get('/github/callback', async (req: Request, res: Response): Promise<void
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
 
-  if (!code || !state) {
+  const cookies = parseCookies(req.headers.cookie);
+  const storedState = cookies[OAUTH_COOKIE];
+
+  if (!code || !state || state !== storedState) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
     return;
   }
