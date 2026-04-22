@@ -1,0 +1,3 @@
+## 2024-04-22 - [SQL Lateral Joins vs Correlated Subqueries]
+**Learning:** Correlated subqueries in the SELECT list execute sequentially for each returned row, causing massive overhead when aggregating metrics like ratings and favorited counts from multiple related tables.
+**Action:** Replace multiple correlated subqueries with `LEFT JOIN LATERAL (...) ON true` to group aggregations into consolidated scans and drastically reduce DB query time. When doing so, remember that `COUNT()` naturally returns 0 but `AVG()` may return NULL, so continue using `COALESCE(..., 0)` for calculated numeric averages.
