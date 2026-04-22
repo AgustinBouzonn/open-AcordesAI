@@ -257,11 +257,20 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response): Pro
     return;
   }
 
+  const cookies = parseCookies(req.headers.cookie);
+  const cookieState = cookies[OAUTH_COOKIE];
+
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
 
   if (!code || !state) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  // Prevent CSRF attacks by validating the state parameter against the cookie
+  if (!cookieState || state !== cookieState) {
+    redirectWithAuthResult(req, res, { error: 'Validación de seguridad fallida. Por favor, intenta de nuevo.' });
     return;
   }
 
@@ -346,11 +355,20 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response): Pro
 });
 
 router.get('/google/callback', async (req: Request, res: Response): Promise<void> => {
+  const cookies = parseCookies(req.headers.cookie);
+  const cookieState = cookies[OAUTH_COOKIE];
+
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
 
   if (!code || !state) {
     redirectWithAuthResult(req, res, { error: 'No se pudo validar la autenticación social' });
+    return;
+  }
+
+  // Prevent CSRF attacks by validating the state parameter against the cookie
+  if (!cookieState || state !== cookieState) {
+    redirectWithAuthResult(req, res, { error: 'Validación de seguridad fallida. Por favor, intenta de nuevo.' });
     return;
   }
 
@@ -400,11 +418,20 @@ router.get('/google/callback', async (req: Request, res: Response): Promise<void
 });
 
 router.get('/github/callback', async (req: Request, res: Response): Promise<void> => {
+  const cookies = parseCookies(req.headers.cookie);
+  const cookieState = cookies[OAUTH_COOKIE];
+
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
 
   if (!code || !state) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  // Prevent CSRF attacks by validating the state parameter against the cookie
+  if (!cookieState || state !== cookieState) {
+    redirectWithAuthResult(req, res, { error: 'Validación de seguridad fallida. Por favor, intenta de nuevo.' });
     return;
   }
 
