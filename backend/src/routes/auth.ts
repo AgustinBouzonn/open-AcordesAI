@@ -265,6 +265,14 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response): Pro
     return;
   }
 
+  // 🛡️ Sentinel: Validate CSRF state parameter against OAUTH_COOKIE
+  const storedState = parseCookies(req.headers.cookie)[OAUTH_COOKIE];
+  if (!storedState || storedState !== state) {
+    console.error(`[auth/oauth/${provider}] CSRF state mismatch`);
+    redirectWithAuthResult(req, res, { error: 'Validación de seguridad fallida. Por favor, intenta de nuevo.' });
+    return;
+  }
+
   try {
     const config = getOAuthConfig(provider, req);
     if (!config.clientId || !config.clientSecret) {
@@ -354,6 +362,14 @@ router.get('/google/callback', async (req: Request, res: Response): Promise<void
     return;
   }
 
+  // 🛡️ Sentinel: Validate CSRF state parameter against OAUTH_COOKIE
+  const storedState = parseCookies(req.headers.cookie)[OAUTH_COOKIE];
+  if (!storedState || storedState !== state) {
+    console.error('[auth/google/callback] CSRF state mismatch');
+    redirectWithAuthResult(req, res, { error: 'Validación de seguridad fallida. Por favor, intenta de nuevo.' });
+    return;
+  }
+
   try {
     const provider = 'google';
     const config = getOAuthConfig(provider, req);
@@ -405,6 +421,14 @@ router.get('/github/callback', async (req: Request, res: Response): Promise<void
 
   if (!code || !state) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  // 🛡️ Sentinel: Validate CSRF state parameter against OAUTH_COOKIE
+  const storedState = parseCookies(req.headers.cookie)[OAUTH_COOKIE];
+  if (!storedState || storedState !== state) {
+    console.error('[auth/github/callback] CSRF state mismatch');
+    redirectWithAuthResult(req, res, { error: 'Validación de seguridad fallida. Por favor, intenta de nuevo.' });
     return;
   }
 
