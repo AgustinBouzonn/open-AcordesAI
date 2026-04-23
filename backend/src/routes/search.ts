@@ -15,13 +15,18 @@ router.get('/local', async (req: Request, res: Response) => {
   try {
     const like = `%${q}%`;
     const result = await query(
-      `SELECT s.*,
+      `-- Bolt Performance Optimization:
+       -- Consolidating correlated subqueries (like rating aggregations) on the same table
+       -- into a single LEFT JOIN LATERAL to eliminate redundant dependent table scans per row.
+       SELECT s.*,
               u.username as author,
-              (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
-              (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-              (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
+              r_stats.rating,
+              r_stats.rating_count,
+              cc_stats.has_chords
        FROM songs s
        LEFT JOIN users u ON s.user_id = u.id
+       LEFT JOIN LATERAL (SELECT AVG(score) as rating, COUNT(*) as rating_count FROM ratings WHERE song_id = s.id) r_stats ON true
+       LEFT JOIN LATERAL (SELECT COUNT(*) as has_chords FROM chord_cache WHERE song_id = s.id) cc_stats ON true
        WHERE s.title ILIKE $1 OR s.artist ILIKE $1
        ORDER BY
          CASE
@@ -29,7 +34,7 @@ router.get('/local', async (req: Request, res: Response) => {
            WHEN s.artist ILIKE $2 THEN 1
            ELSE 2
          END,
-         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) DESC,
+         cc_stats.has_chords DESC,
          s.updated_at DESC,
          s.created_at DESC
        LIMIT $3`,
