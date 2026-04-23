@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility for Dynamic Control States
+**Learning:** Icon-only control buttons with dynamic states (e.g. autoscroll toggles or transpose counters) require careful screen-reader management. Static ARIA labels fail to inform the user of action consequences, and dynamically changing text values (like numbers updating) are ignored unless explicitly marked.
+**Action:** When adding accessibility to interactive widget controls, ensure toggle buttons have dynamically evaluated `aria-label`s reflecting the *next* action or current state, apply `aria-hidden="true"` to SVG icons, and add `aria-live="polite"` to dynamically updating text spans (like transpose values or speed counters) so changes are announced politely.
