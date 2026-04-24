@@ -1,0 +1,7 @@
+## 2026-04-24 - Dynamic ARIA labels masking inner text content
+**Learning:** When you add an `aria-label` to an element, screen readers completely ignore the element's inner text content. For instance, if an icon button has an `aria-label` and also contains a notification badge (like a comment count), that badge will be hidden from visually impaired users.
+**Action:** When adding `aria-label` to buttons that contain dynamic informational text (like counts or badges), you must interpolate that information directly into the `aria-label` (e.g., `aria-label={`Mostrar ${count} comentarios`}`) to ensure information parity between sighted and screen-reader users.
+
+## 2026-04-24 - Dynamic ARIA labels for toggleable icon-only buttons
+**Learning:** For icon-only buttons that toggle states (like favorite or comments), using a static ARIA label is confusing because it doesn't convey the current state or the result of the action to screen reader users. Additionally, decorative elements within the button (like the icon itself or a comment count badge) can be announced redundantly if not explicitly hidden from screen readers.
+**Action:** Always use dynamic `aria-label` and `title` attributes that reflect the *action that will happen* or the *current state* (e.g., 'Quitar de favoritos' instead of just 'Favoritos') and add `aria-hidden="true"` to inner SVG icons and decorative spans to ensure a clean, precise announcement.
