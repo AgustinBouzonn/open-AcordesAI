@@ -265,6 +265,14 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response): Pro
     return;
   }
 
+  const cookies = parseCookies(req.headers.cookie);
+  const expectedState = cookies[OAUTH_COOKIE];
+
+  if (!expectedState || state !== expectedState) {
+    redirectWithAuthResult(req, res, { error: 'Estado de autenticación inválido' });
+    return;
+  }
+
   try {
     const config = getOAuthConfig(provider, req);
     if (!config.clientId || !config.clientSecret) {
@@ -354,6 +362,14 @@ router.get('/google/callback', async (req: Request, res: Response): Promise<void
     return;
   }
 
+  const cookies = parseCookies(req.headers.cookie);
+  const expectedState = cookies[OAUTH_COOKIE];
+
+  if (!expectedState || state !== expectedState) {
+    redirectWithAuthResult(req, res, { error: 'Estado de autenticación inválido' });
+    return;
+  }
+
   try {
     const provider = 'google';
     const config = getOAuthConfig(provider, req);
@@ -405,6 +421,14 @@ router.get('/github/callback', async (req: Request, res: Response): Promise<void
 
   if (!code || !state) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  const cookies = parseCookies(req.headers.cookie);
+  const expectedState = cookies[OAUTH_COOKIE];
+
+  if (!expectedState || state !== expectedState) {
+    redirectWithAuthResult(req, res, { error: 'Estado de autenticación inválido' });
     return;
   }
 
