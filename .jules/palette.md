@@ -1,0 +1,3 @@
+## 2024-05-18 - Dynamic ARIA labels for stateful icon buttons
+**Learning:** Icon-only buttons that toggle application states (like favorite or comment visibility) present an accessibility challenge: static ARIA labels fail to inform screen readers of the action's current context or result. Relying on visual cues (like icon fill or adjacent badges) is insufficient for visually impaired users.
+**Action:** Always provide dynamic `aria-label` and `title` attributes that reflect the *action* that will occur when pressed based on the current state (e.g., "Quitar de favoritos" vs "Añadir a favoritos"). Additionally, explicitly mark the child `<Icon />` components with `aria-hidden="true"` to prevent redundant screen reader announcements.
