@@ -1,4 +1,6 @@
+// @ts-ignore
 import puppeteer from 'puppeteer';
+// @ts-ignore
 import fetch from 'node-fetch';
 
 const BACKEND_URL = 'http://10.11.243.151:3001';
@@ -116,7 +118,7 @@ async function fetchSongWithPuppeteer(url: string): Promise<SongData | null> {
   let browser;
   try {
     browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     });
 
