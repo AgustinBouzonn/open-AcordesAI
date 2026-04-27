@@ -259,7 +259,7 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response): Pro
 
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
-  const cookies = parseCookies(req.headers.cookie);
+  const cookies = parseCookies(req.headers.cookie || '');
   const oauthState = cookies[OAUTH_COOKIE];
 
   if (!code || !state) {
@@ -355,7 +355,7 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response): Pro
 router.get('/google/callback', async (req: Request, res: Response): Promise<void> => {
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
-  const cookies = parseCookies(req.headers.cookie);
+  const cookies = parseCookies(req.headers.cookie || '');
   const oauthState = cookies[OAUTH_COOKIE];
 
   if (!code || !state) {
@@ -416,7 +416,7 @@ router.get('/google/callback', async (req: Request, res: Response): Promise<void
 router.get('/github/callback', async (req: Request, res: Response): Promise<void> => {
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
-  const cookies = parseCookies(req.headers.cookie);
+  const cookies = parseCookies(req.headers.cookie || '');
   const oauthState = cookies[OAUTH_COOKIE];
 
   if (!code || !state) {
