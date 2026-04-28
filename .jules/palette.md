@@ -1,0 +1,3 @@
+## 2025-04-28 - Dynamic Aria Labels and Live Regions for Icons and Transpose controls
+**Learning:** Icon-only buttons that toggle state (like Favorites) need dynamic `aria-label`s and `title`s to reflect the current state and upcoming action to be fully accessible. Also, dynamic text fields that update state (like transpose values and autoscroll speed) require `aria-live="polite"` so screen readers properly announce the state changes.
+**Action:** Always add localized `aria-label` and `title` to icon-only buttons, use `aria-hidden="true"` on decorative icons inside them, and apply `aria-live="polite"` to spans displaying dynamically updated values.
