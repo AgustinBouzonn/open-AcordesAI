@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    url: 'https://tu-dominio.com'
+    url: 'https://acordesai.bthings.com.ar'
   }
 };
 

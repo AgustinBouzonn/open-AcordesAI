@@ -32,3 +32,4 @@ dist-ssr
 android/local.properties
 android/app/release/
 android/app/debug/
+keystore.properties
