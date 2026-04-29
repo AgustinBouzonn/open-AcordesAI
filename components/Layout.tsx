@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, Heart, Music2, Clock, LogIn, UserPlus, LogOut, Users, User, AudioWaveform } from 'lucide-react';
+import { Home, Search, Heart, Music2, Clock, LogIn, UserPlus, LogOut, Users, User, AudioWaveform, Music } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { InstallAppButton } from './InstallAppButton';
 
@@ -45,6 +45,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
             </button>
             <button onClick={() => onNavigate('TUNER')} className={`text-sm font-medium hover:text-brand transition ${activeTab === 'TUNER' ? 'text-brand' : 'text-gray-400'}`}>
               Afinador
+            </button>
+            <button onClick={() => onNavigate('METRONOME')} className={`text-sm font-medium hover:text-brand transition ${activeTab === 'METRONOME' ? 'text-brand' : 'text-gray-400'}`}>
+              Metrónomo
             </button>
           </nav>
 
@@ -99,6 +102,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
           </button>
           <button onClick={() => onNavigate('TUNER')} className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'TUNER' ? 'text-brand' : 'text-gray-500'}`}>
             <AudioWaveform size={20} /><span className="text-[10px]">Afinador</span>
+          </button>
+          <button onClick={() => onNavigate('METRONOME')} className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'METRONOME' ? 'text-brand' : 'text-gray-500'}`}>
+            <Music size={20} /><span className="text-[10px]">Metro</span>
           </button>
         </div>
       </div>

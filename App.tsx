@@ -7,6 +7,7 @@ import { CreateSongModal } from './components/CreateSongModal';
 import { AddFromCommunityModal } from './components/AddFromCommunityModal';
 import { ImportUrlModal } from './components/ImportUrlModal';
 import { Tuner } from './components/Tuner';
+import { Metronome } from './components/Metronome';
 import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './components/AuthContext';
 import { Song, SearchResult } from './types';
@@ -146,6 +147,7 @@ function AppContent() {
     location.pathname === '/history' ? 'HISTORY' :
     location.pathname === '/community' ? 'COMMUNITY' :
     location.pathname === '/tuner' ? 'TUNER' :
+    location.pathname === '/metronome' ? 'METRONOME' :
     location.pathname.startsWith('/song/') ? 'SONG_DETAIL' : 'HOME';
 
   useEffect(() => {
@@ -526,6 +528,7 @@ function AppContent() {
     if (tab === 'HISTORY') navigate('/history');
     if (tab === 'COMMUNITY') navigate('/community');
     if (tab === 'TUNER') navigate('/tuner');
+    if (tab === 'METRONOME') navigate('/metronome');
   };
 
   return (
@@ -576,6 +579,7 @@ function AppContent() {
           <Route path="/history" element={renderHistory()} />
           <Route path="/community" element={renderCommunity()} />
           <Route path="/tuner" element={<Tuner />} />
+          <Route path="/metronome" element={<Metronome />} />
           <Route path="/song/:id" element={<SongDetailRoute />} />
           <Route path="/auth/callback" element={<AuthCallbackRoute />} />
         </Routes>

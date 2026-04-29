@@ -21,16 +21,18 @@ export default function createSongsRouter(): Router {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
       const result = await query(
-        `SELECT s.*, u.username as author,
-         COALESCE((SELECT AVG(score) FROM ratings WHERE song_id = s.id), 0) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-         (SELECT COUNT(*) FROM favorites WHERE song_id = s.id) as fav_count,
-         (SELECT COUNT(*) FROM history WHERE song_id = s.id) as view_count,
-         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
+        `SELECT s.*, u.username AS author,
+                COALESCE(r.avg_score, 0) AS rating,
+                COALESCE(r.cnt, 0)       AS rating_count,
+                COALESCE(f.cnt, 0)       AS fav_count,
+                COALESCE(h.cnt, 0)       AS view_count,
+                cc.cnt                    AS has_chords
          FROM songs s
          LEFT JOIN users u ON s.user_id = u.id
-         LEFT JOIN chord_cache cc ON s.id = cc.song_id
-         WHERE cc.id IS NOT NULL
+         LEFT JOIN (SELECT song_id, AVG(score) AS avg_score, COUNT(*) AS cnt FROM ratings GROUP BY song_id) r ON r.song_id = s.id
+         LEFT JOIN (SELECT song_id, COUNT(*) AS cnt FROM favorites GROUP BY song_id) f ON f.song_id = s.id
+         LEFT JOIN (SELECT song_id, COUNT(*) AS cnt FROM history GROUP BY song_id) h ON h.song_id = s.id
+         INNER JOIN (SELECT song_id, COUNT(*) AS cnt FROM chord_cache GROUP BY song_id) cc ON cc.song_id = s.id
          ORDER BY rating_count DESC, fav_count DESC, view_count DESC
          LIMIT $1`,
         [limit]

@@ -39,7 +39,7 @@ const getFrontendUrl = (req: Request): string => {
 };
 
 const getOAuthConfig = (provider: OAuthProvider, req: Request) => {
-  const callbackUrl = `https://acordesai.bthings.com.ar/api/auth/google/callback`;
+  const callbackUrl = `${getFrontendUrl(req)}/api/auth/oauth/${provider}/callback`;
 
   if (provider === 'google') {
     return {
