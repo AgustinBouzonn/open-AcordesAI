@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, TrendingUp, Music, ChevronRight, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, TrendingUp, Music, ChevronRight, Star, Guitar } from 'lucide-react';
 import { Song } from '../../types';
 import { Artwork } from '../Artwork';
 
@@ -40,6 +41,9 @@ export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, on
         <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
         <button type="submit" className="hidden">Buscar</button>
       </form>
+      <Link to="/chord-search" className="inline-flex items-center gap-2 text-brand text-sm hover:underline">
+        <Guitar size={14} /> ¿Sabés algunos acordes? Buscá canciones por progresión
+      </Link>
     </div>
 
     <div className="space-y-4">

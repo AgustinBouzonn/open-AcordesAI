@@ -143,6 +143,7 @@ class ApiClient {
       }),
     list: (limit?: number, offset?: number, q?: string) => this.request<Song[]>(`/songs?limit=${limit || 50}&offset=${offset || 0}${q ? `&q=${encodeURIComponent(q)}` : ''}`),
     getPopular: (limit?: number) => this.request<Song[]>(`/songs/popular?limit=${limit || 20}`),
+    byChords: (chords: string[]) => this.request<{ chords: string[]; results: Song[] }>(`/songs/by-chords?chords=${encodeURIComponent(chords.join(','))}`),
     getComments: (id: string) => this.request<Comment[]>(`/comments/${id}`),
     addComment: (id: string, content: string) =>
       this.request<Comment>(`/comments/${id}`, {
@@ -166,6 +167,17 @@ class ApiClient {
     add: (songId: string) =>
       this.request<MessageResponse>(`/history/${songId}`, { method: 'POST' }),
     clear: () => this.request<MessageResponse>('/history', { method: 'DELETE' }),
+  };
+
+  setlists = {
+    list: () => this.request<Array<{ id: number; name: string; songCount: number; createdAt: string; updatedAt: string }>>('/setlists'),
+    get: (id: number) => this.request<{ id: number; name: string; createdAt: string; updatedAt: string; songs: (Song & { position: number })[] }>(`/setlists/${id}`),
+    create: (name: string) => this.request<{ id: number; name: string; songCount: number }>('/setlists', { method: 'POST', body: JSON.stringify({ name }) }),
+    rename: (id: number, name: string) => this.request<MessageResponse>(`/setlists/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }),
+    remove: (id: number) => this.request<MessageResponse>(`/setlists/${id}`, { method: 'DELETE' }),
+    addSong: (id: number, songId: string) => this.request<MessageResponse>(`/setlists/${id}/songs`, { method: 'POST', body: JSON.stringify({ songId }) }),
+    removeSong: (id: number, songId: string) => this.request<MessageResponse>(`/setlists/${id}/songs/${songId}`, { method: 'DELETE' }),
+    reorder: (id: number, songIds: string[]) => this.request<MessageResponse>(`/setlists/${id}/order`, { method: 'PUT', body: JSON.stringify({ songIds }) }),
   };
 
   ratings = {

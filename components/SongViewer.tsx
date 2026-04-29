@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star, Maximize, FileText } from 'lucide-react';
+import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star, Maximize, FileText, ListMusic, Repeat } from 'lucide-react';
 import { Song, Comment, RatingSummary, Instrument } from '../types';
 import { useAuth } from './AuthContext';
 import { ImportModal } from './ImportModal';
@@ -9,6 +9,7 @@ import * as storage from '../services/storageService';
 import { acquireWakeLock, releaseWakeLock } from '../services/wakeLock';
 import { useToast } from './Toast';
 import { ChordChart } from './ChordChart';
+import { AddToSetlistModal } from './AddToSetlistModal';
 
 interface SongViewerProps {
   song: Song;
@@ -45,6 +46,9 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [instrument, setInstrument] = useState<Instrument>('guitar');
   const [aiConfigured, setAiConfigured] = useState(true);
   const [presentationMode, setPresentationMode] = useState(false);
+  const [showAddToSetlist, setShowAddToSetlist] = useState(false);
+  const [loopRange, setLoopRange] = useState<{ top: number; bottom: number } | null>(null);
+  const [selectionPrompt, setSelectionPrompt] = useState<{ top: number; bottom: number; x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (!presentationMode) return;
@@ -68,10 +72,13 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     const intervalMs = Math.max(20, 110 - autoScrollSpeed * 18);
     scrollInterval.current = setInterval(() => {
       const before = window.scrollY;
-      window.scrollBy({ top: 1, behavior: 'auto' });
-      if (window.scrollY === before) {
-        setAutoScrollSpeed(0);
+      const viewportBottom = before + window.innerHeight;
+      if (loopRange && viewportBottom >= loopRange.bottom) {
+        window.scrollTo({ top: Math.max(0, loopRange.top - 60), behavior: 'auto' });
+        return;
       }
+      window.scrollBy({ top: 1, behavior: 'auto' });
+      if (window.scrollY === before) setAutoScrollSpeed(0);
     }, intervalMs);
 
     return () => {
@@ -81,7 +88,24 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       }
       void releaseWakeLock();
     };
-  }, [autoScrollSpeed]);
+  }, [autoScrollSpeed, loopRange]);
+
+  useEffect(() => {
+    const handler = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || sel.toString().trim().length < 5) {
+        setSelectionPrompt(null);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const top = rect.top + window.scrollY;
+      const bottom = rect.bottom + window.scrollY;
+      setSelectionPrompt({ top, bottom, x: rect.left + rect.width / 2, y: rect.bottom + window.scrollY });
+    };
+    document.addEventListener('selectionchange', handler);
+    return () => document.removeEventListener('selectionchange', handler);
+  }, []);
 
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -427,6 +451,11 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
                     <button onClick={() => setPresentationMode(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300" title="Modo presentación (Esc para salir)">
                       <Maximize size={16} /> Presentación
                     </button>
+                    {user && (
+                      <button onClick={() => setShowAddToSetlist(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300" title="Agregar a una setlist">
+                        <ListMusic size={16} /> Setlist
+                      </button>
+                    )}
                   </>
                 )}
               </>
@@ -586,6 +615,25 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         onClose={() => setShowShare(false)}
         songId={song.id}
       />
+
+      <AddToSetlistModal isOpen={showAddToSetlist} onClose={() => setShowAddToSetlist(false)} songId={song.id} />
+
+      {selectionPrompt && !loopRange && (
+        <button
+          onClick={() => { setLoopRange({ top: selectionPrompt.top, bottom: selectionPrompt.bottom }); window.getSelection()?.removeAllRanges(); setSelectionPrompt(null); }}
+          style={{ position: 'absolute', top: selectionPrompt.y + 6, left: selectionPrompt.x, transform: 'translateX(-50%)', zIndex: 30 }}
+          className="bg-brand hover:bg-brand/90 text-white text-xs px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1"
+        >
+          <Repeat size={12} /> Loop esta sección
+        </button>
+      )}
+
+      {loopRange && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-brand text-white text-sm px-4 py-2 rounded-full shadow-xl flex items-center gap-3">
+          <Repeat size={14} /> Loop activo
+          <button onClick={() => setLoopRange(null)} className="hover:opacity-80"><X size={14} /></button>
+        </div>
+      )}
 
       {presentationMode && (
         <div className="fixed inset-0 bg-dark-900 z-[1200] overflow-auto p-6 md:p-12">

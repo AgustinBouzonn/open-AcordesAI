@@ -17,6 +17,34 @@ const getInstrument = (value: unknown): 'guitar' | 'ukulele' | 'piano' => {
 export default function createSongsRouter(): Router {
   const router = Router();
 
+  router.get('/by-chords', async (req: Request, res: Response) => {
+    const raw = typeof req.query.chords === 'string' ? req.query.chords : '';
+    const chords = raw.split(/[,\s]+/).map((c) => c.trim()).filter((c) => /^[A-G](#|b)?[a-z0-9#/]{0,6}$/i.test(c)).slice(0, 8);
+    if (chords.length === 0) {
+      res.status(400).json({ message: 'Pasá al menos un acorde válido (ej: C, G, Am, F)' });
+      return;
+    }
+    const limit = Math.min(parseInt(req.query.limit as string) || 30, 60);
+    try {
+      const conditions = chords.map((_, i) => `cc.content ~* ('(^|[^A-Za-z])' || $${i + 1} || '($|[^A-Za-z0-9#b])')`).join(' AND ');
+      const sql = `
+        SELECT s.*, u.username AS author,
+               ${chords.map((_, i) => `(cc.content ~* ('(^|[^A-Za-z])' || $${i + 1} || '($|[^A-Za-z0-9#b])'))::int`).join(' + ')} AS matches
+        FROM chord_cache cc
+        JOIN songs s ON s.id = cc.song_id
+        LEFT JOIN users u ON s.user_id = u.id
+        WHERE cc.instrument = 'guitar' AND ${conditions}
+        ORDER BY matches DESC, s.created_at DESC
+        LIMIT $${chords.length + 1}
+      `;
+      const result = await query(sql, [...chords, limit]);
+      res.json({ chords, results: result.rows.map(serializeSong) });
+    } catch (e) {
+      console.error('[songs/by-chords]', e);
+      res.status(500).json({ message: 'Error en la búsqueda por acordes' });
+    }
+  });
+
   router.get('/popular', async (req: Request, res: Response) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;

@@ -17,6 +17,8 @@ import { SearchPage } from './components/pages/SearchPage';
 import { FavoritesPage } from './components/pages/FavoritesPage';
 import { HistoryPage } from './components/pages/HistoryPage';
 import { CommunityPage } from './components/pages/CommunityPage';
+import { SetlistsPage } from './components/pages/SetlistsPage';
+import { ChordSearchPage } from './components/pages/ChordSearchPage';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
 import { Plus, Globe, Download } from 'lucide-react';
@@ -126,6 +128,7 @@ function AppContent() {
     location.pathname === '/community' ? 'COMMUNITY' :
     location.pathname === '/tuner' ? 'TUNER' :
     location.pathname === '/metronome' ? 'METRONOME' :
+    location.pathname === '/setlists' ? 'SETLISTS' :
     location.pathname.startsWith('/song/') ? 'SONG_DETAIL' : 'HOME';
 
   useEffect(() => {
@@ -220,7 +223,7 @@ function AppContent() {
   const handleNav = (tab: string) => {
     const map: Record<string, string> = {
       HOME: '/', SEARCH: '/search', FAVORITES: '/favorites', HISTORY: '/history',
-      COMMUNITY: '/community', TUNER: '/tuner', METRONOME: '/metronome',
+      COMMUNITY: '/community', TUNER: '/tuner', METRONOME: '/metronome', SETLISTS: '/setlists',
     };
     if (map[tab]) navigate(map[tab]);
   };
@@ -297,6 +300,12 @@ function AppContent() {
           <Route path="/auth/callback" element={<AuthCallbackRoute />} />
           <Route path="/tuner" element={<Tuner />} />
           <Route path="/metronome" element={<Metronome />} />
+          <Route path="/setlists" element={
+            <SetlistsPage user={user} onLogin={() => openAuth('login')} onSelectSong={(id) => navigate(`/song/${id}`)} />
+          } />
+          <Route path="/chord-search" element={
+            <ChordSearchPage onSelectSong={(id) => navigate(`/song/${id}`)} />
+          } />
         </Routes>
       </Layout>
       <AuthModal isOpen={showAuthModal} mode={authMode} onClose={() => setShowAuthModal(false)} />
