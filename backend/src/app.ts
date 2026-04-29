@@ -24,6 +24,11 @@ app.use('/api/history', historyRouter());
 app.use('/api/comments', commentsRouter());
 app.use('/api/ratings', ratingsRouter());
 
-app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
+app.get('/api/health', (_, res) => {
+  const aiConfigured = Boolean(
+    process.env.AI_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY,
+  );
+  res.json({ status: 'ok', aiConfigured });
+});
 
 export default app;

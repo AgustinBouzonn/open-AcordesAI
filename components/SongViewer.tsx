@@ -39,7 +39,12 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [transpose, setTranspose] = useState(0);
   const [showShare, setShowShare] = useState(false);
   const [instrument, setInstrument] = useState<Instrument>('guitar');
-  
+  const [aiConfigured, setAiConfigured] = useState(true);
+
+  useEffect(() => {
+    api.config.get().then(c => setAiConfigured(c.aiConfigured)).catch(() => setAiConfigured(false));
+  }, []);
+
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -423,9 +428,15 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
                   Crear cifrado
                 </button>
                 {user && (
-                  <button onClick={handleGenerateChords} className="bg-brand hover:bg-brand/90 text-white px-6 py-2 rounded-lg font-medium transition">
-                    Generar con IA
-                  </button>
+                  aiConfigured ? (
+                    <button onClick={handleGenerateChords} className="bg-brand hover:bg-brand/90 text-white px-6 py-2 rounded-lg font-medium transition">
+                      Generar con IA
+                    </button>
+                  ) : (
+                    <button onClick={() => setShowImport(true)} className="bg-brand hover:bg-brand/90 text-white px-6 py-2 rounded-lg font-medium transition">
+                      Importar de otra web
+                    </button>
+                  )
                 )}
               </div>
             </div>

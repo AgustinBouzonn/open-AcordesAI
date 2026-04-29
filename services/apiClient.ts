@@ -108,6 +108,10 @@ class ApiClient {
     songs: (query: string) => this.request<SearchSongsResponse>(`/search?q=${encodeURIComponent(query)}`),
   };
 
+  config = {
+    get: () => this.request<{ status: string; aiConfigured: boolean }>('/health'),
+  };
+
   imports = {
     fetch: (url: string, source?: string) =>
       this.request<ImportResponse>('/import/fetch', {
