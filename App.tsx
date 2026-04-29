@@ -136,6 +136,7 @@ function AppContent() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAddFromCommunityModal, setShowAddFromCommunityModal] = useState(false);
   const [showImportUrlModal, setShowImportUrlModal] = useState(false);
+  const [sharedImportUrl, setSharedImportUrl] = useState<string | undefined>(undefined);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
@@ -166,6 +167,25 @@ function AppContent() {
         .finally(() => setLoadingPopular(false));
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const w = window as unknown as { __acordesaiSharedUrl?: string };
+    const openWith = (url: string) => {
+      if (!url) return;
+      setSharedImportUrl(url);
+      setShowImportUrlModal(true);
+    };
+    if (w.__acordesaiSharedUrl) {
+      openWith(w.__acordesaiSharedUrl);
+      w.__acordesaiSharedUrl = undefined;
+    }
+    const onShared = (e: Event) => {
+      const url = (e as CustomEvent<string>).detail;
+      openWith(url);
+    };
+    window.addEventListener('acordesai-shared-url', onShared);
+    return () => window.removeEventListener('acordesai-shared-url', onShared);
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'COMMUNITY') {
@@ -573,7 +593,8 @@ function AppContent() {
       />
       <ImportUrlModal
         isOpen={showImportUrlModal}
-        onClose={() => setShowImportUrlModal(false)}
+        initialUrl={sharedImportUrl}
+        onClose={() => { setShowImportUrlModal(false); setSharedImportUrl(undefined); }}
         onImported={(song) => navigate(`/song/${song.id}`)}
       />
       <ProfileModal

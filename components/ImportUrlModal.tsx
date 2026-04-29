@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Loader2, Download, Copy } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { Song } from '../types';
@@ -7,13 +7,32 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onImported: (song: Song) => void;
+  initialUrl?: string;
 }
 
-export function ImportUrlModal({ isOpen, onClose, onImported }: Props) {
+const SUPPORTED_HOST_RE = /(cifraclub\.com|ultimateguitar\.com|cifraspot\.com)/i;
+
+export function ImportUrlModal({ isOpen, onClose, onImported, initialUrl }: Props) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (initialUrl) { setUrl(initialUrl); return; }
+    if (url) return;
+    navigator.clipboard?.readText?.()
+      .then((text) => {
+        const t = text?.trim();
+        if (t && SUPPORTED_HOST_RE.test(t) && /^https?:\/\//i.test(t)) {
+          setUrl(t);
+          setNotice('URL detectada en el portapapeles.');
+        }
+      })
+      .catch(() => undefined);
+  }, [isOpen, initialUrl]);
+
   if (!isOpen) return null;
 
   const handleImport = async () => {
