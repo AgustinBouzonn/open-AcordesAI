@@ -86,6 +86,7 @@ async function fetchHtml(url: string, attempts = 2): Promise<string> {
     const ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 15000);
     try {
+      // @ts-ignore
       const res = await fetch(url, {
         signal: ctrl.signal,
         redirect: 'follow',
@@ -100,7 +101,7 @@ async function fetchHtml(url: string, attempts = 2): Promise<string> {
           'Upgrade-Insecure-Requests': '1',
         },
       });
-      if (res.ok) return await res.text();
+      if (res && res.ok) return await res.text();
       if (res.status >= 500 && res.status < 600 && i < attempts - 1) {
         lastErr = new Error(`HTTP ${res.status}`);
         await sleep(500 * Math.pow(2, i));
