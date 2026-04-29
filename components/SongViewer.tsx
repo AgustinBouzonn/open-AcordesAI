@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star } from 'lucide-react';
+import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star, Maximize, FileText } from 'lucide-react';
 import { Song, Comment, RatingSummary, Instrument } from '../types';
 import { useAuth } from './AuthContext';
 import { ImportModal } from './ImportModal';
@@ -8,6 +8,7 @@ import { api } from '../services/apiClient';
 import * as storage from '../services/storageService';
 import { acquireWakeLock, releaseWakeLock } from '../services/wakeLock';
 import { useToast } from './Toast';
+import { ChordChart } from './ChordChart';
 
 interface SongViewerProps {
   song: Song;
@@ -43,6 +44,18 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [showShare, setShowShare] = useState(false);
   const [instrument, setInstrument] = useState<Instrument>('guitar');
   const [aiConfigured, setAiConfigured] = useState(true);
+  const [presentationMode, setPresentationMode] = useState(false);
+
+  useEffect(() => {
+    if (!presentationMode) return;
+    void acquireWakeLock();
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setPresentationMode(false); };
+    window.addEventListener('keydown', handler);
+    return () => {
+      window.removeEventListener('keydown', handler);
+      void releaseWakeLock();
+    };
+  }, [presentationMode]);
 
   useEffect(() => {
     api.config.get().then(c => setAiConfigured(c.aiConfigured)).catch(() => setAiConfigured(false));
@@ -299,6 +312,44 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     URL.revokeObjectURL(url);
   };
 
+  const handleExportPdf = async () => {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 36;
+      let cursorY = margin;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.text(song.title, margin, cursorY);
+      cursorY += 22;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(110);
+      doc.text(song.artist, margin, cursorY);
+      cursorY += 24;
+      doc.setTextColor(20);
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(10);
+      const lineHeight = 13;
+      const lines = displayChords.split('\n');
+      for (const line of lines) {
+        if (cursorY + lineHeight > pageHeight - margin) {
+          doc.addPage();
+          cursorY = margin;
+        }
+        doc.text(line || ' ', margin, cursorY);
+        cursorY += lineHeight;
+      }
+      doc.save(`${song.title} - ${song.artist}.pdf`);
+      showToast('PDF descargado', 'success');
+    } catch (e) {
+      console.error('Failed to export PDF:', e);
+      showToast('No se pudo exportar el PDF', 'error');
+    }
+  };
+
   const handleShare = async () => {
     setShowShare(true);
   };
@@ -366,9 +417,17 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
                   <Download size={16} /> Importar
                 </button>
                 {displayChords && (
-                  <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300">
-                    <Upload size={16} /> Exportar
-                  </button>
+                  <>
+                    <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300" title="Descargar como .txt">
+                      <Upload size={16} /> .txt
+                    </button>
+                    <button onClick={handleExportPdf} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300" title="Descargar como PDF">
+                      <FileText size={16} /> PDF
+                    </button>
+                    <button onClick={() => setPresentationMode(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300" title="Modo presentación (Esc para salir)">
+                      <Maximize size={16} /> Presentación
+                    </button>
+                  </>
                 )}
               </>
             )}
@@ -441,6 +500,8 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           />
         </div>
       )}
+
+      {displayChords && <ChordChart chords={displayChords} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className={`lg:col-span-2 bg-dark-800 p-4 md:p-8 rounded-xl shadow-inner min-h-[500px] relative`}>
@@ -525,6 +586,25 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         onClose={() => setShowShare(false)}
         songId={song.id}
       />
+
+      {presentationMode && (
+        <div className="fixed inset-0 bg-dark-900 z-[1200] overflow-auto p-6 md:p-12">
+          <button
+            onClick={() => setPresentationMode(false)}
+            className="fixed top-4 right-4 z-10 p-3 rounded-full bg-dark-800/80 backdrop-blur text-gray-300 hover:text-white border border-dark-700 shadow-lg"
+            title="Salir (Esc)"
+          >
+            <X size={20} />
+          </button>
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-2xl md:text-3xl font-bold mb-1">{song.title}</h1>
+            <p className="text-brand mb-6 text-sm md:text-base">{song.artist}</p>
+            <pre style={{ fontSize: `${fontSize + 2}px`, lineHeight: 1.7 }} className="font-mono whitespace-pre-wrap text-gray-100">
+              {displayChords}
+            </pre>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
