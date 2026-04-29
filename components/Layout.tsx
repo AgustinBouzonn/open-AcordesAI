@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, Heart, Music2, Clock, LogIn, UserPlus, LogOut, Users, User } from 'lucide-react';
+import { Home, Search, Heart, Music2, Clock, LogIn, UserPlus, LogOut, Users, User, AudioWaveform } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { InstallAppButton } from './InstallAppButton';
 
@@ -42,6 +42,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
             </button>
             <button onClick={() => onNavigate('COMMUNITY')} className={`text-sm font-medium hover:text-brand transition ${activeTab === 'COMMUNITY' ? 'text-brand' : 'text-gray-400'}`}>
               Comunidad
+            </button>
+            <button onClick={() => onNavigate('TUNER')} className={`text-sm font-medium hover:text-brand transition ${activeTab === 'TUNER' ? 'text-brand' : 'text-gray-400'}`}>
+              Afinador
             </button>
           </nav>
 
@@ -93,6 +96,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
           </button>
           <button onClick={() => onNavigate('COMMUNITY')} className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'COMMUNITY' ? 'text-brand' : 'text-gray-500'}`}>
             <Users size={20} /><span className="text-[10px]">Comunidad</span>
+          </button>
+          <button onClick={() => onNavigate('TUNER')} className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'TUNER' ? 'text-brand' : 'text-gray-500'}`}>
+            <AudioWaveform size={20} /><span className="text-[10px]">Afinador</span>
           </button>
         </div>
       </div>

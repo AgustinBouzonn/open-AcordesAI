@@ -6,6 +6,7 @@ import { AuthModal } from './components/AuthModal';
 import { CreateSongModal } from './components/CreateSongModal';
 import { AddFromCommunityModal } from './components/AddFromCommunityModal';
 import { ImportUrlModal } from './components/ImportUrlModal';
+import { Tuner } from './components/Tuner';
 import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './components/AuthContext';
 import { Song, SearchResult } from './types';
@@ -143,6 +144,7 @@ function AppContent() {
     location.pathname === '/favorites' ? 'FAVORITES' :
     location.pathname === '/history' ? 'HISTORY' :
     location.pathname === '/community' ? 'COMMUNITY' :
+    location.pathname === '/tuner' ? 'TUNER' :
     location.pathname.startsWith('/song/') ? 'SONG_DETAIL' : 'HOME';
 
   useEffect(() => {
@@ -503,6 +505,7 @@ function AppContent() {
     if (tab === 'FAVORITES') navigate('/favorites');
     if (tab === 'HISTORY') navigate('/history');
     if (tab === 'COMMUNITY') navigate('/community');
+    if (tab === 'TUNER') navigate('/tuner');
   };
 
   return (
@@ -552,6 +555,7 @@ function AppContent() {
           <Route path="/favorites" element={renderFavorites()} />
           <Route path="/history" element={renderHistory()} />
           <Route path="/community" element={renderCommunity()} />
+          <Route path="/tuner" element={<Tuner />} />
           <Route path="/song/:id" element={<SongDetailRoute />} />
           <Route path="/auth/callback" element={<AuthCallbackRoute />} />
         </Routes>

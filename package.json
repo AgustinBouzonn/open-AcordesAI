@@ -16,6 +16,7 @@
   "dependencies": {
     "@google/genai": "^1.39.0",
     "lucide-react": "^0.563.0",
+    "pitchy": "^4.1.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.0"
