@@ -7,8 +7,13 @@
 - **DNS:** apuntado a Cloudflare en modo proxy (naranja). Cloudflare termina TLS en el edge y reenvía al origen `195.200.1.74`.
 
 ## Flujo de request
-cliente → Cloudflare (TLS) → VPS `195.200.1.74` → Traefik (EasyPanel) → contenedor `nginx` (puerto 80) → `backend` (puerto 3001) / estáticos del frontend.
+cliente → Cloudflare (TLS) → VPS `195.200.1.74` → Traefik (EasyPanel) → contenedor `open-acordesai-nginx-1` (puerto 80) → `open-acordesai-backend-1` (puerto 3001) / estáticos del frontend.
 
-## Puntos frágiles conocidos
-- `update-traefik.sh` escribe a mano la IP del contenedor `open-acordesai_nginx_1` en `/etc/easypanel/traefik/config/main.yaml`. Si Docker recrea el contenedor, la IP cambia y Traefik queda apuntando a una IP muerta.
-- `nginx.conf` tiene hardcodeado `proxy_pass http://10.11.243.151:3001` al backend en la red `easypanel`. Mismo problema: si cambia la IP del container, se rompe.
+## Enrutado (actual)
+- Traefik descubre el routing por **labels Docker** en el servicio `nginx` del `docker-compose.yml` (provider `docker` ya habilitado en Traefik). No se editan archivos en `/etc/easypanel/traefik/config/`: Easypanel regenera `main.yaml` desde su DB y borra entradas externas. Las labels sobreviven a cualquier regeneración.
+- Para que Traefik pueda resolver el container, nginx debe estar en la red `easypanel` y tener la label `traefik.docker.network=easypanel`.
+- nginx.conf: `proxy_pass` al backend por nombre DNS (`open-acordesai-backend-1:3001`). Requiere `resolver 127.0.0.11` (ya configurado) para que nginx refresque el nombre.
+- `update-traefik.sh` fue eliminado (ya no hay IPs hardcodeadas).
+
+## Convención de nombres Docker Compose
+Compose v2 usa guiones (`open-acordesai-nginx-1`), no underscores. Si se ven containers viejos con `_`, son huérfanos: `docker compose up -d --force-recreate --remove-orphans`.
