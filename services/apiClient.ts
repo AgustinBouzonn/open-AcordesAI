@@ -112,6 +112,14 @@ class ApiClient {
     get: () => this.request<{ status: string; aiConfigured: boolean }>('/health'),
   };
 
+  backup = {
+    export: () => fetch(`${API_BASE}/auth/export`, { headers: { Authorization: `Bearer ${this.getToken()}` } }).then((r) => r.json()),
+    import: (data: unknown) => this.request<{ message: string; imported: { favorites: number; ratings: number; setlists: number } }>('/auth/import', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  };
+
   imports = {
     fetch: (url: string, source?: string) =>
       this.request<ImportResponse>('/import/fetch', {
@@ -140,6 +148,11 @@ class ApiClient {
       this.request<MessageResponse>(`/songs/${id}/chords`, {
         method: 'PUT',
         body: JSON.stringify({ chords, instrument }),
+      }),
+    setYoutube: (id: string, url: string | null) =>
+      this.request<MessageResponse>(`/songs/${id}/youtube`, {
+        method: 'PUT',
+        body: JSON.stringify({ url: url ?? '' }),
       }),
     list: (limit?: number, offset?: number, q?: string) => this.request<Song[]>(`/songs?limit=${limit || 50}&offset=${offset || 0}${q ? `&q=${encodeURIComponent(q)}` : ''}`),
     getPopular: (limit?: number) => this.request<Song[]>(`/songs/popular?limit=${limit || 20}`),
@@ -171,13 +184,27 @@ class ApiClient {
 
   setlists = {
     list: () => this.request<Array<{ id: number; name: string; songCount: number; createdAt: string; updatedAt: string }>>('/setlists'),
-    get: (id: number) => this.request<{ id: number; name: string; createdAt: string; updatedAt: string; songs: (Song & { position: number })[] }>(`/setlists/${id}`),
+    get: (id: number) => this.request<{ id: number; name: string; createdAt: string; updatedAt: string; shareToken: string | null; songs: (Song & { position: number })[] }>(`/setlists/${id}`),
     create: (name: string) => this.request<{ id: number; name: string; songCount: number }>('/setlists', { method: 'POST', body: JSON.stringify({ name }) }),
     rename: (id: number, name: string) => this.request<MessageResponse>(`/setlists/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }),
     remove: (id: number) => this.request<MessageResponse>(`/setlists/${id}`, { method: 'DELETE' }),
     addSong: (id: number, songId: string) => this.request<MessageResponse>(`/setlists/${id}/songs`, { method: 'POST', body: JSON.stringify({ songId }) }),
     removeSong: (id: number, songId: string) => this.request<MessageResponse>(`/setlists/${id}/songs/${songId}`, { method: 'DELETE' }),
     reorder: (id: number, songIds: string[]) => this.request<MessageResponse>(`/setlists/${id}/order`, { method: 'PUT', body: JSON.stringify({ songIds }) }),
+    share: (id: number) => this.request<{ token: string }>(`/setlists/${id}/share`, { method: 'POST' }),
+    unshare: (id: number) => this.request<MessageResponse>(`/setlists/${id}/share`, { method: 'DELETE' }),
+    getPublic: (token: string) => this.request<{ id: number; name: string; owner: string; songs: (Song & { position: number })[] }>(`/setlists/public/${token}`),
+  };
+
+  recommendations = {
+    get: (limit?: number) => this.request<{ source: 'collaborative' | 'popular'; results: Song[] }>(`/recommendations${limit ? `?limit=${limit}` : ''}`),
+  };
+
+  progress = {
+    me: () => this.request<{ learning: Song[]; learned: Song[] }>('/progress/me'),
+    get: (songId: string) => this.request<{ status: 'learning' | 'learned' | null; updatedAt: string | null }>(`/progress/${songId}`),
+    set: (songId: string, status: 'learning' | 'learned') => this.request<MessageResponse>(`/progress/${songId}`, { method: 'PUT', body: JSON.stringify({ status }) }),
+    clear: (songId: string) => this.request<MessageResponse>(`/progress/${songId}`, { method: 'DELETE' }),
   };
 
   ratings = {

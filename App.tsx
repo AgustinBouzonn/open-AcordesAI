@@ -20,6 +20,8 @@ import { CommunityPage } from './components/pages/CommunityPage';
 import { SetlistsPage } from './components/pages/SetlistsPage';
 import { ChordSearchPage } from './components/pages/ChordSearchPage';
 import { OnboardingModal } from './components/OnboardingModal';
+import { PublicSetlistPage } from './components/pages/PublicSetlistPage';
+import { LearningPage } from './components/pages/LearningPage';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
 import { Plus, Globe, Download } from 'lucide-react';
@@ -261,6 +263,7 @@ function AppContent() {
               performSearch={performSearch}
               popularSongs={popularSongs}
               onSelectSong={(id) => navigate(`/song/${id}`)}
+              hasUser={!!user}
             />
           } />
           <Route path="/search" element={
@@ -306,6 +309,10 @@ function AppContent() {
           } />
           <Route path="/chord-search" element={
             <ChordSearchPage onSelectSong={(id) => navigate(`/song/${id}`)} />
+          } />
+          <Route path="/shared/setlist/:token" element={<PublicSetlistPage />} />
+          <Route path="/learning" element={
+            <LearningPage user={user} onLogin={() => openAuth('login')} onSelectSong={(id) => navigate(`/song/${id}`)} />
           } />
         </Routes>
       </Layout>

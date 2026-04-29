@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ListMusic, Plus, Trash2, Pencil, Check, X, Loader2, ChevronUp, ChevronDown, Music } from 'lucide-react';
+import { ListMusic, Plus, Trash2, Pencil, Check, X, Loader2, ChevronUp, ChevronDown, Music, Share2, Link as LinkIcon } from 'lucide-react';
 import { Song } from '../../types';
 import { api } from '../../services/apiClient';
 import { useToast } from '../Toast';
@@ -16,6 +16,7 @@ interface SetlistRow {
 interface SetlistDetail {
   id: number;
   name: string;
+  shareToken: string | null;
   songs: (Song & { position: number })[];
 }
 
@@ -175,6 +176,39 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
 
               {openId === sl.id && detail && detail.id === sl.id && (
                 <div className="border-t border-dark-700 bg-dark-900/50 p-3 space-y-2">
+                  <div className="flex items-center gap-2 px-1 pb-2">
+                    {detail.shareToken ? (
+                      <>
+                        <button
+                          onClick={async () => {
+                            const url = `${window.location.origin}/#/shared/setlist/${detail.shareToken}`;
+                            try { await navigator.clipboard.writeText(url); showToast('Link copiado', 'success'); } catch { showToast(url, 'info', 8000); }
+                          }}
+                          className="text-xs flex items-center gap-1 bg-emerald-900/40 border border-emerald-700 text-emerald-200 px-2 py-1 rounded hover:bg-emerald-900/60"
+                        >
+                          <LinkIcon size={12} /> Copiar link público
+                        </button>
+                        <button
+                          onClick={async () => { try { await api.setlists.unshare(sl.id); await loadDetail(sl.id); showToast('Link deshabilitado', 'success'); } catch { showToast('Error', 'error'); } }}
+                          className="text-xs text-gray-400 hover:text-red-300"
+                        >Dejar de compartir</button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { token } = await api.setlists.share(sl.id);
+                            await loadDetail(sl.id);
+                            const url = `${window.location.origin}/#/shared/setlist/${token}`;
+                            try { await navigator.clipboard.writeText(url); showToast('Link copiado al portapapeles', 'success'); } catch { showToast(url, 'info', 8000); }
+                          } catch { showToast('Error al generar link', 'error'); }
+                        }}
+                        className="text-xs flex items-center gap-1 bg-dark-700 hover:bg-dark-600 text-gray-300 px-2 py-1 rounded"
+                      >
+                        <Share2 size={12} /> Compartir setlist
+                      </button>
+                    )}
+                  </div>
                   {detail.songs.length === 0 ? (
                     <p className="text-sm text-gray-500 text-center py-4">Esta setlist está vacía. Agregá canciones desde el visor.</p>
                   ) : detail.songs.map((song, idx) => (

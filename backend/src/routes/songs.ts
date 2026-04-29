@@ -199,6 +199,27 @@ export default function createSongsRouter(): Router {
     }
   });
 
+  router.put('/:id/youtube', requireAuth, async (req: AuthRequest, res: Response) => {
+    const id = parseInt(req.params.id, 10);
+    const { url } = req.body ?? {};
+    if (Number.isNaN(id)) { res.status(400).json({ message: 'ID inválido' }); return; }
+    const cleaned = typeof url === 'string' ? url.trim() : '';
+    if (cleaned && !/^https?:\/\/(?:www\.|m\.)?(?:youtube\.com|youtu\.be)\//i.test(cleaned)) {
+      res.status(400).json({ message: 'Solo URLs de YouTube son aceptadas' });
+      return;
+    }
+    try {
+      const owner = await query('SELECT user_id FROM songs WHERE id = $1', [id]);
+      if (!owner.rows.length) { res.status(404).json({ message: 'No encontrada' }); return; }
+      if (owner.rows[0].user_id !== req.userId) { res.status(403).json({ message: 'Solo el autor puede asociar un video' }); return; }
+      await query('UPDATE songs SET youtube_url = $1 WHERE id = $2', [cleaned || null, id]);
+      res.json({ message: cleaned ? 'Video asociado' : 'Video quitado' });
+    } catch (e) {
+      console.error('[songs/youtube]', e);
+      res.status(500).json({ message: 'Error al guardar el video' });
+    }
+  });
+
   router.put('/:id/chords', requireAuth, chordSaveLimiter, async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { chords } = req.body;

@@ -1,11 +1,80 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
+import crypto from 'crypto';
 import { query } from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { serializeSong } from '../serializers/song';
 
 const router = Router();
 
+router.get('/public/:token', async (req: Request, res: Response): Promise<void> => {
+  const token = req.params.token;
+  if (!token || !/^[a-f0-9]{32}$/.test(token)) {
+    res.status(400).json({ message: 'Token inválido' });
+    return;
+  }
+  try {
+    const sl = await query(
+      `SELECT s.id, s.name, s.created_at, s.updated_at, u.username AS owner
+       FROM setlists s LEFT JOIN users u ON u.id = s.user_id
+       WHERE s.share_token = $1`,
+      [token],
+    );
+    if (!sl.rows.length) { res.status(404).json({ message: 'Setlist no encontrada o no pública' }); return; }
+    const songs = await query(
+      `SELECT s.*, ss.position, u.username AS author
+       FROM setlist_songs ss
+       JOIN songs s ON s.id = ss.song_id
+       LEFT JOIN users u ON u.id = s.user_id
+       WHERE ss.setlist_id = $1
+       ORDER BY ss.position ASC`,
+      [sl.rows[0].id],
+    );
+    const row = sl.rows[0];
+    res.json({
+      id: row.id, name: row.name, owner: row.owner, createdAt: row.created_at, updatedAt: row.updated_at,
+      songs: songs.rows.map((r) => ({ ...serializeSong(r), position: r.position })),
+    });
+  } catch (e) {
+    console.error('[setlists/public]', e);
+    res.status(500).json({ message: 'Error al cargar setlist' });
+  }
+});
+
 router.use(requireAuth);
+
+router.post('/:id/share', async (req: AuthRequest, res: Response): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isNaN(id)) { res.status(400).json({ message: 'ID inválido' }); return; }
+  try {
+    const existing = await query('SELECT share_token FROM setlists WHERE id = $1 AND user_id = $2', [id, req.userId!]);
+    if (!existing.rows.length) { res.status(404).json({ message: 'Setlist no encontrada' }); return; }
+    let token = existing.rows[0].share_token as string | null;
+    if (!token) {
+      token = crypto.randomBytes(16).toString('hex');
+      await query('UPDATE setlists SET share_token = $1, updated_at = NOW() WHERE id = $2', [token, id]);
+    }
+    res.json({ token });
+  } catch (e) {
+    console.error('[setlists/share]', e);
+    res.status(500).json({ message: 'Error al generar enlace' });
+  }
+});
+
+router.delete('/:id/share', async (req: AuthRequest, res: Response): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isNaN(id)) { res.status(400).json({ message: 'ID inválido' }); return; }
+  try {
+    const result = await query(
+      'UPDATE setlists SET share_token = NULL, updated_at = NOW() WHERE id = $1 AND user_id = $2 RETURNING id',
+      [id, req.userId!],
+    );
+    if (!result.rows.length) { res.status(404).json({ message: 'Setlist no encontrada' }); return; }
+    res.json({ message: 'Enlace deshabilitado' });
+  } catch (e) {
+    console.error('[setlists/unshare]', e);
+    res.status(500).json({ message: 'Error al deshabilitar enlace' });
+  }
+});
 
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
@@ -67,7 +136,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
     );
     const sl = setlist.rows[0];
     res.json({
-      id: sl.id, name: sl.name, createdAt: sl.created_at, updatedAt: sl.updated_at,
+      id: sl.id, name: sl.name, createdAt: sl.created_at, updatedAt: sl.updated_at, shareToken: sl.share_token || null,
       songs: songs.rows.map((r) => ({ ...serializeSong(r), position: r.position })),
     });
   } catch (e) {

@@ -29,6 +29,7 @@ export interface Song {
   updatedAt?: string;
   favoritedAt?: string;
   viewedAt?: string;
+  youtubeUrl?: string;
 }
 
 export interface Comment {

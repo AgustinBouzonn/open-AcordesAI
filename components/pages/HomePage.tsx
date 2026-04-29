@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, TrendingUp, Music, ChevronRight, Star, Guitar } from 'lucide-react';
+import { Search, TrendingUp, Music, ChevronRight, Star, Guitar, Sparkles } from 'lucide-react';
 import { Song } from '../../types';
 import { Artwork } from '../Artwork';
+import { api } from '../../services/apiClient';
 
 const TRENDING_SEARCHES = [
   'Lamento Boliviano - Enanitos Verdes',
@@ -19,9 +20,18 @@ interface Props {
   performSearch: (q: string) => void;
   popularSongs: Song[];
   onSelectSong: (id: string) => void;
+  hasUser: boolean;
 }
 
-export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, onSearch, performSearch, popularSongs, onSelectSong }) => (
+export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, onSearch, performSearch, popularSongs, onSelectSong, hasUser }) => {
+  const [recs, setRecs] = useState<{ source: 'collaborative' | 'popular'; results: Song[] } | null>(null);
+
+  useEffect(() => {
+    if (!hasUser) { setRecs(null); return; }
+    api.recommendations.get(8).then(setRecs).catch(() => undefined);
+  }, [hasUser]);
+
+  return (
   <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
     <div className="text-center py-12 space-y-4">
       <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-brand to-yellow-500">
@@ -64,6 +74,31 @@ export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, on
       </div>
     </div>
 
+    {recs && recs.results.length > 0 && (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
+          <Sparkles size={16} />
+          <span>{recs.source === 'collaborative' ? 'Recomendado para vos' : 'Te puede gustar'}</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {recs.results.slice(0, 6).map((song) => (
+            <div key={song.id} onClick={() => onSelectSong(song.id)} className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300">
+              <div className="flex items-center gap-4">
+                <Artwork size={52} url={song.artworkUrl} />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
+                  <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+                </div>
+                {(song.hasChords || 0) > 0 && (
+                  <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
     {popularSongs.length > 0 && (
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
@@ -97,4 +132,5 @@ export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, on
       </div>
     )}
   </div>
-);
+  );
+};

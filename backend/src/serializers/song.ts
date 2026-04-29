@@ -18,5 +18,6 @@ export const serializeSong = (row: SongRow) => Object.fromEntries(
     updatedAt: row.updated_at ?? row.updatedAt ?? undefined,
     userId: row.user_id ?? row.userId ?? undefined,
     viewCount: row.view_count ?? row.viewCount ?? undefined,
+    youtubeUrl: row.youtube_url ?? row.youtubeUrl ?? undefined,
   }).filter(([, value]) => value !== undefined)
 );

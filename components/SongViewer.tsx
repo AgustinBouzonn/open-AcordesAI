@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star, Maximize, FileText, ListMusic, Repeat, Guitar } from 'lucide-react';
+import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star, Maximize, FileText, ListMusic, Repeat, Guitar, GraduationCap, CheckCircle2 } from 'lucide-react';
 import { Song, Comment, RatingSummary, Instrument } from '../types';
 import { useAuth } from './AuthContext';
 import { ImportModal } from './ImportModal';
@@ -10,6 +10,7 @@ import { acquireWakeLock, releaseWakeLock } from '../services/wakeLock';
 import { useToast } from './Toast';
 import { ChordChart } from './ChordChart';
 import { AddToSetlistModal } from './AddToSetlistModal';
+import { YouTubePlayer } from './YouTubePlayer';
 
 interface SongViewerProps {
   song: Song;
@@ -48,6 +49,26 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [aiConfigured, setAiConfigured] = useState(true);
   const [presentationMode, setPresentationMode] = useState(false);
   const [showAddToSetlist, setShowAddToSetlist] = useState(false);
+  const [progressStatus, setProgressStatus] = useState<'learning' | 'learned' | null>(null);
+
+  useEffect(() => {
+    if (!user) { setProgressStatus(null); return; }
+    api.progress.get(song.id).then(({ status }) => setProgressStatus(status)).catch(() => undefined);
+  }, [song.id, user]);
+
+  const setProgress = async (next: 'learning' | 'learned' | null) => {
+    if (!user) return;
+    const previous = progressStatus;
+    setProgressStatus(next);
+    try {
+      if (next) await api.progress.set(song.id, next);
+      else await api.progress.clear(song.id);
+      showToast(next === 'learning' ? 'Marcada como "aprendiendo"' : next === 'learned' ? 'Marcada como aprendida' : 'Progreso reseteado', 'success');
+    } catch {
+      setProgressStatus(previous);
+      showToast('No se pudo actualizar el progreso', 'error');
+    }
+  };
   const [loopRange, setLoopRange] = useState<{ top: number; bottom: number } | null>(null);
   const [selectionPrompt, setSelectionPrompt] = useState<{ top: number; bottom: number; x: number; y: number } | null>(null);
 
@@ -404,6 +425,22 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
                   <span className="text-gray-500 text-xs">({avgRating.count})</span>
                 )}
               </div>
+              {user && (
+                <div className="flex items-center gap-1 mt-2">
+                  <button
+                    onClick={() => setProgress(progressStatus === 'learning' ? null : 'learning')}
+                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full border transition ${progressStatus === 'learning' ? 'bg-yellow-900/40 border-yellow-700 text-yellow-200' : 'bg-dark-800 border-dark-700 text-gray-400 hover:bg-dark-700'}`}
+                  >
+                    <GraduationCap size={12} /> Aprendiendo
+                  </button>
+                  <button
+                    onClick={() => setProgress(progressStatus === 'learned' ? null : 'learned')}
+                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full border transition ${progressStatus === 'learned' ? 'bg-emerald-900/40 border-emerald-700 text-emerald-200' : 'bg-dark-800 border-dark-700 text-gray-400 hover:bg-dark-700'}`}
+                  >
+                    <CheckCircle2 size={12} /> Sé tocarla
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -541,7 +578,14 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         </div>
       )}
 
-      {displayChords && <ChordChart chords={displayChords} />}
+      <YouTubePlayer
+        songId={song.id}
+        initialUrl={song.youtubeUrl}
+        canEdit={!!user && song.userId !== undefined && String(song.userId) === String(user.id)}
+        onUrlChange={(url) => { if (onSongUpdated) onSongUpdated({ ...song, youtubeUrl: url ?? undefined }); }}
+      />
+
+      {displayChords && <ChordChart chords={displayChords} instrument={instrument} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className={`lg:col-span-2 bg-dark-800 p-4 md:p-8 rounded-xl shadow-inner min-h-[500px] relative`}>

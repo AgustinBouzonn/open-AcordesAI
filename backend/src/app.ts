@@ -9,6 +9,8 @@ import commentsRouter from './routes/comments';
 import importRouter from './routes/import';
 import ratingsRouter from './routes/ratings';
 import setlistsRouter from './routes/setlists';
+import progressRouter from './routes/progress';
+import recommendationsRouter from './routes/recommendations';
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use('/api/history', historyRouter());
 app.use('/api/comments', commentsRouter());
 app.use('/api/ratings', ratingsRouter());
 app.use('/api/setlists', setlistsRouter);
+app.use('/api/progress', progressRouter);
+app.use('/api/recommendations', recommendationsRouter);
 
 app.get('/api/health', (_, res) => {
   const aiConfigured = Boolean(
