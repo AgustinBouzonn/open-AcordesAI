@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Mic, MicOff, AudioWaveform, Settings2, Volume2, Check } from 'lucide-react';
 import { TunerEngine, TunerSample } from '../services/tunerEngine';
 import { playReferenceTone, stopReferenceTone } from '../services/referenceTone';
+import { acquireWakeLock, releaseWakeLock } from '../services/wakeLock';
 import { TUNINGS, Tuning, frequencyToNote, closestStringIndex, centsFromTarget, rebuildTuningWithA4 } from '../data/tunings';
 
 type InstrumentUI = 'electric' | 'classical' | 'ukulele';
@@ -27,6 +28,7 @@ export const Tuner: React.FC = () => {
 
   const engineRef = useRef<TunerEngine | null>(null);
   if (!engineRef.current) engineRef.current = new TunerEngine();
+  const lastInTuneRef = useRef(false);
 
   const tuning = useMemo(() => {
     const base = TUNINGS.find((t) => t.id === tuningId) ?? TUNINGS[0];
@@ -42,6 +44,7 @@ export const Tuner: React.FC = () => {
     return () => {
       engineRef.current?.stop();
       stopReferenceTone();
+      void releaseWakeLock();
     };
   }, []);
 
@@ -57,6 +60,7 @@ export const Tuner: React.FC = () => {
     try {
       await engineRef.current!.start(setSample);
       setRunning(true);
+      void acquireWakeLock();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'No se pudo acceder al micrófono';
       setPermissionError(msg);
@@ -68,6 +72,8 @@ export const Tuner: React.FC = () => {
     engineRef.current?.stop();
     setRunning(false);
     setSample({ freq: 0, clarity: 0, rms: 0, hasSignal: false });
+    lastInTuneRef.current = false;
+    void releaseWakeLock();
   };
 
   const targetIdx = useMemo(() => {
@@ -79,6 +85,13 @@ export const Tuner: React.FC = () => {
   const cents = targetString && sample.hasSignal ? centsFromTarget(sample.freq, targetString.freq) : 0;
   const note = sample.hasSignal ? frequencyToNote(sample.freq, a4) : null;
   const inTune = sample.hasSignal && Math.abs(cents) <= TUNED_TOLERANCE;
+
+  useEffect(() => {
+    if (inTune && !lastInTuneRef.current && navigator.vibrate) {
+      navigator.vibrate(40);
+    }
+    lastInTuneRef.current = inTune;
+  }, [inTune]);
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">

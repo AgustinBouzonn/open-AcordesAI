@@ -6,6 +6,7 @@ import { ImportModal } from './ImportModal';
 import { ShareModal } from './ShareModal';
 import { api } from '../services/apiClient';
 import * as storage from '../services/storageService';
+import { acquireWakeLock, releaseWakeLock } from '../services/wakeLock';
 
 interface SongViewerProps {
   song: Song;
@@ -44,6 +45,13 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   useEffect(() => {
     api.config.get().then(c => setAiConfigured(c.aiConfigured)).catch(() => setAiConfigured(false));
   }, []);
+
+  useEffect(() => {
+    if (autoScrollSpeed > 0) {
+      void acquireWakeLock();
+      return () => { void releaseWakeLock(); };
+    }
+  }, [autoScrollSpeed]);
 
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
