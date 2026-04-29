@@ -27,9 +27,10 @@ describe('import routes', () => {
   });
 
   it('parses chords from an allowed Ultimate Guitar page', async () => {
+    const longChords = 'C G Am F '.repeat(20);
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      text: async () => '<pre class="js-tab-content">C G Am F</pre>',
+      text: async () => `<pre class="js-tab-content">${longChords}</pre>`,
     });
 
     const response = await request(app).post('/api/import/fetch').send({
@@ -38,7 +39,7 @@ describe('import routes', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ chords: 'C G Am F' });
+    expect(response.body).toEqual({ chords: longChords.trim() });
   });
 
   it('returns parsed search results with absolute URLs', async () => {
