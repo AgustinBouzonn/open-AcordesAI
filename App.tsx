@@ -19,6 +19,7 @@ import { HistoryPage } from './components/pages/HistoryPage';
 import { CommunityPage } from './components/pages/CommunityPage';
 import { SetlistsPage } from './components/pages/SetlistsPage';
 import { ChordSearchPage } from './components/pages/ChordSearchPage';
+import { OnboardingModal } from './components/OnboardingModal';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
 import { Plus, Globe, Download } from 'lucide-react';
@@ -326,6 +327,7 @@ function AppContent() {
         onImported={(song) => navigate(`/song/${song.id}`)}
       />
       <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+      <OnboardingModal />
     </>
   );
 }

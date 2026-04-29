@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star, Maximize, FileText, ListMusic, Repeat } from 'lucide-react';
+import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star, Maximize, FileText, ListMusic, Repeat, Guitar } from 'lucide-react';
 import { Song, Comment, RatingSummary, Instrument } from '../types';
 import { useAuth } from './AuthContext';
 import { ImportModal } from './ImportModal';
@@ -42,6 +42,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [userRating, setUserRating] = useState(0);
   const [avgRating, setAvgRating] = useState<RatingSummary | null>(null);
   const [transpose, setTranspose] = useState(0);
+  const [capo, setCapo] = useState(0);
   const [showShare, setShowShare] = useState(false);
   const [instrument, setInstrument] = useState<Instrument>('guitar');
   const [aiConfigured, setAiConfigured] = useState(true);
@@ -176,18 +177,19 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
 
   useEffect(() => {
     const chords = song.chords || '';
-    setDisplayChords(transposeChords(chords, transpose));
+    setDisplayChords(transposeChords(chords, transpose - capo));
     setEditedChords(song.chords || '');
     loadFavorites();
     loadComments();
     loadRating();
     setAutoScrollSpeed(0);
     setEditMode(false);
+    setCapo(0);
   }, [song.id]);
 
   useEffect(() => {
-    setDisplayChords(transposeChords(editedChords || song.chords || '', transpose));
-  }, [editedChords, song.chords, transpose]);
+    setDisplayChords(transposeChords(editedChords || song.chords || '', transpose - capo));
+  }, [editedChords, song.chords, transpose, capo]);
 
   useEffect(() => {
     if (instrument === 'guitar') {
@@ -488,6 +490,15 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
               {transpose === 0 ? 'Original' : transpose > 0 ? `+${transpose}` : transpose}
             </span>
             <button onClick={() => setTranspose(t => t + 1)} className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600">+1</button>
+          </div>
+
+          <div className="flex items-center gap-2" title="Capo (cejilla virtual): bajá el cifrado para tocarlo con formas más cómodas">
+            <Guitar size={16} className="text-brand" />
+            <button onClick={() => setCapo(c => Math.max(0, c - 1))} className="px-2 py-1 bg-dark-700 rounded text-gray-300 hover:bg-dark-600 text-xs">−</button>
+            <span className="text-xs text-gray-400 min-w-[64px] text-center font-mono">
+              Capo {capo === 0 ? '—' : capo}
+            </span>
+            <button onClick={() => setCapo(c => Math.min(12, c + 1))} className="px-2 py-1 bg-dark-700 rounded text-gray-300 hover:bg-dark-600 text-xs">+</button>
           </div>
 
           <div className="flex items-center gap-1">
