@@ -1,0 +1,3 @@
+## 2024-04-29 - Eliminate Object.fromEntries allocation overhead in serializers
+**Learning:** Using `Object.fromEntries(Object.entries({...}).filter(...))` for data serialization creates significant allocation overhead by creating intermediate objects and arrays (the initial object, the entries array, the filtered array, and finally the new object). In performance-critical paths like data serializers (e.g., `backend/src/serializers/song.ts`), this can cause unnecessary GC pressure and slowdowns.
+**Action:** Replace the `Object.fromEntries` pattern with manual object construction and conditional property assignments (e.g., `if (val !== undefined) obj.key = val`) to eliminate the intermediate allocations.
