@@ -79,7 +79,7 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
               <span style={{ fontSize: '24px' }}>🐦</span>
               <span className="text-xs">Twitter</span>
             </button>
-            <button onClick={shareFacebook} className="flex flex-col items-center gap-1 p-3 bg-[#4267B2] hover:#3B5998 rounded-lg transition">
+            <button onClick={shareFacebook} className="flex flex-col items-center gap-1 p-3 bg-[#4267B2] hover:bg-[#365899] rounded-lg transition">
               <span style={{ fontSize: '24px' }}>📘</span>
               <span className="text-xs">Facebook</span>
             </button>

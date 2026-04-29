@@ -47,10 +47,25 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   }, []);
 
   useEffect(() => {
-    if (autoScrollSpeed > 0) {
-      void acquireWakeLock();
-      return () => { void releaseWakeLock(); };
-    }
+    if (autoScrollSpeed <= 0) return;
+
+    void acquireWakeLock();
+    const intervalMs = Math.max(20, 110 - autoScrollSpeed * 18);
+    scrollInterval.current = setInterval(() => {
+      const before = window.scrollY;
+      window.scrollBy({ top: 1, behavior: 'auto' });
+      if (window.scrollY === before) {
+        setAutoScrollSpeed(0);
+      }
+    }, intervalMs);
+
+    return () => {
+      if (scrollInterval.current) {
+        clearInterval(scrollInterval.current);
+        scrollInterval.current = null;
+      }
+      void releaseWakeLock();
+    };
   }, [autoScrollSpeed]);
 
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -400,7 +415,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-300">Editar cifrado</h3>
             <div className="flex gap-2">
-              <button onClick={async () => { const t = await navigator.clipboard.readText(); setEditedChords(t); }} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
+              <button onClick={async () => { try { const t = await navigator.clipboard.readText(); setEditedChords(t); } catch { /* clipboard unavailable */ } }} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
                 <Copy size={14} /> Pegar
               </button>
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".txt,.chords" className="hidden" />

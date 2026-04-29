@@ -19,7 +19,9 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
     req.user = { id: payload.userId, username: payload.username };
     req.userId = payload.userId;
     next();
-  } catch {
+  } catch (e) {
+    const reason = e instanceof Error ? e.name : 'unknown';
+    console.warn(`[auth] JWT verify failed: ${reason}`);
     res.status(401).json({ message: 'Token inválido o expirado' });
   }
 };

@@ -377,13 +377,16 @@ router.post('/from-url', requireAuth, importLimiter, async (req: AuthRequest, re
   const meta = extractMetadata(html, norm.fetchUrl);
   const title = meta.title || 'Sin título';
   const artist = meta.artist || 'Desconocido';
+  const source = norm.host.includes('ultimateguitar') ? 'ultimateguitar'
+    : norm.host.includes('cifraspot') ? 'cifraspot'
+    : 'cifraclub';
 
   try {
     const inserted = await query(
       `INSERT INTO songs (title, artist, lyrics, source, source_url, user_id)
-       VALUES ($1, $2, $3, 'cifraclub', $4, $5)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [title, artist, content, norm.canonicalUrl, userId],
+      [title, artist, content, source, norm.canonicalUrl, userId],
     );
     const song = inserted.rows[0];
 
