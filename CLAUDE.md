@@ -17,3 +17,8 @@ cliente → Cloudflare (TLS) → VPS `195.200.1.74` → Traefik (EasyPanel) → 
 
 ## Convención de nombres Docker Compose
 Compose v2 usa guiones (`open-acordesai-nginx-1`), no underscores. Si se ven containers viejos con `_`, son huérfanos: `docker compose up -d --force-recreate --remove-orphans`.
+
+## Import desde URL
+- Endpoint: `POST /api/import/from-url` (requireAuth) con body `{ url }`. Valida hostname contra `ALLOWED_HOSTS` (Cifra Club, Ultimate Guitar, CifraSpot), scrapea el `<pre>` más largo y el `og:title`, inserta en `songs` + `chord_cache (instrument='guitar')` atómicamente. Dedup por `source_url` (devuelve `existed: true`).
+- Frontend: botón flotante ⬇ en `App.tsx` → `ImportUrlModal` → llama `api.imports.fromUrl(url)` → navega a `/song/:id`.
+- El mismo patrón (insert en `songs` + `chord_cache` con mismo contenido) lo usa `scripts/import-bulk.mjs` para imports masivos por CLI.

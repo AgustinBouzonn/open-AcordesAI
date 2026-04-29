@@ -114,6 +114,11 @@ class ApiClient {
         method: 'POST',
         body: JSON.stringify({ url, source }),
       }),
+    fromUrl: (url: string) =>
+      this.request<{ song: Song; existed: boolean }>('/import/from-url', {
+        method: 'POST',
+        body: JSON.stringify({ url }),
+      }),
   };
 
   songs = {

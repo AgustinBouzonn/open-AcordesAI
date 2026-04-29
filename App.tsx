@@ -5,11 +5,12 @@ import { SongViewer } from './components/SongViewer';
 import { AuthModal } from './components/AuthModal';
 import { CreateSongModal } from './components/CreateSongModal';
 import { AddFromCommunityModal } from './components/AddFromCommunityModal';
+import { ImportUrlModal } from './components/ImportUrlModal';
 import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './components/AuthContext';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
-import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart, LogIn, UserPlus, Users, Star, Plus, Globe } from 'lucide-react';
+import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart, LogIn, UserPlus, Users, Star, Plus, Globe, Download } from 'lucide-react';
 
 const TRENDING_SEARCHES = [
   "Lamento Boliviano - Enanitos Verdes",
@@ -133,6 +134,7 @@ function AppContent() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAddFromCommunityModal, setShowAddFromCommunityModal] = useState(false);
+  const [showImportUrlModal, setShowImportUrlModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
@@ -514,6 +516,13 @@ function AppContent() {
       {user && (
         <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
           <button
+            onClick={() => setShowImportUrlModal(true)}
+            className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg"
+            title="Importar desde URL de Cifra Club"
+          >
+            <Download size={20} />
+          </button>
+          <button
             onClick={() => setShowAddFromCommunityModal(true)}
             className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg"
             title="Buscar en iTunes"
@@ -553,14 +562,19 @@ function AppContent() {
         onClose={() => setShowCreateModal(false)} 
         onSubmit={handleCreateSong} 
       />
-      <AddFromCommunityModal 
-        isOpen={showAddFromCommunityModal} 
-        onClose={() => setShowAddFromCommunityModal(false)} 
+      <AddFromCommunityModal
+        isOpen={showAddFromCommunityModal}
+        onClose={() => setShowAddFromCommunityModal(false)}
         onSelect={handleAddFromCommunity}
       />
-      <ProfileModal 
-        isOpen={showProfileModal} 
-        onClose={() => setShowProfileModal(false)} 
+      <ImportUrlModal
+        isOpen={showImportUrlModal}
+        onClose={() => setShowImportUrlModal(false)}
+        onImported={(song) => navigate(`/song/${song.id}`)}
+      />
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
       />
     </>
   );

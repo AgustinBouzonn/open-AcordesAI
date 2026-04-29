@@ -1,8 +1,14 @@
-import { rateLimit } from 'express-rate-limit';
+import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 import { Request } from 'express';
 import { AuthRequest } from './auth';
 
 const jsonMessage = (message: string) => ({ message });
+
+const userOrIpKey = (req: Request) => {
+  const userId = (req as AuthRequest).user?.id?.toString();
+  if (userId) return userId;
+  return ipKeyGenerator(req.ip ?? '') || 'anonymous';
+};
 
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -25,7 +31,7 @@ export const chordGenerationLimiter = rateLimit({
   limit: 15,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req: Request) => (req as AuthRequest).user?.id?.toString() || req.ip || 'anonymous',
+  keyGenerator: userOrIpKey,
   message: jsonMessage('Demasiadas generaciones de cifrados. Intenta de nuevo más tarde.'),
 });
 
@@ -34,6 +40,6 @@ export const chordSaveLimiter = rateLimit({
   limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req: Request) => (req as AuthRequest).user?.id?.toString() || req.ip || 'anonymous',
+  keyGenerator: userOrIpKey,
   message: jsonMessage('Demasiados guardados de cifrados. Intenta de nuevo más tarde.'),
 });
