@@ -7,6 +7,7 @@ import { ShareModal } from './ShareModal';
 import { api } from '../services/apiClient';
 import * as storage from '../services/storageService';
 import { acquireWakeLock, releaseWakeLock } from '../services/wakeLock';
+import { useToast } from './Toast';
 
 interface SongViewerProps {
   song: Song;
@@ -23,6 +24,7 @@ const INSTRUMENTS = [
 
 export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [isFav, setIsFav] = useState(false);
   const [fontSize, setFontSize] = useState(16);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(0);
@@ -198,7 +200,10 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     try {
       await api.ratings.save(song.id, score);
       loadRating();
-    } catch {}
+      showToast(`Rating de ${score} ★ guardado`, 'success');
+    } catch {
+      showToast('No se pudo guardar el rating', 'error');
+    }
   };
 
   const loadFavorites = async () => {
@@ -238,6 +243,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       }
     } catch (err) {
       console.error('Failed to generate chords:', err);
+      showToast('No se pudo generar el cifrado con IA', 'error');
     } finally {
       setLoadingChords(false);
     }
@@ -252,8 +258,10 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       if (onSongUpdated) {
         onSongUpdated({ ...song, chords: editedChords });
       }
+      showToast('Cifrado guardado', 'success');
     } catch (err) {
       console.error('Failed to save chords:', err);
+      showToast('No se pudo guardar el cifrado', 'error');
     } finally {
       setSaving(false);
     }

@@ -1,39 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { SongViewer } from './components/SongViewer';
 import { AuthModal } from './components/AuthModal';
 import { CreateSongModal } from './components/CreateSongModal';
 import { AddFromCommunityModal } from './components/AddFromCommunityModal';
 import { ImportUrlModal } from './components/ImportUrlModal';
-import { Tuner } from './components/Tuner';
-import { Metronome } from './components/Metronome';
 import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './components/AuthContext';
+import { useToast } from './components/Toast';
+import { Tuner } from './components/Tuner';
+import { Metronome } from './components/Metronome';
+import { HomePage } from './components/pages/HomePage';
+import { SearchPage } from './components/pages/SearchPage';
+import { FavoritesPage } from './components/pages/FavoritesPage';
+import { HistoryPage } from './components/pages/HistoryPage';
+import { CommunityPage } from './components/pages/CommunityPage';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
-import { Search, Loader2, Music, TrendingUp, ChevronRight, Clock, Heart, LogIn, UserPlus, Users, Star, Plus, Globe, Download } from 'lucide-react';
-
-const TRENDING_SEARCHES = [
-  "Lamento Boliviano - Enanitos Verdes",
-  "De Música Ligera - Soda Stereo",
-  "La Flaca - Jarabe de Palo",
-  "Wonderwall - Oasis",
-  "Creep - Radiohead"
-];
-
-const Artwork: React.FC<{ url?: string; size?: number; className?: string }> = ({ url, size = 48, className = '' }) => {
-  if (url) {
-    return (
-      <img src={url} alt="" width={size} height={size} className={`rounded-lg object-cover shrink-0 ${className}`} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-    );
-  }
-  return (
-    <div style={{ width: size, height: size }} className={`bg-dark-900 rounded-lg flex items-center justify-center shrink-0 border border-dark-700 ${className}`}>
-      <Music size={size * 0.45} className="text-brand" />
-    </div>
-  );
-};
+import { Plus, Globe, Download } from 'lucide-react';
 
 function SongDetailRoute() {
   const { id } = useParams<{ id: string }>();
@@ -85,15 +71,8 @@ function AuthCallbackRoute() {
     const token = params.get('token');
     const oauthError = params.get('error');
 
-    if (oauthError) {
-      setError(oauthError);
-      return;
-    }
-
-    if (!token) {
-      setError('No se recibió el token de autenticación social');
-      return;
-    }
+    if (oauthError) { setError(oauthError); return; }
+    if (!token) { setError('No se recibió el token de autenticación social'); return; }
 
     completeOAuth(token)
       .then(() => navigate('/'))
@@ -120,7 +99,8 @@ function AuthCallbackRoute() {
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
+  const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -130,9 +110,7 @@ function AppContent() {
   const [communitySongs, setCommunitySongs] = useState<Song[]>([]);
   const [popularSongs, setPopularSongs] = useState<Song[]>([]);
   const [loadingCommunity, setLoadingCommunity] = useState(false);
-  const [loadingPopular, setLoadingPopular] = useState(false);
   const [communityPage, setCommunityPage] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAddFromCommunityModal, setShowAddFromCommunityModal] = useState(false);
@@ -161,16 +139,6 @@ function AppContent() {
   }, [user]);
 
   useEffect(() => {
-    if (activeTab === 'HOME') {
-      setLoadingPopular(true);
-      storage.getPopularSongs(10)
-        .then(setPopularSongs)
-        .catch(() => setPopularSongs([]))
-        .finally(() => setLoadingPopular(false));
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
     const w = window as unknown as { __acordesaiSharedUrl?: string };
     const openWith = (url: string) => {
       if (!url) return;
@@ -181,13 +149,16 @@ function AppContent() {
       openWith(w.__acordesaiSharedUrl);
       w.__acordesaiSharedUrl = undefined;
     }
-    const onShared = (e: Event) => {
-      const url = (e as CustomEvent<string>).detail;
-      openWith(url);
-    };
+    const onShared = (e: Event) => openWith((e as CustomEvent<string>).detail);
     window.addEventListener('acordesai-shared-url', onShared);
     return () => window.removeEventListener('acordesai-shared-url', onShared);
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'HOME') {
+      storage.getPopularSongs(10).then(setPopularSongs).catch(() => setPopularSongs([]));
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === 'COMMUNITY') {
@@ -199,23 +170,23 @@ function AppContent() {
     }
   }, [activeTab, communityPage]);
 
-  const performSearch = async (query: string) => {
-    if (!query.trim()) return;
-    setSearchQuery(query);
+  const performSearch = async (q: string) => {
+    if (!q.trim()) return;
+    setSearchQuery(q);
     setIsSearching(true);
     navigate('/search');
     try {
       const [itunesResults, localResults] = await Promise.all([
-        storage.searchSongs(query).catch(() => []),
-        storage.searchLocalSongs(query).catch(() => [])
+        storage.searchSongs(q).catch(() => []),
+        storage.searchLocalSongs(q).catch(() => []),
       ]);
-      const allResults = [
-        ...localResults.map((result) => ({ ...result, source: 'comunidad' as const, id: `local-${result.id}` })),
-        ...itunesResults.map((result) => ({ ...result, source: 'itunes' as const, id: result.id }))
+      const all = [
+        ...localResults.map((r) => ({ ...r, source: 'comunidad' as const, id: `local-${r.id}` })),
+        ...itunesResults.map((r) => ({ ...r, source: 'itunes' as const, id: r.id })),
       ];
-      setSearchResults(allResults.map(r => ({ title: r.title, artist: r.artist, source: r.source, url: r.sourceUrl, id: r.id })));
+      setSearchResults(all.map((r) => ({ title: r.title, artist: r.artist, source: r.source, url: r.sourceUrl, id: r.id })));
     } catch {
-      setErrorMessage('Error en la búsqueda');
+      showToast('Error en la búsqueda', 'error');
     } finally {
       setIsSearching(false);
     }
@@ -226,340 +197,45 @@ function AppContent() {
     performSearch(searchQuery);
   };
 
-  const handleToggleFavorite = async (songId: string) => {
-    if (!user) {
-      setAuthMode('login');
-      setShowAuthModal(true);
-      return;
-    }
-    await storage.toggleFavorite(songId);
-    const newFavs = await storage.getFavorites();
-    setFavorites(newFavs);
-  };
-
-  const handleCreateSong = async (data: { title: string; artist: string; lyrics?: string }) => {
-    const song = await storage.createSong(data);
-    navigate(`/song/${song.id}`);
-  };
-
-  const handleAddFromCommunity = async (data: { title: string; artist: string }) => {
-    const song = await storage.createSong(data);
-    navigate(`/song/${song.id}`);
-  };
-
   const openAuth = (mode: 'login' | 'register') => {
     setAuthMode(mode);
     setShowAuthModal(true);
   };
 
-  const renderHome = () => (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="text-center py-12 space-y-4">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-brand to-yellow-500">
-          Toca lo que quieras.
-        </h1>
-        <p className="text-gray-400 max-w-lg mx-auto">
-          Busca cualquier canción y obtén los acordes al instante con IA.
-        </p>
-        <form onSubmit={handleSearch} className="max-w-md mx-auto relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Canción o artista..."
-            className="w-full bg-dark-800 border border-dark-600 rounded-full py-3 pl-12 pr-4 text-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition shadow-lg"
-          />
-          <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
-          <button type="submit" className="hidden">Buscar</button>
-        </form>
-      </div>
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
-          <TrendingUp size={16} />
-          <span>Tendencias</span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {TRENDING_SEARCHES.map((term, idx) => (
-            <div key={idx} onClick={() => performSearch(term)} className="group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition"><Music size={20} /></div>
-                <span className="font-medium text-sm text-gray-200">{term}</span>
-              </div>
-              <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" />
-            </div>
-          ))}
-        </div>
-      </div>
+  const handleSearchResultClick = async (result: SearchResult) => {
+    if (!user) { openAuth('login'); return; }
+    try {
+      const song = await storage.createSong({ title: result.title, artist: result.artist, lyrics: '' });
+      navigate(`/song/${song.id}`);
+    } catch {
+      showToast('Error al crear canción', 'error');
+    }
+  };
 
-      {popularSongs.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
-            <Star size={16} />
-            <span>Más Populares</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {popularSongs.slice(0, 6).map((song) => (
-              <div key={song.id} onClick={() => navigate(`/song/${song.id}`)} className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300">
-                <div className="flex items-center gap-4">
-                  <Artwork size={52} url={song.artworkUrl} />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
-                    <p className="text-gray-400 text-sm truncate">{song.artist}</p>
-                    <div className="flex items-center gap-3 mt-1">
-                      {song.rating && (
-                        <div className="flex items-center gap-1 text-yellow-500">
-                          <Star size={12} fill="currentColor" />
-                          <span className="text-xs">{song.rating}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {(song.hasChords || 0) > 0 && (
-                    <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderSearch = () => (
-    <div className="space-y-6">
-      <div className="sticky top-0 bg-dark-900 z-10 py-2">
-        <form onSubmit={handleSearch} className="relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar..."
-            className="w-full bg-dark-800 border border-dark-600 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-brand"
-            autoFocus
-          />
-          <Search className="absolute left-3 top-3.5 text-gray-500" size={20} />
-          {isSearching && <div className="absolute right-3 top-3.5"><Loader2 className="animate-spin text-brand" size={20} /></div>}
-        </form>
-      </div>
-      {searchResults.length > 0 ? (
-        <div className="space-y-2">
-          {searchResults.map((result, idx) => (
-            <div key={idx} onClick={async () => {
-              if (!user) {
-                setAuthMode('login');
-                setShowAuthModal(true);
-                return;
-              }
-              try {
-                const song = await storage.createSong({ title: result.title, artist: result.artist, lyrics: '' });
-                navigate(`/song/${song.id}`);
-              } catch (e) {
-                setErrorMessage('Error al crear canción');
-              }
-            }} className="bg-dark-800 hover:bg-dark-700 p-3 rounded-xl cursor-pointer border border-transparent hover:border-brand/30 transition flex items-center gap-3">
-              <Artwork size={52} />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white truncate">{result.title}</h3>
-                <p className="text-sm text-brand truncate">{result.artist}</p>
-              </div>
-              <ChevronRight size={16} className="text-gray-500 shrink-0" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        !isSearching && (
-          <div className="text-center text-gray-500 mt-20">
-            <Search size={48} className="mx-auto mb-4 opacity-20" />
-            <p className="mb-4">No se encontraron resultados.</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button 
-                onClick={() => user ? setShowCreateModal(true) : (setAuthMode('login'), setShowAuthModal(true))}
-                className="bg-brand hover:bg-brand/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-              >
-                Crear canción manualmente
-              </button>
-              <button 
-                onClick={() => user ? setShowCreateModal(true) : (setAuthMode('login'), setShowAuthModal(true))}
-                className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-              >
-                Subir cifrado propio
-              </button>
-            </div>
-          </div>
-        )
-      )}
-    </div>
-  );
-
-  const renderFavorites = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold flex items-center gap-2"><Heart className="text-brand fill-current" />Mis Favoritos</h2>
-      {favorites.length === 0 ? (
-        <div className="text-center text-gray-500 mt-20 bg-dark-800 p-8 rounded-xl border border-dashed border-dark-600">
-          <Heart size={48} className="mx-auto mb-4 opacity-20" />
-          <p>Aún no tienes canciones favoritas.</p>
-          {!user && (
-            <button onClick={() => openAuth('login')} className="mt-4 text-brand font-medium hover:underline flex items-center justify-center gap-2">
-              <LogIn size={16} /> Inicia sesión
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {favorites.map((song) => (
-            <div key={song.id} onClick={() => navigate(`/song/${song.id}`)} className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300">
-              <div className="flex items-center gap-4">
-                <Artwork url={song.artworkUrl} size={52} />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
-                  <p className="text-gray-400 text-sm truncate">{song.artist}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderHistory = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold flex items-center gap-2"><Clock className="text-brand" />Historial Reciente</h2>
-      {history.length === 0 ? (
-        <div className="text-center text-gray-500 mt-20">
-          <Clock size={48} className="mx-auto mb-4 opacity-20" />
-          <p>Las últimas canciones que veas aparecerán aquí.</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {history.map((song) => (
-            <div key={song.id} onClick={() => navigate(`/song/${song.id}`)} className="bg-dark-800 hover:bg-dark-700 p-3 rounded-xl cursor-pointer border border-dark-700 hover:border-brand/30 transition flex items-center gap-3">
-              <Artwork size={48} />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white truncate">{song.title}</h3>
-                <p className="text-sm text-gray-400 truncate">{song.artist}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderCommunity = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold flex items-center gap-2"><Users className="text-brand" />Comunidad</h2>
-        <button 
-          onClick={() => user ? setShowCreateModal(true) : (setAuthMode('login'), setShowAuthModal(true))} 
-          className="bg-brand hover:bg-brand/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
-        >
-          <Plus size={18} /> Crear canción
-        </button>
-      </div>
-      {loadingCommunity ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-brand" size={40} />
-        </div>
-      ) : communitySongs.length === 0 ? (
-        <div className="text-center text-gray-500 mt-20 bg-dark-800 p-8 rounded-xl border border-dashed border-dark-600">
-          <Users size={48} className="mx-auto mb-4 opacity-20" />
-          <p>No hay canciones en la comunidad todavía.</p>
-          <button onClick={() => navigate('/search')} className="mt-4 text-brand font-medium hover:underline">
-            Sé el primero en agregar una
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {communitySongs.map((song) => (
-            <div key={song.id} onClick={() => navigate(`/song/${song.id}`)} className="bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300">
-              <div className="flex items-center gap-4">
-                <Artwork size={52} />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
-                  <p className="text-gray-400 text-sm truncate">{song.artist}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    {song.author && (
-                      <span className="text-xs text-gray-500">por {song.author}</span>
-                    )}
-                    {song.rating && (
-                      <div className="flex items-center gap-1 text-yellow-500">
-                        <Star size={12} fill="currentColor" />
-                        <span className="text-xs">{song.rating}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {(song.hasChords || 0) > 0 && (
-                  <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {communitySongs.length >= 20 && (
-        <div className="flex justify-center gap-4 mt-6">
-          <button
-            onClick={() => setCommunityPage(p => Math.max(0, p - 1))}
-            disabled={communityPage === 0}
-            className="px-4 py-2 bg-dark-700 rounded-lg disabled:opacity-50"
-          >
-            Anterior
-          </button>
-          <span className="py-2 text-gray-400">Página {communityPage + 1}</span>
-          <button
-            onClick={() => setCommunityPage(p => p + 1)}
-            disabled={communitySongs.length < 20}
-            className="px-4 py-2 bg-dark-700 rounded-lg disabled:opacity-50"
-          >
-            Siguiente
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  const ensureUserOrLogin = (action: () => void) => {
+    if (!user) { openAuth('login'); return; }
+    action();
+  };
 
   const handleNav = (tab: string) => {
-    if (tab === 'HOME') navigate('/');
-    if (tab === 'SEARCH') navigate('/search');
-    if (tab === 'FAVORITES') navigate('/favorites');
-    if (tab === 'HISTORY') navigate('/history');
-    if (tab === 'COMMUNITY') navigate('/community');
-    if (tab === 'TUNER') navigate('/tuner');
-    if (tab === 'METRONOME') navigate('/metronome');
+    const map: Record<string, string> = {
+      HOME: '/', SEARCH: '/search', FAVORITES: '/favorites', HISTORY: '/history',
+      COMMUNITY: '/community', TUNER: '/tuner', METRONOME: '/metronome',
+    };
+    if (map[tab]) navigate(map[tab]);
   };
 
   return (
     <>
-      {errorMessage && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-900/90 border border-red-700 text-red-100 text-sm px-5 py-3 rounded-xl shadow-xl flex items-center gap-3">
-          <span>{errorMessage}</span>
-          <button onClick={() => setErrorMessage(null)} className="text-red-300 hover:text-white font-bold ml-2">✕</button>
-        </div>
-      )}
       {user && (
         <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
-          <button
-            onClick={() => setShowImportUrlModal(true)}
-            className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg"
-            title="Importar desde URL de Cifra Club"
-          >
+          <button onClick={() => setShowImportUrlModal(true)} className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg" title="Importar desde URL de Cifra Club">
             <Download size={20} />
           </button>
-          <button
-            onClick={() => setShowAddFromCommunityModal(true)}
-            className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg"
-            title="Buscar en iTunes"
-          >
+          <button onClick={() => setShowAddFromCommunityModal(true)} className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg" title="Buscar en iTunes">
             <Globe size={20} />
           </button>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-brand hover:bg-brand/90 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
-            title="Crear canción"
-          >
+          <button onClick={() => setShowCreateModal(true)} className="bg-brand hover:bg-brand/90 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110" title="Crear canción">
             <Plus size={24} />
           </button>
         </div>
@@ -573,27 +249,66 @@ function AppContent() {
         onProfileClick={() => setShowProfileModal(true)}
       >
         <Routes>
-          <Route path="/" element={renderHome()} />
-          <Route path="/search" element={renderSearch()} />
-          <Route path="/favorites" element={renderFavorites()} />
-          <Route path="/history" element={renderHistory()} />
-          <Route path="/community" element={renderCommunity()} />
-          <Route path="/tuner" element={<Tuner />} />
-          <Route path="/metronome" element={<Metronome />} />
+          <Route path="/" element={
+            <HomePage
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              onSearch={handleSearch}
+              performSearch={performSearch}
+              popularSongs={popularSongs}
+              onSelectSong={(id) => navigate(`/song/${id}`)}
+            />
+          } />
+          <Route path="/search" element={
+            <SearchPage
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              onSearch={handleSearch}
+              isSearching={isSearching}
+              searchResults={searchResults}
+              hasUser={!!user}
+              onResultClick={handleSearchResultClick}
+              onCreateClick={() => ensureUserOrLogin(() => setShowCreateModal(true))}
+            />
+          } />
+          <Route path="/favorites" element={
+            <FavoritesPage
+              favorites={favorites}
+              user={user}
+              onSelectSong={(id) => navigate(`/song/${id}`)}
+              onLogin={() => openAuth('login')}
+            />
+          } />
+          <Route path="/history" element={
+            <HistoryPage history={history} onSelectSong={(id) => navigate(`/song/${id}`)} />
+          } />
+          <Route path="/community" element={
+            <CommunityPage
+              songs={communitySongs}
+              loading={loadingCommunity}
+              page={communityPage}
+              onPageChange={setCommunityPage}
+              onSelectSong={(id) => navigate(`/song/${id}`)}
+              onNewClick={() => ensureUserOrLogin(() => setShowCreateModal(true))}
+              onSearchClick={() => navigate('/search')}
+            />
+          } />
           <Route path="/song/:id" element={<SongDetailRoute />} />
           <Route path="/auth/callback" element={<AuthCallbackRoute />} />
+          <Route path="/tuner" element={<Tuner />} />
+          <Route path="/metronome" element={<Metronome />} />
         </Routes>
       </Layout>
       <AuthModal isOpen={showAuthModal} mode={authMode} onClose={() => setShowAuthModal(false)} />
-      <CreateSongModal 
-        isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
-        onSubmit={handleCreateSong} 
+      <CreateSongModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={async (data) => { const song = await storage.createSong(data); navigate(`/song/${song.id}`); }}
       />
       <AddFromCommunityModal
         isOpen={showAddFromCommunityModal}
         onClose={() => setShowAddFromCommunityModal(false)}
-        onSelect={handleAddFromCommunity}
+        onSelect={async (data) => { const song = await storage.createSong(data); navigate(`/song/${song.id}`); }}
       />
       <ImportUrlModal
         isOpen={showImportUrlModal}
@@ -601,10 +316,7 @@ function AppContent() {
         onClose={() => { setShowImportUrlModal(false); setSharedImportUrl(undefined); }}
         onImported={(song) => navigate(`/song/${song.id}`)}
       />
-      <ProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-      />
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </>
   );
 }

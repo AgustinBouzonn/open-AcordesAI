@@ -22,14 +22,15 @@ describe('import routes', () => {
     });
 
     expect(response.status).toBe(400);
-    expect(response.body).toEqual({ message: 'URL no permitida' });
+    expect(response.body.message).toMatch(/URL no permitida/);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('parses chords from an allowed Ultimate Guitar page', async () => {
+    const longChords = 'Verse 1\nC                    G\nLine of lyrics here for the song\nAm                   F\nMore lyrics here that fill the verse out properly';
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      text: async () => '<pre class="js-tab-content">C G Am F</pre>',
+      text: async () => `<pre class="js-tab-content">${longChords}</pre>`,
     });
 
     const response = await request(app).post('/api/import/fetch').send({
@@ -38,11 +39,12 @@ describe('import routes', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ chords: 'C G Am F' });
+    expect(response.body.chords).toContain('Line of lyrics');
   });
 
   it('returns parsed search results with absolute URLs', async () => {
     fetchMock.mockResolvedValueOnce({
+      ok: true,
       text: async () => '<a href="/tabs/song-1">Song 1</a>',
     });
 
