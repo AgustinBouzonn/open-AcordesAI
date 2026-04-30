@@ -73,7 +73,8 @@ La generación de cifrados y las integraciones de IA viven en el backend. El fro
 - 🎯 **Sin límites:** No estás restringido a una base de datos preexistente
 - ⚡ **Instantáneo:** Obtén cifrados en segundos, no en horas
 - 🎸 **Multi-instrumento:** Guitarra, Ukelele y Piano
-- 💾 **Offline:** Funciona sin conexión gracias a PWA
+- 💾 **Offline real:** Service worker con `stale-while-revalidate` para listados y `network-first` para tu biblioteca
+- 📊 **Estadísticas de práctica:** Tiempo total, sesiones, gráfico de 30 días y top de canciones más tocadas
 - 🆓 **Gratis:** Código abierto para la comunidad
 
 ---
@@ -112,9 +113,13 @@ La generación de cifrados y las integraciones de IA viven en el backend. El fro
 |---------|-------------|
 | 🎼 **Cifrados IA** | Acordes generados por Gemini |
 | 🎹 **Multi-instrumento** | Guitarra, Ukelele, Piano |
-| 📜 **Autoscroll** | Velocidad ajustable 1-10 |
+| 📜 **Autoscroll** | Velocidad ajustable 1-5 con bucle de sección |
 | 🔤 **Fuente ajustable** | Tamaño personalizable |
-| 🎚️ **Transposición** | Cambio de tono (próximamente) |
+| 🎚️ **Transposición** | Cambio de tono y capo virtual con normalización de bemoles |
+| 🖥️ **Modo presentación** | Pantalla completa con `ESC` para salir y wake-lock |
+| 📄 **Exportar PDF / TXT** | Descarga directa con `jspdf` |
+| 📋 **Setlists públicas** | Compartir con token con TTL de 30 días |
+| 🎯 **Práctica registrada** | Tiempo en pantalla automático → estadísticas |
 
 ### 📚 Gestión de Biblioteca
 
@@ -141,16 +146,25 @@ Biblioteca Inteligente:
 ### Frontend
 <div>
   <img src="https://img.shields.io/badge/React-19-black?style=flat-square&logo=react&logoColor=61DAFB" alt="React 19"/>
-  <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5.0"/>
-  <img src="https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind 3.4"/>
-  <img src="https://img.shields.io/badge/Vite-5.0-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite 5.0"/>
+  <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5.8"/>
+  <img src="https://img.shields.io/badge/Tailwind-4.2-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind 4.2"/>
+  <img src="https://img.shields.io/badge/Vite-6.4-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite 6.4"/>
+  <img src="https://img.shields.io/badge/Vitest-4.1-6E9F18?style=flat-square&logo=vitest&logoColor=white" alt="Vitest 4.1"/>
 </div>
 
-### IA & Backend
+### Backend & IA
 <div>
-  <img src="https://img.shields.io/badge/Gemini_Pro-4285F4?style=flat-square&logo=google&logoColor=white" alt="Gemini Pro"/>
-  <img src="https://img.shields.io/badge/React_Router-6.20-CA4245?style=flat-square&logo=react-router&logoColor=white" alt="React Router"/>
-  <img src="https://img.shields.io/badge/Zustand-4.4-000000?style=flat-square&logo=zustand&logoColor=white" alt="Zustand"/>
+  <img src="https://img.shields.io/badge/Express-4.19-black?style=flat-square&logo=express&logoColor=white" alt="Express"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-15-336791?style=flat-square&logo=postgresql&logoColor=white" alt="Postgres 15"/>
+  <img src="https://img.shields.io/badge/Gemini_2.0-4285F4?style=flat-square&logo=google&logoColor=white" alt="Gemini 2.0 Flash"/>
+  <img src="https://img.shields.io/badge/JWT-secure-000?style=flat-square&logo=jsonwebtokens&logoColor=white" alt="JWT"/>
+</div>
+
+### Mobile / PWA
+<div>
+  <img src="https://img.shields.io/badge/Capacitor-8.3-119EFF?style=flat-square&logo=capacitor&logoColor=white" alt="Capacitor 8.3"/>
+  <img src="https://img.shields.io/badge/Workbox-stale--while--revalidate-FF6F00?style=flat-square&logo=googlechrome&logoColor=white" alt="Workbox"/>
+  <img src="https://img.shields.io/badge/PWA-share__target-5A0FC8?style=flat-square&logo=pwa&logoColor=white" alt="PWA share target"/>
 </div>
 
 ---
@@ -182,12 +196,14 @@ Para correr la app completa también necesitás PostgreSQL y variables reales pa
 
 ```bash
 # Frontend
-npm run dev
-npm run build
-npm run typecheck
+npm run dev          # Vite dev server (puerto 3000)
+npm run build        # Build producción → dist/
+npm run typecheck    # tsc --noEmit
+npm run test         # Vitest watch
+npm run test:run     # Vitest run (CI)
 
 # Full build
-npm run build:all
+npm run build:all    # Frontend + backend
 
 # Backend
 npm --prefix backend run dev
@@ -199,10 +215,9 @@ npm --prefix backend test
 ## 🔍 Verificación Rápida
 
 ```bash
-npm run typecheck
-npm run build:all
-npm --prefix backend run migrate
-npm --prefix backend test
+npm run typecheck && npm --prefix backend run typecheck   # Ambos lados
+npm run test:run && npm --prefix backend test             # Tests (66 totales)
+npm run build:all                                         # Build de prod
 ```
 
 Notas:
@@ -247,10 +262,19 @@ npm run dev
 docker compose up --build
 ```
 
-Si ya habías levantado Postgres antes y agregaste nuevas migraciones, recuerda que los scripts de `backend/migrations/` solo corren automáticamente al crear el volumen por primera vez. Para aplicar la optimización nueva de búsqueda sobre una base existente:
+Si ya habías levantado Postgres antes y agregaste nuevas migraciones, recuerda que los scripts de `backend/migrations/` solo corren automáticamente al crear el volumen por primera vez. Para aplicar todas las migraciones sobre una base existente:
 
 ```bash
-docker compose exec postgres psql -U acordesai -d acordesai -f /docker-entrypoint-initdb.d/002_search_indexes.sql
+for m in backend/migrations/*.sql; do
+  docker compose exec -T postgres psql -U acordesai -d acordesai < "$m"
+done
+```
+
+O una específica (ej. la de v1.1.0 con índices, share TTL y `practice_sessions`):
+
+```bash
+docker compose exec -T postgres psql -U acordesai -d acordesai \
+  < backend/migrations/006_indexes_share_ttl_practice.sql
 ```
 
 Luego entra desde tu celular a:
@@ -295,18 +319,47 @@ Notas:
 
 ```
 open-AcordesAI/
-├── App.tsx
+├── App.tsx                      # Root con HashRouter + lazy routes
+├── index.tsx                    # ErrorBoundary + AuthProvider + ToastProvider
 ├── components/
+│   ├── ErrorBoundary.tsx        # Boundary global y por ruta
+│   ├── SongViewer.tsx           # Orquestador del visor
+│   ├── songViewer/              # TransportBar, PresentationOverlay, usePracticeTracker
+│   ├── hooks/useModalA11y.ts    # Focus trap + Escape + body lock
+│   ├── pages/
+│   │   ├── StatsPage.tsx        # Estadísticas de práctica
+│   │   └── ...                  # Home, Search, Favorites, History, Community, Setlists, Learning
+│   ├── ChordDiagram.tsx         # Guitarra
+│   ├── UkuleleChordDiagram.tsx
+│   ├── PianoChordDiagram.tsx
+│   ├── Tuner.tsx / Metronome.tsx
+│   └── ...modales (Auth, Create, Import, Share, AddToSetlist...)
 ├── services/
+│   ├── apiClient.ts             # Fetch wrapper con retry y onAuthError
+│   ├── chordTransposer.ts       # Transposición (módulo puro y testeado)
+│   ├── safeStorage.ts           # localStorage con fallback en memoria
+│   ├── tunerEngine.ts / metronomeEngine.ts / wakeLock.ts
+│   └── storageService.ts
 ├── types.ts
 ├── backend/
 │   ├── src/
-│   ├── migrations/
-│   ├── test/
+│   │   ├── app.ts / index.ts
+│   │   ├── db.ts                # query() + withTransaction()
+│   │   ├── env.ts               # validación de env
+│   │   ├── middleware/          # auth (códigos TOKEN_EXPIRED/INVALID), rateLimit
+│   │   ├── routes/              # auth, songs, setlists, import, practice, ratings, …
+│   │   ├── serializers/
+│   │   └── services/aiService.ts (Gemini/OpenAI con logs sanitizados)
+│   ├── migrations/              # 001-006 SQL (006: índices, share TTL, practice_sessions)
+│   ├── test/                    # Vitest + supertest (24 tests)
 │   └── package.json
-├── public/
-├── docker-compose.yml
+├── android/                     # Capacitor 8 (versionCode 14, versionName 1.1.0)
+├── test/                        # Vitest jsdom (41 tests)
+├── public/                      # Assets PWA
+├── docker-compose.yml           # Postgres + backend + nginx (Traefik labels)
 ├── nginx.conf
+├── vite.config.ts               # manualChunks, PWA manifest, share_target, runtime caching
+├── capacitor.config.ts
 ├── .env.example
 └── package.json
 ```
@@ -318,7 +371,9 @@ open-AcordesAI/
 ### Variables de Entorno
 ```bash
 # Frontend
-VITE_API_URL=http://localhost:3001/api
+VITE_API_URL=http://localhost:3001/api          # Web local
+VITE_NATIVE_API_URL=https://tu-dominio.com/api  # App nativa Capacitor
+VITE_PUBLIC_APP_URL=https://tu-dominio.com      # Para shares desde la nativa
 
 # Backend obligatorias
 DATABASE_URL=postgres://acordesai:password@localhost:5432/acordesai
@@ -326,43 +381,74 @@ JWT_SECRET=una-clave-larga-de-al-menos-32-caracteres
 
 # Backend opcionales
 PORT=3001
-CORS_ORIGIN=http://localhost:5173
+CORS_ORIGIN=http://localhost:5173,https://tu-dominio.com
+FRONTEND_URL=https://tu-dominio.com             # Para callbacks OAuth
 AI_API_KEY=
 AI_PROVIDER=gemini
 AI_MODEL=gemini-2.0-flash
 AI_BASE_URL=https://api.openai.com/v1
+GOOGLE_CLIENT_ID=                               # OAuth Google (opcional)
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=                               # OAuth GitHub (opcional)
+GITHUB_CLIENT_SECRET=
 ```
 
 Referencia rápida:
-- `DATABASE_URL` y `JWT_SECRET` son obligatorias.
-- `AI_API_KEY` es necesaria para generar cifrados con IA.
+- `DATABASE_URL` y `JWT_SECRET` (≥32 chars) son obligatorias.
+- `AI_API_KEY` es necesaria para generar cifrados con IA — sin ella la app sigue funcionando, pero sólo con los cifrados creados/importados manualmente.
 - `VITE_API_URL` solo hace falta si el frontend no usa el proxy por defecto.
+- `CORS_ORIGIN` acepta lista separada por comas.
 
 ---
 
+## 🔐 Notas de seguridad y operación
+
+- **Transacciones atómicas** en operaciones multi-tabla (import song+chord_cache, reorder de setlists con `unnest()`).
+- **JWT con códigos de error** (`TOKEN_EXPIRED` / `TOKEN_INVALID`) → el frontend hace auto-logout en 401 con `onAuthError`.
+- **Anti timing attacks** en `/login`: bcrypt dummy si el email no existe.
+- **Logs sanitizados** en `aiService` (nunca se loguea el body completo del provider; `?key=` redacted).
+- **Share tokens de setlists** caducan a los **30 días** (columna `share_token_expires_at`).
+- **Rate limiting** por usuario/IP en `/auth/*`, `/import/*`, generación y guardado de cifrados.
+- **PWA caching**:
+  - `StaleWhileRevalidate` para `/api/songs*` (excepto `/chords`).
+  - `NetworkFirst` con timeout de 4 s para `/api/favorites`, `/api/history`, `/api/setlists`.
+- **Storage cliente** vía `safeStorage` (probe + fallback a memoria si el navegador bloquea localStorage).
+
 ## 🌟 Roadmap
 
-### ✅ Versión 1.0 (Actual)
+### ✅ Versión 1.0
 - [x] Búsqueda de canciones con IA
 - [x] Multi-instrumento (Guitarra, Ukelele, Piano)
 - [x] Caché local e historial
 - [x] Autoscroll y fuente ajustable
 - [x] PWA functionality
+- [x] 🎸 Diagramas de acordes interactivos (guitarra, ukelele, piano)
+- [x] 🎤 Modo presentación con wake-lock
+- [x] 📄 Exportar a PDF / TXT
+- [x] 🎚️ Transposición de tono y capo virtual
+- [x] 📋 Setlists privadas y públicas
+- [x] 🤖 Recomendaciones colaborativas
+- [x] 👥 Comunidad y sharing
+- [x] 📱 App nativa Android (Capacitor)
+- [x] 🎼 Búsqueda por progresión de acordes
+- [x] 🔁 Loop de sección con autoscroll
+
+### ✅ Versión 1.1 (Actual)
+- [x] 📊 **Estadísticas de práctica** (tiempo total, sesiones, top 10, gráfico 30 días)
+- [x] 🔐 **Hardening backend**: transacciones atómicas, índices nuevos, JWT con códigos de error, bcrypt dummy anti-timing, share TTL 30d
+- [x] ⚡ **Performance frontend**: lazy load de páginas, manualChunks (react-vendor / pdf / audio), `useMemo` en transposición, ErrorBoundary global, `safeStorage` con fallback en memoria
+- [x] ♿ **Accesibilidad**: focus trap + Escape en todos los modales, `aria-modal`, touch targets ≥44px, skeletons reales
+- [x] 📲 **PWA**: `share_target` + service worker con `stale-while-revalidate` para canciones y `network-first` para favoritos/setlists
+- [x] 🎯 **Tracker de práctica** automático: detecta actividad/idle y descarta tiempo inactivo
 
 ### 🔜 Versión 2.0 (Próximamente)
-- [ ] 🎚️ **Transposición** de tono
-- [ ] 🎵 **Reproductor** de audio integrado
-- [ ] 📄 **Exportar** a PDF
-- [ ] 🎤 **Modo karaoke** sincronizado
+- [ ] 🎵 **Reproductor de audio** integrado con pitch/tempo
+- [ ] 🎤 **Modo karaoke** sincronizado (timestamps por línea)
 - [ ] 🌐 **Multi-idioma** (EN, PT, FR)
-- [ ] 📊 **Estadísticas** de práctica
-
-### 💡 Versión 3.0 (Futuro)
-- [ ] 🎸 **Diagramas** de acordes interactivos
-- [ ] 🤖 **Recomendaciones** de canciones
+- [ ] 🔄 **Refresh tokens** reales (auto-renovación de JWT)
+- [ ] 📜 **Virtualización** de listas largas (`react-window`)
 - [ ] 🎓 **Tutoriales** integrados
-- [ ] 👥 **Comunidad** y sharing
-- [ ] 📱 **App nativa** (iOS, Android)
+- [ ] 🍎 **App nativa iOS**
 
 ---
 
