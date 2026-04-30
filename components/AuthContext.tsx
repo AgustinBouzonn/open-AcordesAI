@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { api } from '../services/apiClient';
+import { api, onAuthError } from '../services/apiClient';
 import { OAuthProvider, User } from '../types';
 
 interface AuthContextType {
@@ -29,6 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setLoading(false);
     }
+    const off = onAuthError(() => setUser(null));
+    return () => { off(); };
   }, []);
 
   const login = async (email: string, password: string) => {

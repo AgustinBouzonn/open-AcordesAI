@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Loader2, ExternalLink, Copy } from 'lucide-react';
 import { api } from '../services/apiClient';
+import { useModalA11y } from './hooks/useModalA11y';
 
 interface Props {
   isOpen: boolean;
@@ -12,6 +13,10 @@ export function ImportModal({ isOpen, onClose, onImport }: Props) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useModalA11y(isOpen, onClose, dialogRef);
+
   if (!isOpen) return null;
 
   const handleImport = async () => {
@@ -43,11 +48,18 @@ export function ImportModal({ isOpen, onClose, onImport }: Props) {
   };
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
-        <button onClick={onClose} style={closeStyle}><X size={20} /></button>
-        
-        <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
+    <div style={overlayStyle} onClick={onClose} role="presentation">
+      <div
+        ref={dialogRef}
+        style={modalStyle}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button onClick={onClose} style={closeStyle} aria-label="Cerrar"><X size={20} /></button>
+
+        <h2 id="import-modal-title" style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
           Importar cifrado desde URL
         </h2>
 

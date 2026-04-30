@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Plus, Loader2, ListMusic } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { useToast } from './Toast';
+import { useModalA11y } from './hooks/useModalA11y';
 
 interface Props {
   isOpen: boolean;
@@ -16,6 +17,9 @@ export const AddToSetlistModal: React.FC<Props> = ({ isOpen, onClose, songId }) 
   const [adding, setAdding] = useState<number | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useModalA11y(isOpen, onClose, dialogRef);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -46,9 +50,16 @@ export const AddToSetlistModal: React.FC<Props> = ({ isOpen, onClose, songId }) 
   };
 
   return (
-    <div style={overlay}>
-      <div style={modal}>
-        <button onClick={onClose} style={closeBtn}><X size={20} /></button>
+    <div style={overlay} onClick={onClose} role="presentation">
+      <div
+        ref={dialogRef}
+        style={modal}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Agregar a setlist"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button onClick={onClose} style={closeBtn} aria-label="Cerrar"><X size={20} /></button>
         <h2 className="text-lg font-bold mb-3 flex items-center gap-2"><ListMusic className="text-brand" size={20} /> Agregar a setlist</h2>
 
         {loading ? (

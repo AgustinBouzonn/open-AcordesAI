@@ -1,30 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { HashRouter, Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, Globe, Download } from 'lucide-react';
 import { Layout } from './components/Layout';
-import { SongViewer } from './components/SongViewer';
 import { AuthModal } from './components/AuthModal';
 import { CreateSongModal } from './components/CreateSongModal';
 import { AddFromCommunityModal } from './components/AddFromCommunityModal';
-import { ImportUrlModal } from './components/ImportUrlModal';
 import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './components/AuthContext';
 import { useToast } from './components/Toast';
-import { Tuner } from './components/Tuner';
-import { Metronome } from './components/Metronome';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { OnboardingModal } from './components/OnboardingModal';
 import { HomePage } from './components/pages/HomePage';
 import { SearchPage } from './components/pages/SearchPage';
 import { FavoritesPage } from './components/pages/FavoritesPage';
 import { HistoryPage } from './components/pages/HistoryPage';
-import { CommunityPage } from './components/pages/CommunityPage';
-import { SetlistsPage } from './components/pages/SetlistsPage';
-import { ChordSearchPage } from './components/pages/ChordSearchPage';
-import { OnboardingModal } from './components/OnboardingModal';
-import { PublicSetlistPage } from './components/pages/PublicSetlistPage';
-import { LearningPage } from './components/pages/LearningPage';
 import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
-import { Plus, Globe, Download } from 'lucide-react';
+
+const SongViewer = lazy(() => import('./components/SongViewer').then((m) => ({ default: m.SongViewer })));
+const ImportUrlModal = lazy(() => import('./components/ImportUrlModal').then((m) => ({ default: m.ImportUrlModal })));
+const Tuner = lazy(() => import('./components/Tuner').then((m) => ({ default: m.Tuner })));
+const Metronome = lazy(() => import('./components/Metronome').then((m) => ({ default: m.Metronome })));
+const CommunityPage = lazy(() => import('./components/pages/CommunityPage').then((m) => ({ default: m.CommunityPage })));
+const SetlistsPage = lazy(() => import('./components/pages/SetlistsPage').then((m) => ({ default: m.SetlistsPage })));
+const ChordSearchPage = lazy(() => import('./components/pages/ChordSearchPage').then((m) => ({ default: m.ChordSearchPage })));
+const PublicSetlistPage = lazy(() => import('./components/pages/PublicSetlistPage').then((m) => ({ default: m.PublicSetlistPage })));
+const LearningPage = lazy(() => import('./components/pages/LearningPage').then((m) => ({ default: m.LearningPage })));
+const StatsPage = lazy(() => import('./components/pages/StatsPage').then((m) => ({ default: m.StatsPage })));
+
+const PageLoader: React.FC = () => (
+  <div className="flex flex-col items-center justify-center min-h-[40vh] text-brand" role="status" aria-live="polite">
+    <Loader2 size={40} className="animate-spin mb-3" />
+    <span className="sr-only">Cargando…</span>
+  </div>
+);
 
 function SongDetailRoute() {
   const { id } = useParams<{ id: string }>();
@@ -61,7 +70,13 @@ function SongDetailRoute() {
     );
   }
 
-  return <SongViewer song={song} onSongUpdated={setSong} />;
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <SongViewer song={song} onSongUpdated={setSong} />
+      </Suspense>
+    </ErrorBoundary>
+  );
 }
 
 function AuthCallbackRoute() {
@@ -132,17 +147,18 @@ function AppContent() {
     location.pathname === '/tuner' ? 'TUNER' :
     location.pathname === '/metronome' ? 'METRONOME' :
     location.pathname === '/setlists' ? 'SETLISTS' :
+    location.pathname === '/stats' ? 'STATS' :
     location.pathname.startsWith('/song/') ? 'SONG_DETAIL' : 'HOME';
 
   useEffect(() => {
     if (user) {
-      storage.getFavorites().then(setFavorites).catch(() => {});
-      storage.getHistory().then(setHistory).catch(() => {});
+      storage.getFavorites().then(setFavorites).catch(() => showToast('No se pudieron cargar favoritos', 'error'));
+      storage.getHistory().then(setHistory).catch(() => showToast('No se pudo cargar el historial', 'error'));
     } else {
       setFavorites([]);
       setHistory([]);
     }
-  }, [user]);
+  }, [user, showToast]);
 
   useEffect(() => {
     const w = window as unknown as { __acordesaiSharedUrl?: string };
@@ -155,6 +171,15 @@ function AppContent() {
       openWith(w.__acordesaiSharedUrl);
       w.__acordesaiSharedUrl = undefined;
     }
+
+    const params = new URLSearchParams(window.location.search);
+    const sharedUrl = params.get('url') || params.get('text');
+    if (sharedUrl && /^https?:\/\//i.test(sharedUrl)) {
+      openWith(sharedUrl);
+      const cleanedUrl = window.location.pathname + (window.location.hash || '');
+      window.history.replaceState({}, '', cleanedUrl);
+    }
+
     const onShared = (e: Event) => openWith((e as CustomEvent<string>).detail);
     window.addEventListener('acordesai-shared-url', onShared);
     return () => window.removeEventListener('acordesai-shared-url', onShared);
@@ -176,7 +201,7 @@ function AppContent() {
     }
   }, [activeTab, communityPage]);
 
-  const performSearch = async (q: string) => {
+  const performSearch = useCallback(async (q: string) => {
     if (!q.trim()) return;
     setSearchQuery(q);
     setIsSearching(true);
@@ -196,19 +221,19 @@ function AppContent() {
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [navigate, showToast]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     performSearch(searchQuery);
-  };
+  }, [performSearch, searchQuery]);
 
-  const openAuth = (mode: 'login' | 'register') => {
+  const openAuth = useCallback((mode: 'login' | 'register') => {
     setAuthMode(mode);
     setShowAuthModal(true);
-  };
+  }, []);
 
-  const handleSearchResultClick = async (result: SearchResult) => {
+  const handleSearchResultClick = useCallback(async (result: SearchResult) => {
     if (!user) { openAuth('login'); return; }
     try {
       const song = await storage.createSong({ title: result.title, artist: result.artist, lyrics: '' });
@@ -216,32 +241,48 @@ function AppContent() {
     } catch {
       showToast('Error al crear canción', 'error');
     }
-  };
+  }, [user, navigate, showToast, openAuth]);
 
-  const ensureUserOrLogin = (action: () => void) => {
+  const ensureUserOrLogin = useCallback((action: () => void) => {
     if (!user) { openAuth('login'); return; }
     action();
-  };
+  }, [user, openAuth]);
 
-  const handleNav = (tab: string) => {
+  const handleNav = useCallback((tab: string) => {
     const map: Record<string, string> = {
       HOME: '/', SEARCH: '/search', FAVORITES: '/favorites', HISTORY: '/history',
       COMMUNITY: '/community', TUNER: '/tuner', METRONOME: '/metronome', SETLISTS: '/setlists',
+      STATS: '/stats',
     };
     if (map[tab]) navigate(map[tab]);
-  };
+  }, [navigate]);
 
   return (
     <>
       {user && (
         <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
-          <button onClick={() => setShowImportUrlModal(true)} className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg" title="Importar desde URL de Cifra Club">
+          <button
+            onClick={() => setShowImportUrlModal(true)}
+            className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
+            title="Importar desde URL de Cifra Club"
+            aria-label="Importar desde URL"
+          >
             <Download size={20} />
           </button>
-          <button onClick={() => setShowAddFromCommunityModal(true)} className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg" title="Buscar en iTunes">
+          <button
+            onClick={() => setShowAddFromCommunityModal(true)}
+            className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
+            title="Buscar en iTunes"
+            aria-label="Buscar en iTunes"
+          >
             <Globe size={20} />
           </button>
-          <button onClick={() => setShowCreateModal(true)} className="bg-brand hover:bg-brand/90 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110" title="Crear canción">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-brand hover:bg-brand/90 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 min-w-[56px] min-h-[56px] flex items-center justify-center"
+            title="Crear canción"
+            aria-label="Crear canción"
+          >
             <Plus size={24} />
           </button>
         </div>
@@ -254,67 +295,74 @@ function AppContent() {
         onRegisterClick={() => openAuth('register')}
         onProfileClick={() => setShowProfileModal(true)}
       >
-        <Routes>
-          <Route path="/" element={
-            <HomePage
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-              onSearch={handleSearch}
-              performSearch={performSearch}
-              popularSongs={popularSongs}
-              onSelectSong={(id) => navigate(`/song/${id}`)}
-              hasUser={!!user}
-            />
-          } />
-          <Route path="/search" element={
-            <SearchPage
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-              onSearch={handleSearch}
-              isSearching={isSearching}
-              searchResults={searchResults}
-              hasUser={!!user}
-              onResultClick={handleSearchResultClick}
-              onCreateClick={() => ensureUserOrLogin(() => setShowCreateModal(true))}
-            />
-          } />
-          <Route path="/favorites" element={
-            <FavoritesPage
-              favorites={favorites}
-              user={user}
-              onSelectSong={(id) => navigate(`/song/${id}`)}
-              onLogin={() => openAuth('login')}
-            />
-          } />
-          <Route path="/history" element={
-            <HistoryPage history={history} onSelectSong={(id) => navigate(`/song/${id}`)} />
-          } />
-          <Route path="/community" element={
-            <CommunityPage
-              songs={communitySongs}
-              loading={loadingCommunity}
-              page={communityPage}
-              onPageChange={setCommunityPage}
-              onSelectSong={(id) => navigate(`/song/${id}`)}
-              onNewClick={() => ensureUserOrLogin(() => setShowCreateModal(true))}
-              onSearchClick={() => navigate('/search')}
-            />
-          } />
-          <Route path="/song/:id" element={<SongDetailRoute />} />
-          <Route path="/auth/callback" element={<AuthCallbackRoute />} />
-          <Route path="/tuner" element={<Tuner />} />
-          <Route path="/metronome" element={<Metronome />} />
-          <Route path="/setlists" element={
-            <SetlistsPage user={user} onLogin={() => openAuth('login')} onSelectSong={(id) => navigate(`/song/${id}`)} />
-          } />
-          <Route path="/chord-search" element={
-            <ChordSearchPage onSelectSong={(id) => navigate(`/song/${id}`)} />
-          } />
-          <Route path="/shared/setlist/:token" element={<PublicSetlistPage />} />
-          <Route path="/learning" element={
-            <LearningPage user={user} onLogin={() => openAuth('login')} onSelectSong={(id) => navigate(`/song/${id}`)} />
-          } />
-        </Routes>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={
+                <HomePage
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                  onSearch={handleSearch}
+                  performSearch={performSearch}
+                  popularSongs={popularSongs}
+                  onSelectSong={(id) => navigate(`/song/${id}`)}
+                  hasUser={!!user}
+                />
+              } />
+              <Route path="/search" element={
+                <SearchPage
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                  onSearch={handleSearch}
+                  isSearching={isSearching}
+                  searchResults={searchResults}
+                  hasUser={!!user}
+                  onResultClick={handleSearchResultClick}
+                  onCreateClick={() => ensureUserOrLogin(() => setShowCreateModal(true))}
+                />
+              } />
+              <Route path="/favorites" element={
+                <FavoritesPage
+                  favorites={favorites}
+                  user={user}
+                  onSelectSong={(id) => navigate(`/song/${id}`)}
+                  onLogin={() => openAuth('login')}
+                />
+              } />
+              <Route path="/history" element={
+                <HistoryPage history={history} onSelectSong={(id) => navigate(`/song/${id}`)} />
+              } />
+              <Route path="/community" element={
+                <CommunityPage
+                  songs={communitySongs}
+                  loading={loadingCommunity}
+                  page={communityPage}
+                  onPageChange={setCommunityPage}
+                  onSelectSong={(id) => navigate(`/song/${id}`)}
+                  onNewClick={() => ensureUserOrLogin(() => setShowCreateModal(true))}
+                  onSearchClick={() => navigate('/search')}
+                />
+              } />
+              <Route path="/song/:id" element={<SongDetailRoute />} />
+              <Route path="/auth/callback" element={<AuthCallbackRoute />} />
+              <Route path="/tuner" element={<Tuner />} />
+              <Route path="/metronome" element={<Metronome />} />
+              <Route path="/setlists" element={
+                <SetlistsPage user={user} onLogin={() => openAuth('login')} onSelectSong={(id) => navigate(`/song/${id}`)} />
+              } />
+              <Route path="/chord-search" element={
+                <ChordSearchPage onSelectSong={(id) => navigate(`/song/${id}`)} />
+              } />
+              <Route path="/shared/setlist/:token" element={<PublicSetlistPage />} />
+              <Route path="/learning" element={
+                <LearningPage user={user} onLogin={() => openAuth('login')} onSelectSong={(id) => navigate(`/song/${id}`)} />
+              } />
+              <Route path="/stats" element={
+                <StatsPage user={user} onLogin={() => openAuth('login')} onSelectSong={(id) => navigate(`/song/${id}`)} />
+              } />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </Layout>
       <AuthModal isOpen={showAuthModal} mode={authMode} onClose={() => setShowAuthModal(false)} />
       <CreateSongModal
@@ -327,13 +375,17 @@ function AppContent() {
         onClose={() => setShowAddFromCommunityModal(false)}
         onSelect={async (data) => { const song = await storage.createSong(data); navigate(`/song/${song.id}`); }}
       />
-      <ImportUrlModal
-        isOpen={showImportUrlModal}
-        initialUrl={sharedImportUrl}
-        onClose={() => { setShowImportUrlModal(false); setSharedImportUrl(undefined); }}
-        onImported={(song) => navigate(`/song/${song.id}`)}
-      />
       <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+      <Suspense fallback={null}>
+        {showImportUrlModal && (
+          <ImportUrlModal
+            isOpen={showImportUrlModal}
+            initialUrl={sharedImportUrl}
+            onClose={() => { setShowImportUrlModal(false); setSharedImportUrl(undefined); }}
+            onImported={(song) => navigate(`/song/${song.id}`)}
+          />
+        )}
+      </Suspense>
       <OnboardingModal />
     </>
   );

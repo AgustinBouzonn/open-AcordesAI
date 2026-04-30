@@ -55,6 +55,9 @@ Determine the musical key.
 Return JSON exactly as: {"title": "...", "artist": "...", "key": "G", "content": "full chord sheet text"}`;
 };
 
+const safeErrorSnippet = (text: string, max = 200): string =>
+  text.replace(/[?&]key=[^&\s]+/gi, '[REDACTED_KEY]').slice(0, max);
+
 async function callGemini(prompt: string): Promise<string> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${AI_API_KEY}`;
   const res = await fetch(url, {
@@ -68,7 +71,8 @@ async function callGemini(prompt: string): Promise<string> {
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(`Gemini API error ${res.status}: ${errText}`);
+    console.error(`[ai/gemini] HTTP ${res.status}: ${safeErrorSnippet(errText)}`);
+    throw new Error(`Gemini API error ${res.status}`);
   }
   const data = await res.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
   return data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
@@ -94,7 +98,8 @@ async function callOpenAI(prompt: string): Promise<string> {
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(`AI API error ${res.status}: ${errText}`);
+    console.error(`[ai/openai] HTTP ${res.status}: ${safeErrorSnippet(errText)}`);
+    throw new Error(`AI API error ${res.status}`);
   }
   const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
   return data.choices?.[0]?.message?.content || '{}';

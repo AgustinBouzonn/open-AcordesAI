@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Loader2, Download, Copy } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { Song } from '../types';
+import { useModalA11y } from './hooks/useModalA11y';
 
 interface Props {
   isOpen: boolean;
@@ -17,6 +18,9 @@ export function ImportUrlModal({ isOpen, onClose, onImported, initialUrl }: Prop
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useModalA11y(isOpen, onClose, dialogRef);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -62,11 +66,18 @@ export function ImportUrlModal({ isOpen, onClose, onImported, initialUrl }: Prop
   };
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
-        <button onClick={onClose} style={closeStyle}><X size={20} /></button>
+    <div style={overlayStyle} onClick={onClose} role="presentation">
+      <div
+        ref={dialogRef}
+        style={modalStyle}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-url-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button onClick={onClose} style={closeStyle} aria-label="Cerrar"><X size={20} /></button>
 
-        <h2 style={{ marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
+        <h2 id="import-url-title" style={{ marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
           Importar desde URL
         </h2>
         <p style={{ color: '#9ca3af', marginBottom: '1rem', fontSize: '0.875rem' }}>

@@ -26,6 +26,19 @@ export default defineConfig({
     port: 4173,
     host: '0.0.0.0',
   },
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'icons': ['lucide-react'],
+          'pdf': ['jspdf'],
+          'audio': ['pitchy'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
@@ -40,6 +53,11 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
+        share_target: {
+          action: '/?share-target',
+          method: 'GET',
+          params: { title: 'title', text: 'text', url: 'url' },
+        },
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -61,6 +79,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -72,7 +91,29 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 365
               }
             }
-          }
+          },
+          {
+            urlPattern: ({ url, request }) => request.method === 'GET'
+              && url.pathname.startsWith('/api/songs')
+              && !url.pathname.includes('/chords'),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'api-songs-cache',
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: ({ url, request }) => request.method === 'GET'
+              && (url.pathname === '/api/favorites' || url.pathname === '/api/history' || url.pathname.startsWith('/api/setlists')),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-user-cache',
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ]
       },
       devOptions: {

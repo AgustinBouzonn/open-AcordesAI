@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Copy, Check, Loader2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Copy, Check } from 'lucide-react';
+import { useModalA11y } from './hooks/useModalA11y';
 
 interface Props {
   isOpen: boolean;
@@ -9,7 +10,9 @@ interface Props {
 
 export function ShareModal({ isOpen, onClose, songId }: Props) {
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useModalA11y(isOpen, onClose, dialogRef);
 
   if (!isOpen) return null;
 
@@ -46,11 +49,18 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
   };
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
-        <button onClick={onClose} style={closeStyle}><X size={20} /></button>
-        
-        <h2 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
+    <div style={overlayStyle} onClick={onClose} role="presentation">
+      <div
+        ref={dialogRef}
+        style={modalStyle}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button onClick={onClose} style={closeStyle} aria-label="Cerrar"><X size={20} /></button>
+
+        <h2 id="share-modal-title" style={{ marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
           Compartir canción
         </h2>
 

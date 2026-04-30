@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageSquare, PlayCircle, PauseCircle, Type, Minus, Plus, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star, Maximize, FileText, ListMusic, Repeat, Guitar, GraduationCap, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Heart, MessageSquare, Loader2, Edit2, Save, X, Copy, Upload, Download, Share2, Star, Maximize, FileText, ListMusic, Repeat, GraduationCap, CheckCircle2 } from 'lucide-react';
 import { Song, Comment, RatingSummary, Instrument } from '../types';
 import { useAuth } from './AuthContext';
 import { ImportModal } from './ImportModal';
@@ -11,14 +11,16 @@ import { useToast } from './Toast';
 import { ChordChart } from './ChordChart';
 import { AddToSetlistModal } from './AddToSetlistModal';
 import { YouTubePlayer } from './YouTubePlayer';
+import { transposeChords } from '../services/chordTransposer';
+import { TransportBar } from './songViewer/TransportBar';
+import { PresentationOverlay } from './songViewer/PresentationOverlay';
+import { usePracticeTracker } from './songViewer/usePracticeTracker';
 
 interface SongViewerProps {
   song: Song;
   onSongUpdated?: (song: Song) => void;
 }
 
-const TRANSPOSITIONS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const CHORD_TOKEN = /^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus|add)?\d*(?:[#b](?:5|9|11|13))*(?:\/[A-G](?:#|b)?)?$/i;
 const INSTRUMENTS = [
   { id: 'guitar', name: 'Guitarra' },
   { id: 'ukulele', name: 'Ukulele' },
@@ -35,7 +37,6 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [newComment, setNewComment] = useState('');
   const [showComments, setShowComments] = useState(false);
   const [loadingChords, setLoadingChords] = useState(false);
-  const [displayChords, setDisplayChords] = useState(song.chords || '');
   const [editMode, setEditMode] = useState(false);
   const [editedChords, setEditedChords] = useState(song.chords || '');
   const [saving, setSaving] = useState(false);
@@ -73,19 +74,10 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [selectionPrompt, setSelectionPrompt] = useState<{ top: number; bottom: number; x: number; y: number } | null>(null);
 
   useEffect(() => {
-    if (!presentationMode) return;
-    void acquireWakeLock();
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setPresentationMode(false); };
-    window.addEventListener('keydown', handler);
-    return () => {
-      window.removeEventListener('keydown', handler);
-      void releaseWakeLock();
-    };
-  }, [presentationMode]);
-
-  useEffect(() => {
     api.config.get().then(c => setAiConfigured(c.aiConfigured)).catch(() => setAiConfigured(false));
   }, []);
+
+  usePracticeTracker(song.id, !!user && !editMode);
 
   useEffect(() => {
     if (autoScrollSpeed <= 0) return;
@@ -132,73 +124,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const transposeRoot = (root: string, steps: number): string => {
-    const normalizedRoot = root.toUpperCase().replace('B#', 'C').replace('E#', 'F');
-    const sharpRoot = normalizedRoot.endsWith('B') && normalizedRoot.length === 2
-      ? `${normalizedRoot[0]}#`
-      : normalizedRoot;
-    let idx = TRANSPOSITIONS.indexOf(sharpRoot);
-    if (idx === -1) {
-      idx = TRANSPOSITIONS.indexOf(sharpRoot.replace('b', '#').replace(/##/g, '#'));
-    }
-    if (idx === -1) {
-      return root;
-    }
-    return TRANSPOSITIONS[(idx + steps + 12) % 12];
-  };
-
-  const transposeChordToken = (token: string, steps: number): string => {
-    const match = token.match(/^(\[|\()?([A-G](?:#|b)?)(.*?)(?:\/([A-G](?:#|b)?))?(\]|\))?$/i);
-    if (!match) {
-      return token;
-    }
-
-    const [, prefix, root, suffixWithoutBass, bass, closing] = match;
-    const normalizedSuffix = bass ? suffixWithoutBass.replace(/\/$/, '') : suffixWithoutBass;
-    const transposedBass = bass ? `/${transposeRoot(bass, steps)}` : '';
-    return `${prefix}${transposeRoot(root, steps)}${normalizedSuffix}${transposedBass}${closing}`;
-  };
-
-  const isChordLine = (line: string): boolean => {
-    const tokens = line.trim().split(/\s+/).filter(Boolean);
-    if (tokens.length === 0) {
-      return false;
-    }
-
-    const chordTokens = tokens.filter((token) => {
-      const cleaned = token.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
-      return CHORD_TOKEN.test(cleaned);
-    });
-
-    return chordTokens.length > 0 && chordTokens.length >= Math.ceil(tokens.length * 0.6);
-  };
-
-  const transposeChords = (text: string, steps: number): string => {
-    if (steps === 0) return text;
-
-    return text
-      .split('\n')
-      .map((line) => {
-        const withInlineChords = line.replace(/\[([^[\]]+)\]/g, (fullMatch, token: string) => {
-          return CHORD_TOKEN.test(token) ? `[${transposeChordToken(token, steps)}]` : fullMatch;
-        });
-
-        if (!isChordLine(withInlineChords)) {
-          return withInlineChords;
-        }
-
-        return withInlineChords.replace(/(^|\s)(?:\[|\()?([A-G](?:#|b)?[^\s\]]*(?:\/[A-G](?:#|b)?)?)(?:\]|\))?(?=\s|$)/gi, (match, leading, token) => {
-          const candidate = match.slice(leading.length);
-          const cleaned = candidate.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
-          return CHORD_TOKEN.test(cleaned) ? `${leading}${transposeChordToken(candidate, steps)}` : match;
-        });
-      })
-      .join('\n');
-  };
-
   useEffect(() => {
-    const chords = song.chords || '';
-    setDisplayChords(transposeChords(chords, transpose - capo));
     setEditedChords(song.chords || '');
     loadFavorites();
     loadComments();
@@ -206,11 +132,14 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     setAutoScrollSpeed(0);
     setEditMode(false);
     setCapo(0);
-  }, [song.id]);
+    setTranspose(0);
+  }, [song.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    setDisplayChords(transposeChords(editedChords || song.chords || '', transpose - capo));
-  }, [editedChords, song.chords, transpose, capo]);
+  const baseChords = editedChords || song.chords || '';
+  const displayChords = useMemo(
+    () => transposeChords(baseChords, transpose - capo),
+    [baseChords, transpose, capo],
+  );
 
   useEffect(() => {
     if (instrument === 'guitar') {
@@ -292,11 +221,10 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     setNewComment('');
   };
 
-  const handleGenerateChords = async () => {
+  const handleGenerateChords = useCallback(async () => {
     setLoadingChords(true);
     try {
       const result = await storage.getChords(song.id, instrument);
-      setDisplayChords(transposeChords(result.chords, transpose));
       setEditedChords(result.chords);
       if (onSongUpdated) {
         onSongUpdated({ ...song, chords: result.chords });
@@ -307,13 +235,12 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     } finally {
       setLoadingChords(false);
     }
-  };
+  }, [song, instrument, onSongUpdated, showToast]);
 
-  const handleSaveChords = async () => {
+  const handleSaveChords = useCallback(async () => {
     setSaving(true);
     try {
       await storage.saveChords(song.id, editedChords, instrument);
-      setDisplayChords(transposeChords(editedChords, transpose));
       setEditMode(false);
       if (onSongUpdated) {
         onSongUpdated({ ...song, chords: editedChords });
@@ -325,7 +252,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     } finally {
       setSaving(false);
     }
-  };
+  }, [song, instrument, editedChords, onSongUpdated, showToast]);
 
   const handleCancelEdit = () => {
     setEditedChords(song.chords || '');
@@ -514,44 +441,16 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setFontSize(s => Math.max(12, s - 2))} className="p-2 text-gray-400 hover:text-white"><Minus size={16} /></button>
-            <Type size={18} className="text-brand" />
-            <button onClick={() => setFontSize(s => Math.min(24, s + 2))} className="p-2 text-gray-400 hover:text-white"><Plus size={16} /></button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button onClick={() => setTranspose(t => t - 1)} className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600">-1</button>
-            <span className="text-sm text-gray-400 min-w-[60px] text-center">
-              {transpose === 0 ? 'Original' : transpose > 0 ? `+${transpose}` : transpose}
-            </span>
-            <button onClick={() => setTranspose(t => t + 1)} className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600">+1</button>
-          </div>
-
-          <div className="flex items-center gap-2" title="Capo (cejilla virtual): bajá el cifrado para tocarlo con formas más cómodas">
-            <Guitar size={16} className="text-brand" />
-            <button onClick={() => setCapo(c => Math.max(0, c - 1))} className="px-2 py-1 bg-dark-700 rounded text-gray-300 hover:bg-dark-600 text-xs">−</button>
-            <span className="text-xs text-gray-400 min-w-[64px] text-center font-mono">
-              Capo {capo === 0 ? '—' : capo}
-            </span>
-            <button onClick={() => setCapo(c => Math.min(12, c + 1))} className="px-2 py-1 bg-dark-700 rounded text-gray-300 hover:bg-dark-600 text-xs">+</button>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {autoScrollSpeed > 0 && (
-              <>
-                <button onClick={() => setAutoScrollSpeed(s => Math.max(1, s - 1))} className="p-1 text-gray-400 hover:text-white"><Minus size={13} /></button>
-                <span className="text-xs text-brand font-mono w-4 text-center">{autoScrollSpeed}</span>
-                <button onClick={() => setAutoScrollSpeed(s => Math.min(5, s + 1))} className="p-1 text-gray-400 hover:text-white"><Plus size={13} /></button>
-              </>
-            )}
-            <button onClick={() => setAutoScrollSpeed(s => s === 0 ? 1 : 0)} className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition ${autoScrollSpeed > 0 ? 'bg-brand text-white' : 'bg-dark-700 text-gray-300'}`}>
-              {autoScrollSpeed > 0 ? <PauseCircle size={16} /> : <PlayCircle size={16} />}
-              <span>{autoScrollSpeed > 0 ? 'Pausar' : 'Autoscroll'}</span>
-            </button>
-          </div>
-        </div>
+        <TransportBar
+          fontSize={fontSize}
+          onFontSize={setFontSize}
+          transpose={transpose}
+          onTranspose={setTranspose}
+          capo={capo}
+          onCapo={setCapo}
+          autoScrollSpeed={autoScrollSpeed}
+          onAutoScrollSpeed={setAutoScrollSpeed}
+        />
       </div>
 
       {editMode && (
@@ -691,22 +590,13 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       )}
 
       {presentationMode && (
-        <div className="fixed inset-0 bg-dark-900 z-[1200] overflow-auto p-6 md:p-12">
-          <button
-            onClick={() => setPresentationMode(false)}
-            className="fixed top-4 right-4 z-10 p-3 rounded-full bg-dark-800/80 backdrop-blur text-gray-300 hover:text-white border border-dark-700 shadow-lg"
-            title="Salir (Esc)"
-          >
-            <X size={20} />
-          </button>
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-2xl md:text-3xl font-bold mb-1">{song.title}</h1>
-            <p className="text-brand mb-6 text-sm md:text-base">{song.artist}</p>
-            <pre style={{ fontSize: `${fontSize + 2}px`, lineHeight: 1.7 }} className="font-mono whitespace-pre-wrap text-gray-100">
-              {displayChords}
-            </pre>
-          </div>
-        </div>
+        <PresentationOverlay
+          title={song.title}
+          artist={song.artist}
+          chords={displayChords}
+          fontSize={fontSize}
+          onClose={() => setPresentationMode(false)}
+        />
       )}
     </div>
   );

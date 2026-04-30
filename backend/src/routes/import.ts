@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { importLimiter } from '../middleware/rateLimit';
 import { requireAuth, AuthRequest } from '../middleware/auth';
-import { query } from '../db';
+import { query, withTransaction } from '../db';
 import { serializeSong } from '../serializers/song';
 
 const router = Router();
@@ -382,21 +382,22 @@ router.post('/from-url', requireAuth, importLimiter, async (req: AuthRequest, re
     : 'cifraclub';
 
   try {
-    const inserted = await query(
-      `INSERT INTO songs (title, artist, lyrics, source, source_url, user_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [title, artist, content, source, norm.canonicalUrl, userId],
-    );
-    const song = inserted.rows[0];
-
-    await query(
-      `INSERT INTO chord_cache (song_id, instrument, title, artist, content)
-       VALUES ($1, 'guitar', $2, $3, $4)
-       ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content`,
-      [song.id, title, artist, content],
-    );
-
+    const song = await withTransaction(async (client) => {
+      const inserted = await client.query(
+        `INSERT INTO songs (title, artist, lyrics, source, source_url, user_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [title, artist, content, source, norm.canonicalUrl, userId],
+      );
+      const row = inserted.rows[0];
+      await client.query(
+        `INSERT INTO chord_cache (song_id, instrument, title, artist, content)
+         VALUES ($1, 'guitar', $2, $3, $4)
+         ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content`,
+        [row.id, title, artist, content],
+      );
+      return row;
+    });
     res.status(201).json({ song: serializeSong(song), existed: false });
   } catch (e) {
     console.error('[import/from-url] insert', e);

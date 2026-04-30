@@ -1,6 +1,8 @@
 import { Comment, Instrument, OAuthProvider, ProfileStats, RatingSummary, Song, User } from '../types';
+import { safeStorage } from './safeStorage';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const TOKEN_KEY = 'token';
 
 interface AuthResponse {
   user: User;
@@ -23,6 +25,24 @@ interface MessageResponse {
   message: string;
 }
 
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
+}
+
+type AuthListener = (reason: 'expired' | 'invalid' | 'unauthorized') => void;
+const authListeners = new Set<AuthListener>();
+
+export const onAuthError = (fn: AuthListener) => {
+  authListeners.add(fn);
+  return () => authListeners.delete(fn);
+};
+
 class ApiClient {
   private token: string | null = null;
 
@@ -30,45 +50,67 @@ class ApiClient {
     if (/^https?:\/\//.test(API_BASE)) {
       return API_BASE.replace(/\/$/, '');
     }
-
     return `${window.location.origin}${API_BASE}`.replace(/\/$/, '');
   }
 
   setToken(token: string | null) {
     this.token = token;
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
-    }
+    if (token) safeStorage.set(TOKEN_KEY, token);
+    else safeStorage.remove(TOKEN_KEY);
   }
 
   getToken(): string | null {
     if (!this.token) {
-      this.token = localStorage.getItem('token');
+      this.token = safeStorage.get(TOKEN_KEY);
     }
     return this.token;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const headers: HeadersInit = {
+  private async doFetch(endpoint: string, options: RequestInit, withAuth: boolean): Promise<Response> {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string> | undefined),
     };
+    if (withAuth) {
+      const token = this.getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+  }
 
-    const token = this.getToken();
-    if (token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    let response: Response;
+    try {
+      response = await this.doFetch(endpoint, options, true);
+    } catch (e) {
+      try {
+        response = await this.doFetch(endpoint, options, true);
+      } catch (e2) {
+        throw new ApiError(
+          e2 instanceof Error ? e2.message : 'Sin conexión',
+          0,
+        );
+      }
     }
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers,
-    });
-
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Request failed', error: 'Request failed' }));
-      throw new Error(error.message || error.error || 'Request failed');
+      const body = await response.json().catch(() => ({} as Record<string, unknown>));
+      const message = (body as { message?: string; error?: string }).message
+        || (body as { error?: string }).error
+        || 'Request failed';
+      const code = (body as { code?: string }).code;
+
+      if (response.status === 401) {
+        const reason: 'expired' | 'invalid' | 'unauthorized' =
+          code === 'TOKEN_EXPIRED' ? 'expired' :
+          code === 'TOKEN_INVALID' ? 'invalid' : 'unauthorized';
+        if (this.token) {
+          this.setToken(null);
+          authListeners.forEach((fn) => { try { fn(reason); } catch { /* noop */ } });
+        }
+      }
+
+      throw new ApiError(message, response.status, code);
     }
 
     return response.json() as Promise<T>;
@@ -163,7 +205,7 @@ class ApiClient {
         method: 'POST',
         body: JSON.stringify({ content }),
       }),
-    deleteComment: (songId: string, commentId: string) =>
+    deleteComment: (_songId: string, commentId: string) =>
       this.request<MessageResponse>(`/comments/${commentId}`, { method: 'DELETE' }),
   };
 
@@ -191,7 +233,7 @@ class ApiClient {
     addSong: (id: number, songId: string) => this.request<MessageResponse>(`/setlists/${id}/songs`, { method: 'POST', body: JSON.stringify({ songId }) }),
     removeSong: (id: number, songId: string) => this.request<MessageResponse>(`/setlists/${id}/songs/${songId}`, { method: 'DELETE' }),
     reorder: (id: number, songIds: string[]) => this.request<MessageResponse>(`/setlists/${id}/order`, { method: 'PUT', body: JSON.stringify({ songIds }) }),
-    share: (id: number) => this.request<{ token: string }>(`/setlists/${id}/share`, { method: 'POST' }),
+    share: (id: number) => this.request<{ token: string; expiresInDays?: number }>(`/setlists/${id}/share`, { method: 'POST' }),
     unshare: (id: number) => this.request<MessageResponse>(`/setlists/${id}/share`, { method: 'DELETE' }),
     getPublic: (token: string) => this.request<{ id: number; name: string; owner: string; songs: (Song & { position: number })[] }>(`/setlists/public/${token}`),
   };
@@ -205,6 +247,22 @@ class ApiClient {
     get: (songId: string) => this.request<{ status: 'learning' | 'learned' | null; updatedAt: string | null }>(`/progress/${songId}`),
     set: (songId: string, status: 'learning' | 'learned') => this.request<MessageResponse>(`/progress/${songId}`, { method: 'PUT', body: JSON.stringify({ status }) }),
     clear: (songId: string) => this.request<MessageResponse>(`/progress/${songId}`, { method: 'DELETE' }),
+  };
+
+  practice = {
+    log: (songId: string, durationSec: number) =>
+      this.request<MessageResponse>('/practice', {
+        method: 'POST',
+        body: JSON.stringify({ songId, durationSec }),
+      }),
+    stats: () =>
+      this.request<{
+        totalSec: number;
+        sessions: number;
+        uniqueSongs: number;
+        byDay: { day: string; sec: number }[];
+        topSongs: (Song & { practicedSec: number; sessions: number })[];
+      }>('/practice/stats'),
   };
 
   ratings = {

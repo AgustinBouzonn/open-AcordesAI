@@ -10,6 +10,7 @@ import importRouter from './routes/import';
 import ratingsRouter from './routes/ratings';
 import setlistsRouter from './routes/setlists';
 import progressRouter from './routes/progress';
+import practiceRouter from './routes/practice';
 import recommendationsRouter from './routes/recommendations';
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/comments', commentsRouter());
 app.use('/api/ratings', ratingsRouter());
 app.use('/api/setlists', setlistsRouter);
 app.use('/api/progress', progressRouter);
+app.use('/api/practice', practiceRouter);
 app.use('/api/recommendations', recommendationsRouter);
 
 app.get('/api/health', (_, res) => {

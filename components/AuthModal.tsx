@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Github, Chrome } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { useModalA11y } from './hooks/useModalA11y';
 
 interface Props {
   isOpen: boolean;
@@ -16,12 +17,15 @@ export function AuthModal({ isOpen, onClose, mode }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (isOpen) {
       setCurrentMode(mode);
     }
   }, [isOpen, mode]);
+
+  useModalA11y(isOpen, onClose, dialogRef);
 
   if (!isOpen) return null;
 
@@ -47,9 +51,16 @@ export function AuthModal({ isOpen, onClose, mode }: Props) {
   };
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
-        <h2>{currentMode === 'login' ? 'Iniciar Sesión' : 'Registrarse'}</h2>
+    <div style={overlayStyle} onClick={onClose} role="presentation">
+      <div
+        ref={dialogRef}
+        style={modalStyle}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="auth-modal-title">{currentMode === 'login' ? 'Iniciar Sesión' : 'Registrarse'}</h2>
         <form onSubmit={handleSubmit}>
           {currentMode === 'register' && (
             <input

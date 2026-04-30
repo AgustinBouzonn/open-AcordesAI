@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { api } from '../services/apiClient';
 import { ProfileStats } from '../types';
 import { useToast } from './Toast';
+import { useModalA11y } from './hooks/useModalA11y';
 
 interface Props {
   isOpen: boolean;
@@ -18,6 +19,9 @@ export function ProfileModal({ isOpen, onClose }: Props) {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useModalA11y(isOpen, onClose, dialogRef);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -73,9 +77,16 @@ export function ProfileModal({ isOpen, onClose }: Props) {
   };
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
-        <button onClick={onClose} style={closeStyle}><X size={20} /></button>
+    <div style={overlayStyle} onClick={onClose} role="presentation">
+      <div
+        ref={dialogRef}
+        style={modalStyle}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Perfil de usuario"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button onClick={onClose} style={closeStyle} aria-label="Cerrar"><X size={20} /></button>
         
         <div className="text-center mb-6">
           <div className="w-20 h-20 bg-brand rounded-full flex items-center justify-center mx-auto mb-4">

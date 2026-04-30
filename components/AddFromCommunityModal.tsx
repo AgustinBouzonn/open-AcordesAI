@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Search, Loader2, Music } from 'lucide-react';
 import { SearchResult } from '../types';
+import { useModalA11y } from './hooks/useModalA11y';
 
 interface Props {
   isOpen: boolean;
@@ -12,6 +13,9 @@ export function AddFromCommunityModal({ isOpen, onClose, onSelect }: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useModalA11y(isOpen, onClose, dialogRef);
 
   if (!isOpen) return null;
 
@@ -38,11 +42,18 @@ export function AddFromCommunityModal({ isOpen, onClose, onSelect }: Props) {
   };
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
-        <button onClick={onClose} style={closeStyle}><X size={20} /></button>
-        
-        <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
+    <div style={overlayStyle} onClick={onClose} role="presentation">
+      <div
+        ref={dialogRef}
+        style={modalStyle}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-community-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button onClick={onClose} style={closeStyle} aria-label="Cerrar"><X size={20} /></button>
+
+        <h2 id="add-community-title" style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
           Agregar de iTunes
         </h2>
 

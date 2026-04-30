@@ -1,8 +1,10 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
-import { query } from '../db';
+import { query, withTransaction } from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { serializeSong } from '../serializers/song';
+
+const SHARE_TOKEN_TTL_DAYS = 30;
 
 const router = Router();
 
@@ -16,7 +18,8 @@ router.get('/public/:token', async (req: Request, res: Response): Promise<void> 
     const sl = await query(
       `SELECT s.id, s.name, s.created_at, s.updated_at, u.username AS owner
        FROM setlists s LEFT JOIN users u ON u.id = s.user_id
-       WHERE s.share_token = $1`,
+       WHERE s.share_token = $1
+         AND (s.share_token_expires_at IS NULL OR s.share_token_expires_at > NOW())`,
       [token],
     );
     if (!sl.rows.length) { res.status(404).json({ message: 'Setlist no encontrada o no pública' }); return; }
@@ -46,14 +49,27 @@ router.post('/:id/share', async (req: AuthRequest, res: Response): Promise<void>
   const id = parseInt(req.params.id, 10);
   if (Number.isNaN(id)) { res.status(400).json({ message: 'ID inválido' }); return; }
   try {
-    const existing = await query('SELECT share_token FROM setlists WHERE id = $1 AND user_id = $2', [id, req.userId!]);
+    const existing = await query(
+      `SELECT share_token, share_token_expires_at
+       FROM setlists WHERE id = $1 AND user_id = $2`,
+      [id, req.userId!],
+    );
     if (!existing.rows.length) { res.status(404).json({ message: 'Setlist no encontrada' }); return; }
-    let token = existing.rows[0].share_token as string | null;
+    const row = existing.rows[0];
+    const stillValid = row.share_token && (!row.share_token_expires_at || new Date(row.share_token_expires_at) > new Date());
+    let token = stillValid ? (row.share_token as string) : null;
     if (!token) {
       token = crypto.randomBytes(16).toString('hex');
-      await query('UPDATE setlists SET share_token = $1, updated_at = NOW() WHERE id = $2', [token, id]);
+      await query(
+        `UPDATE setlists
+           SET share_token = $1,
+               share_token_expires_at = NOW() + ($2 || ' days')::interval,
+               updated_at = NOW()
+         WHERE id = $3`,
+        [token, String(SHARE_TOKEN_TTL_DAYS), id],
+      );
     }
-    res.json({ token });
+    res.json({ token, expiresInDays: SHARE_TOKEN_TTL_DAYS });
   } catch (e) {
     console.error('[setlists/share]', e);
     res.status(500).json({ message: 'Error al generar enlace' });
@@ -65,7 +81,7 @@ router.delete('/:id/share', async (req: AuthRequest, res: Response): Promise<voi
   if (Number.isNaN(id)) { res.status(400).json({ message: 'ID inválido' }); return; }
   try {
     const result = await query(
-      'UPDATE setlists SET share_token = NULL, updated_at = NOW() WHERE id = $1 AND user_id = $2 RETURNING id',
+      'UPDATE setlists SET share_token = NULL, share_token_expires_at = NULL, updated_at = NOW() WHERE id = $1 AND user_id = $2 RETURNING id',
       [id, req.userId!],
     );
     if (!result.rows.length) { res.status(404).json({ message: 'Setlist no encontrada' }); return; }
@@ -229,20 +245,41 @@ router.put('/:id/order', async (req: AuthRequest, res: Response) => {
   const { songIds } = req.body ?? {};
   if (Number.isNaN(id)) { res.status(400).json({ message: 'ID inválido' }); return; }
   if (!Array.isArray(songIds)) { res.status(400).json({ message: 'songIds debe ser un array' }); return; }
+  const numericIds = songIds.map((v) => Number(v)).filter((n) => Number.isInteger(n));
+  if (numericIds.length !== songIds.length) {
+    res.status(400).json({ message: 'songIds deben ser números' }); return;
+  }
 
   try {
-    const ownership = await query('SELECT id FROM setlists WHERE id = $1 AND user_id = $2', [id, req.userId!]);
-    if (!ownership.rows.length) { res.status(404).json({ message: 'Setlist no encontrada' }); return; }
-
-    for (let i = 0; i < songIds.length; i++) {
-      await query(
-        'UPDATE setlist_songs SET position = $1 WHERE setlist_id = $2 AND song_id = $3',
-        [i + 1, id, songIds[i]],
+    await withTransaction(async (client) => {
+      const ownership = await client.query(
+        'SELECT id FROM setlists WHERE id = $1 AND user_id = $2',
+        [id, req.userId!],
       );
-    }
-    await query('UPDATE setlists SET updated_at = NOW() WHERE id = $1', [id]);
+      if (!ownership.rows.length) {
+        const err = new Error('NOT_FOUND') as Error & { code?: string };
+        err.code = 'NOT_FOUND';
+        throw err;
+      }
+
+      const positions = numericIds.map((_, i) => i + 1);
+      await client.query(
+        `UPDATE setlist_songs AS ss
+            SET position = data.pos
+           FROM (
+             SELECT unnest($1::int[]) AS song_id,
+                    unnest($2::int[]) AS pos
+           ) AS data
+          WHERE ss.setlist_id = $3 AND ss.song_id = data.song_id`,
+        [numericIds, positions, id],
+      );
+      await client.query('UPDATE setlists SET updated_at = NOW() WHERE id = $1', [id]);
+    });
     res.json({ message: 'Reordenada' });
   } catch (e) {
+    if ((e as { code?: string }).code === 'NOT_FOUND') {
+      res.status(404).json({ message: 'Setlist no encontrada' }); return;
+    }
     console.error('[setlists/reorder]', e);
     res.status(500).json({ message: 'Error al reordenar' });
   }

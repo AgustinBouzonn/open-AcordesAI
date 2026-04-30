@@ -10,7 +10,7 @@ export interface AuthRequest extends Request {
 export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) {
-    res.status(401).json({ message: 'No autorizado' });
+    res.status(401).json({ message: 'No autorizado', code: 'NO_TOKEN' });
     return;
   }
 
@@ -20,8 +20,15 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
     req.userId = payload.userId;
     next();
   } catch (e) {
-    const reason = e instanceof Error ? e.name : 'unknown';
-    console.warn(`[auth] JWT verify failed: ${reason}`);
-    res.status(401).json({ message: 'Token inválido o expirado' });
+    if (e instanceof jwt.TokenExpiredError) {
+      res.status(401).json({ message: 'Sesión expirada', code: 'TOKEN_EXPIRED' });
+      return;
+    }
+    if (e instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({ message: 'Token inválido', code: 'TOKEN_INVALID' });
+      return;
+    }
+    console.error('[auth] verify failed', e);
+    res.status(401).json({ message: 'Token inválido', code: 'TOKEN_INVALID' });
   }
 };

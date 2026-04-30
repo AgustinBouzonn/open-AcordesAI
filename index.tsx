@@ -4,6 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import { AuthProvider } from './components/AuthContext';
 import { ToastProvider } from './components/Toast';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 registerSW({ immediate: true });
 
@@ -15,10 +16,12 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <ToastProvider>
-        <App />
-      </ToastProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

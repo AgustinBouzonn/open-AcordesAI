@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, Heart, Music2, Clock, LogIn, UserPlus, LogOut, Users, User, AudioWaveform, Music, ListMusic } from 'lucide-react';
+import { Home, Search, Heart, Music2, Clock, LogIn, UserPlus, Users, User, AudioWaveform, Music, ListMusic, Activity } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { InstallAppButton } from './InstallAppButton';
 
@@ -14,7 +14,7 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate, user, onLoginClick, onRegisterClick, onProfileClick }) => {
-  const { logout } = useAuth();
+  useAuth();
 
   return (
     <div className="min-h-screen bg-dark-900 text-white flex flex-col pb-20 md:pb-0">
@@ -52,6 +52,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
             <button onClick={() => onNavigate('SETLISTS')} className={`text-sm font-medium hover:text-brand transition ${activeTab === 'SETLISTS' ? 'text-brand' : 'text-gray-400'}`}>
               Setlists
             </button>
+            {user && (
+              <button onClick={() => onNavigate('STATS')} className={`text-sm font-medium hover:text-brand transition ${activeTab === 'STATS' ? 'text-brand' : 'text-gray-400'}`}>
+                Stats
+              </button>
+            )}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -112,6 +117,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
           <button onClick={() => onNavigate('SETLISTS')} className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'SETLISTS' ? 'text-brand' : 'text-gray-500'}`}>
             <ListMusic size={20} /><span className="text-[10px]">Setlists</span>
           </button>
+          {user && (
+            <button onClick={() => onNavigate('STATS')} className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'STATS' ? 'text-brand' : 'text-gray-500'}`}>
+              <Activity size={20} /><span className="text-[10px]">Stats</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

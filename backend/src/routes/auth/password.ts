@@ -6,14 +6,17 @@ import { buildJwt, toUserDto } from './utils';
 
 const router = Router();
 
+const MIN_PASSWORD_LENGTH = 8;
+const DUMMY_HASH = '$2a$10$CwTycUXWue0Thq9StjUM0uJ8.5O0p3.S6.r5J7CjC6zYj6wJYK.qK';
+
 router.post('/register', authLimiter, async (req: Request, res: Response): Promise<void> => {
   const { email, username, password } = req.body;
   if (!email || !username || !password) {
     res.status(400).json({ message: 'Email, nombre de usuario y contraseña son requeridos' });
     return;
   }
-  if (password.length < 6) {
-    res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+  if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+    res.status(400).json({ message: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres` });
     return;
   }
 
@@ -47,7 +50,9 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
   try {
     const result = await query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
     const user = result.rows[0];
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    const hash = user?.password_hash || DUMMY_HASH;
+    const ok = await bcrypt.compare(password, hash);
+    if (!user || !ok) {
       res.status(401).json({ message: 'Email o contraseña incorrectos' });
       return;
     }

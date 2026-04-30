@@ -1,7 +1,8 @@
 import React from 'react';
-import { Users, Plus, Loader2, Star } from 'lucide-react';
+import { Users, Plus, Star } from 'lucide-react';
 import { Song } from '../../types';
 import { Artwork } from '../Artwork';
+import { SongCardGridSkeleton } from '../SongCardSkeleton';
 
 interface Props {
   songs: Song[];
@@ -22,7 +23,7 @@ export const CommunityPage: React.FC<Props> = ({ songs, loading, page, onPageCha
       </button>
     </div>
     {loading ? (
-      <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-brand" size={40} /></div>
+      <SongCardGridSkeleton count={6} />
     ) : songs.length === 0 ? (
       <div className="text-center text-gray-500 mt-20 bg-dark-800 p-8 rounded-xl border border-dashed border-dark-600">
         <Users size={48} className="mx-auto mb-4 opacity-20" />

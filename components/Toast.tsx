@@ -16,10 +16,11 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
+const noopToastValue: ToastContextValue = { showToast: () => undefined };
+
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
-  if (!ctx) return { showToast: () => undefined };
-  return ctx;
+  return ctx ?? noopToastValue;
 }
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
