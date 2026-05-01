@@ -12,7 +12,10 @@ COPY . .
 ARG VITE_GEMINI_API_KEY
 ENV VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY
 
-RUN npm run build
+RUN npm run build \
+ && WORKBOX_FILE="$(find dist -maxdepth 1 -name 'workbox-*.js' | head -n 1)" \
+ && cp "$WORKBOX_FILE" dist/workbox.js \
+ && sed -i -E 's#\./workbox-[^"]+#./workbox#' dist/sw.js
 
 # Stage 2: Serve con Nginx
 FROM nginx:alpine
