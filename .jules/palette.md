@@ -1,0 +1,3 @@
+## 2025-05-02 - Contextual ARIA labels for dynamic lists
+**Learning:** When dealing with dynamic list manipulations, ARIA labels for icon buttons like "up" and "down" must be paired with context. Simply using "Subir" or "Bajar" can be ambiguous for screen reader users when multiple lists or items are present.
+**Action:** Always provide explicit action context in `aria-label` attributes for icon-only buttons that manipulate items (e.g. use "Subir canción" and "Bajar canción" instead of just "Subir" or "Bajar").
