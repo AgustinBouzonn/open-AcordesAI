@@ -1,0 +1,3 @@
+## 2024-05-03 - [Avoid Array Materialization for matchAll() Iterators]
+**Learning:** [When extracting a limited number of matches using `String.prototype.matchAll()`, spreading the iterator into an array (e.g., `[...html.matchAll(...)]`) forces the regex engine to find and allocate memory for every single match in the string before slicing. In large texts (like full HTML pages), this causes unnecessary processing and garbage collection overhead.]
+**Action:** [Use a `for...of` loop with a manual counter and `break` when only a specific subset of matches (e.g., the first 10) is needed, allowing early exit and saving memory.]

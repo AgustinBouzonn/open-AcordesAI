@@ -313,12 +313,20 @@ router.get('/search/:source', importLimiter, async (req: Request, res: Response)
     const results: Array<{ title: string; artist: string; url: string }> = [];
 
     if (source === 'ultimateguitar') {
-      for (const m of [...html.matchAll(/href="(\/tabs\/[^"]+)"[^>]*>([^<]+)<\/a>/g)].slice(0, 10)) {
+      let count = 0;
+      for (const m of html.matchAll(/href="(\/tabs\/[^"]+)"[^>]*>([^<]+)<\/a>/g)) {
+        if (count >= 10) break;
         results.push({ title: m[2].trim(), artist: 'Unknown', url: sourceConfig.baseUrl + m[1] });
+        count++;
       }
     } else if (source === 'cifraclub') {
-      for (const m of [...html.matchAll(/href="(\/[^"]+)"[^>]*>([^<]+)<\/a>/g)].slice(0, 10)) {
-        if (m[1].startsWith('/')) results.push({ title: m[2].trim(), artist: 'Unknown', url: sourceConfig.baseUrl + m[1] });
+      let count = 0;
+      for (const m of html.matchAll(/href="(\/[^"]+)"[^>]*>([^<]+)<\/a>/g)) {
+        if (count >= 10) break;
+        if (m[1].startsWith('/')) {
+          results.push({ title: m[2].trim(), artist: 'Unknown', url: sourceConfig.baseUrl + m[1] });
+          count++;
+        }
       }
     }
 
