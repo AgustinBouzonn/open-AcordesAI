@@ -1,0 +1,3 @@
+## 2024-05-06 - Missing Accessibility Attributes on Icon-Only Toggle Buttons
+**Learning:** Icon-only toggle buttons (like favorites or expandable comment sections) often lack dynamic `aria-label`, `title`, `aria-expanded`, and `aria-hidden="true"` attributes on their inner icons, making them inaccessible to screen readers.
+**Action:** Always add dynamic `aria-label` and `title` attributes (e.g., "Añadir a favoritos" vs "Quitar de favoritos") to icon-only buttons. Use `aria-expanded` to convey visibility state for expandable sections, and set `aria-hidden="true"` on decorative child elements like Lucide icons to prevent redundant announcements.
