@@ -1,0 +1,3 @@
+## 2024-05-07 - Dynamic ARIA States for Toggle Buttons
+**Learning:** Icon-only toggle buttons require dynamic `aria-label` and `title` attributes (e.g., 'Añadir a favoritos' vs 'Quitar de favoritos') rather than static descriptions. Additionally, buttons that control the visibility of expandable UI sections must use the `aria-expanded` attribute to convey their current state to screen readers. Finally, child icons inside these buttons must be explicitly marked with `aria-hidden="true"` to prevent redundant announcements.
+**Action:** Always ensure stateful icon-only buttons clearly articulate their *current* action or state via dynamic attributes, and hide decorative elements from assistive technologies.
