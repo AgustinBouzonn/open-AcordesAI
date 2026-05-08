@@ -1,0 +1,3 @@
+## 2024-05-08 - Accessible Icon-Only Buttons and Toggles
+**Learning:** Icon-only buttons lack accessible names by default, and buttons that toggle visibility of expandable sections (like comments) do not natively convey their state. Using static titles isn't enough; dynamic states and expanded attributes are critical for screen reader context.
+**Action:** Always add descriptive `aria-label` and `title` to icon-only buttons. For stateful toggles (like favorites or expandable comments), make the `aria-label` and `title` dynamic (e.g., "Añadir a favoritos" vs "Quitar de favoritos") and use `aria-expanded` reflecting the visibility state for expandable sections. Decorative icons inside should use `aria-hidden="true"`.
