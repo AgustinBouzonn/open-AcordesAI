@@ -1,0 +1,3 @@
+## 2026-05-09 - Avoid Object.fromEntries(Object.entries({...}).filter(...)) in hot paths
+**Learning:** The pattern `Object.fromEntries(Object.entries({...}).filter(...))` causes significant allocation overhead of intermediate objects and arrays, which becomes a performance bottleneck in data serializers handling multiple records.
+**Action:** Replace this pattern with manual object construction and conditional property assignments (e.g., `if (val !== undefined) obj.key = val`) to optimize serializers. Always ensure all properties, including base ones like `id` or `title`, are assigned conditionally to avoid regressions where undefined keys are inadvertently included.
