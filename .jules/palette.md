@@ -1,0 +1,3 @@
+## 2025-02-28 - Missing ARIA Labels on Icon-Only Buttons
+**Learning:** Icon-only buttons used for primary actions (like Edit, Delete, Check, Close, Move Up/Down) frequently lack proper accessibility attributes in this app, rendering them invisible or confusing to screen reader users. Simply adding visual titles is not sufficient.
+**Action:** When implementing icon-only buttons, always apply explicit `aria-label`s with descriptive text in Spanish, and ensure child icons receive `aria-hidden="true"` to prevent redundant announcements.
