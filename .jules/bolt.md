@@ -1,0 +1,3 @@
+## 2024-05-10 - Replace Object.fromEntries allocation overhead with conditional object assignment
+**Learning:** `Object.fromEntries(Object.entries({...}).filter(...))` introduces a massive allocation overhead for intermediate objects and arrays during serialization in performance-critical paths (like data serializers), leading to ~100x slower execution compared to manual assignments.
+**Action:** When writing data serializers or refactoring object sanitization paths, replace `Object.fromEntries` patterns with manual object construction and conditional property assignments (e.g., `if (val !== undefined) obj.key = val`) to eliminate the overhead. Ensure all properties, including base ones, are assigned conditionally to prevent undefined keys from slipping through.
