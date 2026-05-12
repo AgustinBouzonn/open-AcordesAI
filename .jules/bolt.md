@@ -1,0 +1,3 @@
+## 2025-03-01 - Avoid Object.fromEntries for serializers
+**Learning:** In performance-critical paths like data serializers (e.g., `backend/src/serializers/song.ts`), the pattern `Object.fromEntries(Object.entries({...}).filter(...))` introduces significant overhead by creating multiple intermediate objects and arrays.
+**Action:** Replace this pattern with manual object construction and conditional property assignments (e.g., `if (val !== undefined) obj.key = val`) to eliminate allocation overhead and improve throughput.
