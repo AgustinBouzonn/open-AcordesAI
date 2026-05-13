@@ -1,0 +1,3 @@
+## 2024-05-13 - [Accessibility for state-toggling icon buttons]
+**Learning:** Icon-only buttons that toggle visibility or state require dynamic ARIA attributes (like `aria-expanded` or dynamic `aria-label`/`title`) to properly convey their current state and action to screen readers, and decorative icons must use `aria-hidden="true"` to prevent redundant announcements.
+**Action:** Always apply `aria-expanded` with the current boolean state to expandable section toggles, dynamically reflect the upcoming action or current state in `aria-label`/`title` for state toggles, and add `aria-hidden="true"` to inner Lucide icons.
