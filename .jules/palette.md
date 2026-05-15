@@ -1,0 +1,3 @@
+## 2024-05-15 - Stateful Toggle Button ARIA Attributes
+**Learning:** Icon-only toggle buttons in this app (like favorites, comments) need dynamic `aria-label` and `title` attributes in Spanish to convey current state to screen readers, plus `aria-pressed` or `aria-expanded` and `aria-hidden="true"` on the icons themselves.
+**Action:** Always apply `aria-pressed` for two-state toggles (like favorites), `aria-expanded` for visibility toggles (like comments), ensure labels/titles translate the state (e.g., 'Quitar de favoritos' vs 'Añadir a favoritos'), and hide decorative children (`<Icon aria-hidden="true" />`).
