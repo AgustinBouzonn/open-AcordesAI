@@ -341,8 +341,15 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} disabled={!user} onClick={() => handleRating(star)} className={`${!user ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition`}>
-                    <Star size={16} className={star <= userRating ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-gray-500'} />
+                  <button
+                    key={star}
+                    disabled={!user}
+                    onClick={() => handleRating(star)}
+                    className={`${!user ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition`}
+                    aria-label={`Calificar con ${star} estrella${star === 1 ? '' : 's'}`}
+                    title={!user ? 'Iniciá sesión para calificar' : `Calificar con ${star} estrella${star === 1 ? '' : 's'}`}
+                  >
+                    <Star aria-hidden="true" size={16} className={star <= userRating ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-gray-500'} />
                   </button>
                 ))}
                 {avgRating?.average && (
@@ -373,14 +380,31 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         </div>
         
         <div className="flex items-center gap-3">
-          <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition">
-            <Share2 size={20} />
+          <button
+            onClick={handleShare}
+            className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition"
+            aria-label="Compartir canción"
+            title="Compartir"
+          >
+            <Share2 aria-hidden="true" size={20} />
           </button>
-          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
-            <Heart size={20} fill={isFav ? "currentColor" : "none"} />
+          <button
+            onClick={handleToggleFav}
+            disabled={!user}
+            className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
+            aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+            title={!user ? 'Iniciá sesión para añadir a favoritos' : isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          >
+            <Heart aria-hidden="true" size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
-          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative">
-            <MessageSquare size={20} />
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative"
+            aria-label={showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'}
+            title={showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'}
+            aria-expanded={showComments}
+          >
+            <MessageSquare aria-hidden="true" size={20} />
             {comments.length > 0 && <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
           </button>
         </div>
