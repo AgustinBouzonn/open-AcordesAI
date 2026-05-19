@@ -1,3 +1,5 @@
+import { sanitizeInput } from '../utils/security';
+
 const AI_PROVIDER =
   process.env.AI_PROVIDER ||
   (process.env.GEMINI_API_KEY ? 'gemini' : process.env.OPENAI_API_KEY ? 'openai' : 'gemini');
@@ -114,7 +116,10 @@ export async function generateChords(
     throw new Error('AI_API_KEY no configurada en el servidor. Contactá al administrador.');
   }
 
-  const prompt = buildPrompt(title, artist, instrument);
+  const sanitizedTitle = sanitizeInput(title);
+  const sanitizedArtist = sanitizeInput(artist);
+  const sanitizedInstrument = sanitizeInput(instrument);
+  const prompt = buildPrompt(sanitizedTitle, sanitizedArtist, sanitizedInstrument);
   const rawJson = AI_PROVIDER === 'gemini' ? await callGemini(prompt) : await callOpenAI(prompt);
   const parsedJson = extractJson(rawJson);
 
