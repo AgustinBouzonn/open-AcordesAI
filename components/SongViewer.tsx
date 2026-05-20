@@ -373,15 +373,32 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         </div>
         
         <div className="flex items-center gap-3">
-          <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition">
-            <Share2 size={20} />
+          <button
+            onClick={handleShare}
+            className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition"
+            title="Compartir"
+            aria-label="Compartir canción"
+          >
+            <Share2 size={20} aria-hidden="true" />
           </button>
-          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
-            <Heart size={20} fill={isFav ? "currentColor" : "none"} />
+          <button
+            onClick={handleToggleFav}
+            disabled={!user}
+            className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
+            title={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
+            aria-label={isFav ? "Quitar canción de favoritos" : "Añadir canción a favoritos"}
+          >
+            <Heart size={20} fill={isFav ? "currentColor" : "none"} aria-hidden="true" />
           </button>
-          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative">
-            <MessageSquare size={20} />
-            {comments.length > 0 && <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative"
+            title={showComments ? "Ocultar comentarios" : "Ver comentarios"}
+            aria-label={showComments ? "Ocultar sección de comentarios" : "Ver sección de comentarios"}
+            aria-expanded={showComments}
+          >
+            <MessageSquare size={20} aria-hidden="true" />
+            {comments.length > 0 && <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full" aria-hidden="true">{comments.length}</span>}
           </button>
         </div>
       </div>
