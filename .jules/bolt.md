@@ -1,0 +1,3 @@
+## 2024-05-21 - [Optimize serializers]
+**Learning:** `Object.fromEntries(Object.entries({...}).filter(...))` introduces significant allocation overhead of intermediate objects and arrays, especially when the objects being serialized are large or have many properties, and are evaluated frequently in loops or hot paths like data serialization.
+**Action:** Replace `Object.fromEntries(Object.entries({...}).filter(...))` with manual object construction and conditional property assignments (e.g., `if (val !== undefined) obj.key = val`) to eliminate the allocation overhead.
