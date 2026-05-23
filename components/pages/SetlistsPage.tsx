@@ -163,13 +163,13 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
                 )}
                 {renamingId === sl.id ? (
                   <>
-                    <button onClick={() => void submitRename(sl.id)} className="p-2 text-emerald-400 hover:text-emerald-300"><Check size={16} /></button>
-                    <button onClick={() => setRenamingId(null)} className="p-2 text-gray-400 hover:text-white"><X size={16} /></button>
+                    <button onClick={() => void submitRename(sl.id)} className="p-2 text-emerald-400 hover:text-emerald-300" aria-label="Confirmar"><Check size={16} /></button>
+                    <button onClick={() => setRenamingId(null)} className="p-2 text-gray-400 hover:text-white" aria-label="Cancelar"><X size={16} /></button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => { setRenamingId(sl.id); setRenameValue(sl.name); }} className="p-2 text-gray-400 hover:text-white" title="Renombrar"><Pencil size={16} /></button>
-                    <button onClick={() => void remove(sl.id)} className="p-2 text-gray-400 hover:text-red-400" title="Eliminar"><Trash2 size={16} /></button>
+                    <button onClick={() => { setRenamingId(sl.id); setRenameValue(sl.name); }} className="p-2 text-gray-400 hover:text-white" title="Renombrar" aria-label="Renombrar"><Pencil size={16} /></button>
+                    <button onClick={() => void remove(sl.id)} className="p-2 text-gray-400 hover:text-red-400" title="Eliminar" aria-label="Eliminar"><Trash2 size={16} /></button>
                   </>
                 )}
               </div>
@@ -219,9 +219,9 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
                         <div className="text-sm font-medium text-white truncate">{song.title}</div>
                         <div className="text-xs text-gray-400 truncate">{song.artist}</div>
                       </button>
-                      <button onClick={() => void move(idx, -1)} disabled={idx === 0} className="p-1 text-gray-500 hover:text-white disabled:opacity-30"><ChevronUp size={14} /></button>
-                      <button onClick={() => void move(idx, 1)} disabled={idx === detail.songs.length - 1} className="p-1 text-gray-500 hover:text-white disabled:opacity-30"><ChevronDown size={14} /></button>
-                      <button onClick={() => void removeSong(sl.id, song.id)} className="p-1 text-gray-500 hover:text-red-400"><Trash2 size={14} /></button>
+                      <button onClick={() => void move(idx, -1)} disabled={idx === 0} className="p-1 text-gray-500 hover:text-white disabled:opacity-30" aria-label="Mover arriba"><ChevronUp size={14} /></button>
+                      <button onClick={() => void move(idx, 1)} disabled={idx === detail.songs.length - 1} className="p-1 text-gray-500 hover:text-white disabled:opacity-30" aria-label="Mover abajo"><ChevronDown size={14} /></button>
+                      <button onClick={() => void removeSong(sl.id, song.id)} className="p-1 text-gray-500 hover:text-red-400" aria-label="Quitar canción"><Trash2 size={14} /></button>
                     </div>
                   ))}
                 </div>
