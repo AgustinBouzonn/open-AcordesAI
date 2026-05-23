@@ -1,0 +1,3 @@
+## 2024-05-23 - Avoid Object.fromEntries in Performance-Critical Paths
+**Learning:** Using `Object.fromEntries(Object.entries({...}).filter(...))` introduces significant allocation overhead in performance-critical paths like serializers due to intermediate array creations.
+**Action:** Replace this pattern with manual object construction and conditional property assignments (e.g., `if (val !== undefined) obj.key = val`) to eliminate the overhead.
