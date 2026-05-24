@@ -1,0 +1,3 @@
+## 2025-03-01 - Icon-Only Button Accessibility Pattern
+**Learning:** Icon-only state-toggling buttons (like Favorite or Comments) require dynamic `aria-label`s and attributes like `aria-pressed` or `aria-expanded` to properly convey their changing state to screen readers. Additionally, decorative icons within these buttons must be hidden from screen readers using `aria-hidden="true"` to prevent redundant or confusing announcements.
+**Action:** Always verify that icon-only buttons have descriptive, dynamic `aria-label`s (and `title`s for visual tooltips), appropriate state attributes (`aria-expanded`/`aria-pressed`), and that their child icons have `aria-hidden="true"`.
