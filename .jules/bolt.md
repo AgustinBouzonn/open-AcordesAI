@@ -1,0 +1,3 @@
+## 2024-06-25 - Avoid `Object.fromEntries(Object.entries(...))` overhead in serializers
+**Learning:** Using `Object.fromEntries(Object.entries({...}).filter(...))` pattern for filtering undefined properties in hot paths like data serializers introduces significant intermediate object allocation overhead and garbage collection pressure.
+**Action:** Replace this pattern with manual object construction and conditional property assignments (e.g., `if (val !== undefined) obj.key = val`) to eliminate the intermediate object arrays and improve performance.
