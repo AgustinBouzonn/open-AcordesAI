@@ -1,0 +1,3 @@
+## 2024-05-25 - Improve Accessibility of Comments Toggle
+**Learning:** For toggleable UI elements like comments sections that appear conditionally, screen reader users miss context if the button only has an `aria-label`. The `aria-expanded` and `aria-controls` attributes are crucial for explicitly linking the toggle button to the expanding section and conveying its current visibility state.
+**Action:** When adding sections that toggle visibility (especially user-generated content like comments or reviews), ensure the controlling button includes `aria-expanded={isVisible}` and `aria-controls="section-id"` connected to the corresponding container `id`.
