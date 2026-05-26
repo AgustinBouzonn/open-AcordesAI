@@ -1,0 +1,3 @@
+## 2024-05-26 - Missing Accessibility Attributes on Icon-Only Buttons
+**Learning:** Found a pattern where icon-only action buttons (like Share, Favorite, and Comments in SongViewer) were lacking `aria-label` and `title` attributes, making them inaccessible to screen readers and lacking helpful tooltips for visual users. Furthermore, buttons that control the visibility of sections (like Comments) were missing the `aria-expanded` state.
+**Action:** When adding or reviewing icon-only buttons, especially those that toggle sections, ensure `aria-label`, `title`, and `aria-expanded` (where applicable) are always included to improve both screen reader support and general usability.
