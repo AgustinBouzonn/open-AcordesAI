@@ -1,0 +1,3 @@
+## 2024-05-26 - Serialize Object Allocation Overhead
+**Learning:** In performance-critical paths like data serializers (e.g., `backend/src/serializers/song.ts`), the pattern `Object.fromEntries(Object.entries({...}).filter(...))` introduces significant memory allocation overhead due to intermediate arrays and objects being created.
+**Action:** Replace `Object.fromEntries(Object.entries({...}).filter(...))` with manual object construction and conditional property assignments (e.g., `if (val !== undefined) obj.key = val`) to eliminate intermediate object and array allocations. Ensure all base properties like `id` and `title` are also assigned conditionally to prevent regressing.
