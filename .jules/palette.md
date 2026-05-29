@@ -1,0 +1,3 @@
+## 2024-05-29 - Missing ARIA labels on Icon-Only Buttons
+**Learning:** Found multiple icon-only action buttons (share, favorite, comments) in `SongViewer` lacking `aria-label` or `title`. This is a common accessibility issue that renders the buttons invisible or confusing for screen readers, and hides tooltips for mouse users. The comments button, which toggles a panel, also missed the `aria-expanded` state.
+**Action:** Always verify icon-only buttons have descriptive `aria-label`s, `title`s (using Spanish for this app), and if they control expanding UI sections, add `aria-expanded` with the correct boolean state.
