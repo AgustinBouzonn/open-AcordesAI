@@ -1,0 +1,3 @@
+## 2024-05-29 - Optimize serializers by avoiding Object.fromEntries with Object.entries and filter
+**Learning:** In performance-critical paths like data serializers (e.g., `backend/src/serializers/song.ts`), the pattern `Object.fromEntries(Object.entries({...}).filter(...))` introduces significant allocation overhead by creating intermediate objects and arrays for each serialized row. This degrades performance, especially on large arrays.
+**Action:** Replace `Object.fromEntries(Object.entries({...}).filter(...))` with manual object construction and conditional property assignments (e.g., `if (val != null) obj.key = val`) to eliminate intermediate allocations.
