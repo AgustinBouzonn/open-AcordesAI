@@ -1,0 +1,3 @@
+## 2024-05-24 - Serializer Performance Optimization
+**Learning:** Using `Object.fromEntries(Object.entries({...}).filter(...))` for data serialization creates unnecessary intermediate arrays and objects, causing significant allocation overhead in hot paths.
+**Action:** Replace functional object filtering with manual object construction and conditional property assignments (e.g., `if (val != null) obj.key = val`) in performance-critical data serializers.
