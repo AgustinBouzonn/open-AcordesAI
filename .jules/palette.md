@@ -1,0 +1,3 @@
+## 2024-05-30 - Missing Accessible Names on Inline List Actions
+**Learning:** Icon-only buttons used for inline list operations (e.g. reordering or deleting items in a list of songs) frequently lack accessible names (`aria-label` or `title`). This makes it difficult for screen reader users to understand the purpose of the action without visual context, and sighted users might miss tooltips.
+**Action:** When adding inline actions (such as edit, move, delete, confirm, or cancel) represented solely by icons (like Check, X, ChevronUp, ChevronDown, Trash2), ensure `aria-label` and `title` attributes are applied to improve both screen reader support and visual hover feedback.
