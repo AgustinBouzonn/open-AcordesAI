@@ -1,0 +1,3 @@
+## 2026-05-31 - Accessible Icon-Only Buttons and Expandable Sections
+**Learning:** Icon-only buttons (like star ratings, share, and favorite buttons) and expandable UI sections (like a comments toggle) frequently lack context for screen readers when they rely purely on visual icons. The comments toggle also missed indicating its state, making it unclear to screen reader users if the section is currently shown or hidden.
+**Action:** Always add descriptive `aria-label` attributes to buttons that do not have text content. For buttons that toggle the visibility of expandable sections, apply the `aria-expanded` attribute with the current boolean state to properly convey visibility status.
