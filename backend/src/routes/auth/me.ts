@@ -94,27 +94,39 @@ router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Pro
   }
   let imported = { favorites: 0, ratings: 0, setlists: 0 };
   try {
+    // ⚡ Bolt: Use unnest() for bulk inserts to prevent N+1 query performance bottleneck during data import.
     if (Array.isArray(data.favorites)) {
+      const favIds: number[] = [];
       for (const songId of data.favorites) {
         if (typeof songId === 'number' || /^\d+$/.test(String(songId))) {
-          const result = await query(
-            'INSERT INTO favorites (user_id, song_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING song_id',
-            [userId, Number(songId)],
-          );
-          if (result.rows.length) imported.favorites += 1;
+          favIds.push(Number(songId));
         }
+      }
+      if (favIds.length > 0) {
+        const result = await query(
+          'INSERT INTO favorites (user_id, song_id) SELECT $1, unnest($2::int[]) ON CONFLICT DO NOTHING RETURNING song_id',
+          [userId, favIds],
+        );
+        imported.favorites += result.rows.length;
       }
     }
     if (Array.isArray(data.ratings)) {
+      const ratingSongIds: number[] = [];
+      const ratingScores: number[] = [];
       for (const r of data.ratings) {
         if (r && typeof r.songId !== 'undefined' && Number.isInteger(r.score) && r.score >= 1 && r.score <= 5) {
-          await query(
-            `INSERT INTO ratings (user_id, song_id, score) VALUES ($1, $2, $3)
-             ON CONFLICT (user_id, song_id) DO UPDATE SET score = EXCLUDED.score`,
-            [userId, Number(r.songId), r.score],
-          );
-          imported.ratings += 1;
+          ratingSongIds.push(Number(r.songId));
+          ratingScores.push(r.score);
         }
+      }
+      if (ratingSongIds.length > 0) {
+        await query(
+          `INSERT INTO ratings (user_id, song_id, score)
+           SELECT $1, unnest($2::int[]), unnest($3::int[])
+           ON CONFLICT (user_id, song_id) DO UPDATE SET score = EXCLUDED.score`,
+          [userId, ratingSongIds, ratingScores],
+        );
+        imported.ratings += ratingSongIds.length;
       }
     }
     if (Array.isArray(data.setlists)) {
@@ -126,14 +138,22 @@ router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Pro
         );
         const newId = created.rows[0].id;
         if (Array.isArray(sl.songs)) {
+          const songIds: number[] = [];
+          const positions: number[] = [];
           for (let i = 0; i < sl.songs.length; i++) {
             const songId = Number(sl.songs[i]);
             if (Number.isInteger(songId)) {
-              await query(
-                'INSERT INTO setlist_songs (setlist_id, song_id, position) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
-                [newId, songId, i + 1],
-              );
+              songIds.push(songId);
+              positions.push(i + 1);
             }
+          }
+          if (songIds.length > 0) {
+            await query(
+              `INSERT INTO setlist_songs (setlist_id, song_id, position)
+               SELECT $1, unnest($2::int[]), unnest($3::int[])
+               ON CONFLICT DO NOTHING`,
+              [newId, songIds, positions],
+            );
           }
         }
         imported.setlists += 1;
