@@ -1,0 +1,3 @@
+## 2025-04-27 - Dynamic Labels for Stateful Icon Buttons
+**Learning:** Icon-only buttons that toggle states (like favorites) need dynamic labels to accurately reflect the action that will happen or the current state (e.g., 'Añadir a favoritos' vs 'Quitar de favoritos'), rather than a static description. Also, decorative child elements like Lucide icons need `aria-hidden="true"` to prevent redundant screen reader announcements.
+**Action:** Always apply `aria-hidden="true"` to icons within icon-only buttons, and use ternary operators for `aria-label` and `title` to dynamically describe the action based on the button's state, especially ensuring they are localized (e.g., Spanish in this project).
