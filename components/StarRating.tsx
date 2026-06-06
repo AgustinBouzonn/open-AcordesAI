@@ -21,6 +21,7 @@ export function StarRating({ value, onChange, readonly = false }: Props) {
           onMouseEnter={() => !readonly && setHover(star)}
           onMouseLeave={() => !readonly && setHover(0)}
           className={`transition ${readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'}`}
+          aria-label={`Calificar con ${star} estrella${star === 1 ? '' : 's'}`}
         >
           <Star
             size={18}
