@@ -95,26 +95,39 @@ router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Pro
   let imported = { favorites: 0, ratings: 0, setlists: 0 };
   try {
     if (Array.isArray(data.favorites)) {
+      const validFavorites: number[] = [];
       for (const songId of data.favorites) {
         if (typeof songId === 'number' || /^\d+$/.test(String(songId))) {
-          const result = await query(
-            'INSERT INTO favorites (user_id, song_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING song_id',
-            [userId, Number(songId)],
-          );
-          if (result.rows.length) imported.favorites += 1;
+          validFavorites.push(Number(songId));
         }
+      }
+      if (validFavorites.length > 0) {
+        // ⚡ Bolt: Bulk insert favorites using unnest to prevent N+1 queries
+        const result = await query(
+          'INSERT INTO favorites (user_id, song_id) SELECT $1, unnest($2::int[]) ON CONFLICT DO NOTHING RETURNING song_id',
+          [userId, validFavorites],
+        );
+        imported.favorites += result.rows.length;
       }
     }
     if (Array.isArray(data.ratings)) {
+      const validSongIds: number[] = [];
+      const validScores: number[] = [];
       for (const r of data.ratings) {
         if (r && typeof r.songId !== 'undefined' && Number.isInteger(r.score) && r.score >= 1 && r.score <= 5) {
-          await query(
-            `INSERT INTO ratings (user_id, song_id, score) VALUES ($1, $2, $3)
-             ON CONFLICT (user_id, song_id) DO UPDATE SET score = EXCLUDED.score`,
-            [userId, Number(r.songId), r.score],
-          );
-          imported.ratings += 1;
+          validSongIds.push(Number(r.songId));
+          validScores.push(r.score);
         }
+      }
+      if (validSongIds.length > 0) {
+        // ⚡ Bolt: Parallel unnest for bulk upsert to eliminate N+1 queries
+        await query(
+          `INSERT INTO ratings (user_id, song_id, score)
+           SELECT $1, unnest($2::int[]), unnest($3::int[])
+           ON CONFLICT (user_id, song_id) DO UPDATE SET score = EXCLUDED.score`,
+          [userId, validSongIds, validScores],
+        );
+        imported.ratings += validSongIds.length;
       }
     }
     if (Array.isArray(data.setlists)) {
@@ -126,14 +139,21 @@ router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Pro
         );
         const newId = created.rows[0].id;
         if (Array.isArray(sl.songs)) {
+          const validSetlistSongs: number[] = [];
+          const validPositions: number[] = [];
           for (let i = 0; i < sl.songs.length; i++) {
             const songId = Number(sl.songs[i]);
             if (Number.isInteger(songId)) {
-              await query(
-                'INSERT INTO setlist_songs (setlist_id, song_id, position) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
-                [newId, songId, i + 1],
-              );
+              validSetlistSongs.push(songId);
+              validPositions.push(i + 1);
             }
+          }
+          if (validSetlistSongs.length > 0) {
+            // ⚡ Bolt: Bulk insert setlist songs using unnest to prevent N+1 queries
+            await query(
+              'INSERT INTO setlist_songs (setlist_id, song_id, position) SELECT $1, unnest($2::int[]), unnest($3::int[]) ON CONFLICT DO NOTHING',
+              [newId, validSetlistSongs, validPositions],
+            );
           }
         }
         imported.setlists += 1;
