@@ -1,0 +1,3 @@
+## 2026-06-09 - Optimize serializeSong performance
+**Learning:** The previous implementation of `serializeSong` used `Object.fromEntries(Object.entries(...).filter(...))` to strip undefined values. In Node.js/V8, this pattern is highly inefficient as it allocates multiple intermediate objects and arrays, generating significant GC pressure—especially when processing large arrays of database rows (like popular songs or search results).
+**Action:** Replaced the `Object.fromEntries` pattern with explicit, manual object construction and conditional `if` statements using `!= null` to correctly retain falsy values like `0` or `''` while dropping `null` and `undefined`, yielding a massive speedup by eliminating intermediate array allocations.
