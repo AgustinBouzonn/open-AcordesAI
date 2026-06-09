@@ -8,6 +8,7 @@ import {
   getOAuthConfig,
   redirectWithAuthResult,
   upsertOAuthUser,
+  parseCookies,
 } from './utils';
 
 const router = Router();
@@ -45,6 +46,18 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
   const code = typeof req.query.code === 'string' ? req.query.code : '';
   if (!code || !state) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  // 🛡️ Sentinel: Validate state parameter against stored cookie to prevent CSRF attacks
+  const cookies = parseCookies(req.headers.cookie);
+  const storedState = cookies[OAUTH_COOKIE];
+
+  // Clear the state cookie after reading it to prevent replay attacks
+  res.clearCookie(OAUTH_COOKIE, { httpOnly: true, sameSite: 'none', secure: true });
+
+  if (!storedState || state !== storedState) {
+    redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación' });
     return;
   }
 
