@@ -1,0 +1,3 @@
+## 2024-04-30 - Dynamic ARIA labels for icon-only buttons
+**Learning:** For icon-only buttons that toggle states (like favorites or play/pause), the `aria-label` and `title` must dynamically reflect the action that will happen or the current state (e.g., 'Añadir a favoritos' vs 'Quitar de favoritos'), rather than a static description. Additionally, child icons inside these buttons should be explicitly hidden from screen readers using `aria-hidden="true"` to prevent redundant or confusing announcements.
+**Action:** When adding or reviewing icon-only toggle buttons, always ensure dynamic, localized (Spanish) accessibility attributes are present and decorative children are hidden.
