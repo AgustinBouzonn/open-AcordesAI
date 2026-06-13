@@ -1,0 +1,3 @@
+## 2025-06-13 - [Performance] Optimize Object Serialization in Loop
+**Learning:** `Object.fromEntries(Object.entries({ ... }).filter(([_, v]) => v !== undefined))` is a significant performance bottleneck when used to serialize large arrays of data (e.g., in a `.map` function for an API response). The intermediate array allocations (`Object.entries` creates an array of arrays, `filter` creates another array) cause substantial CPU overhead and garbage collection pressure.
+**Action:** Replace `Object.fromEntries(Object.entries(...).filter(...))` with manual object construction, conditionally assigning properties. Use `if (value != null) result.key = value` to safely handle both `null` and `undefined` without the overhead of intermediate arrays.
