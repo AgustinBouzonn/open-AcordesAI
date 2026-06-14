@@ -85,6 +85,7 @@ router.get('/export', requireAuth, async (req: AuthRequest, res: Response): Prom
   }
 });
 
+// ⚡ Bolt: Use PostgreSQL unnest for bulk inserts to fix N+1 query problem during data import
 router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.userId!;
   const data = req.body;
@@ -95,28 +96,45 @@ router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Pro
   let imported = { favorites: 0, ratings: 0, setlists: 0 };
   try {
     if (Array.isArray(data.favorites)) {
-      for (const songId of data.favorites) {
-        if (typeof songId === 'number' || /^\d+$/.test(String(songId))) {
-          const result = await query(
-            'INSERT INTO favorites (user_id, song_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING song_id',
-            [userId, Number(songId)],
-          );
-          if (result.rows.length) imported.favorites += 1;
-        }
+      // Deduplicate to avoid PostgreSQL ON CONFLICT DO NOTHING issues with duplicate rows
+      const favSongs = [...new Set(data.favorites
+        .map(Number)
+        .filter((id: number) => Number.isInteger(id) && id > 0))];
+
+      if (favSongs.length > 0) {
+        const result = await query(
+          `INSERT INTO favorites (user_id, song_id)
+           SELECT $1, unnest($2::int[])
+           ON CONFLICT DO NOTHING RETURNING song_id`,
+          [userId, favSongs]
+        );
+        imported.favorites = result.rows.length;
       }
     }
+
     if (Array.isArray(data.ratings)) {
-      for (const r of data.ratings) {
+      // Keep only the last valid rating per song to avoid 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+      const validRatingsMap = new Map<number, number>();
+      data.ratings.forEach((r: any) => {
         if (r && typeof r.songId !== 'undefined' && Number.isInteger(r.score) && r.score >= 1 && r.score <= 5) {
-          await query(
-            `INSERT INTO ratings (user_id, song_id, score) VALUES ($1, $2, $3)
-             ON CONFLICT (user_id, song_id) DO UPDATE SET score = EXCLUDED.score`,
-            [userId, Number(r.songId), r.score],
-          );
-          imported.ratings += 1;
+          validRatingsMap.set(Number(r.songId), r.score);
         }
+      });
+
+      if (validRatingsMap.size > 0) {
+        const songIds = Array.from(validRatingsMap.keys());
+        const scores = Array.from(validRatingsMap.values());
+
+        const result = await query(
+          `INSERT INTO ratings (user_id, song_id, score)
+           SELECT $1, unnest($2::int[]), unnest($3::int[])
+           ON CONFLICT (user_id, song_id) DO UPDATE SET score = EXCLUDED.score RETURNING song_id`,
+          [userId, songIds, scores]
+        );
+        imported.ratings = result.rows.length;
       }
     }
+
     if (Array.isArray(data.setlists)) {
       for (const sl of data.setlists) {
         if (!sl || typeof sl.name !== 'string' || !sl.name.trim()) continue;
@@ -126,14 +144,16 @@ router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Pro
         );
         const newId = created.rows[0].id;
         if (Array.isArray(sl.songs)) {
-          for (let i = 0; i < sl.songs.length; i++) {
-            const songId = Number(sl.songs[i]);
-            if (Number.isInteger(songId)) {
-              await query(
-                'INSERT INTO setlist_songs (setlist_id, song_id, position) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
-                [newId, songId, i + 1],
-              );
-            }
+          // Keep deduplication logic strictly aligned with PostgreSQL array structure
+          const songIds = sl.songs.map(Number).filter(Number.isInteger);
+          if (songIds.length > 0) {
+            const positions = songIds.map((_, i) => i + 1);
+            await query(
+              `INSERT INTO setlist_songs (setlist_id, song_id, position)
+               SELECT $1, unnest($2::int[]), unnest($3::int[])
+               ON CONFLICT DO NOTHING`,
+              [newId, songIds, positions]
+            );
           }
         }
         imported.setlists += 1;
