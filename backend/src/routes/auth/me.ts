@@ -106,7 +106,7 @@ router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Pro
           `INSERT INTO favorites (user_id, song_id)
            SELECT $1, unnest($2::int[])
            ON CONFLICT DO NOTHING RETURNING song_id`,
-          [userId, favSongs]
+          [userId, favSongs as number[]]
         );
         imported.favorites = result.rows.length;
       }
@@ -129,7 +129,7 @@ router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Pro
           `INSERT INTO ratings (user_id, song_id, score)
            SELECT $1, unnest($2::int[]), unnest($3::int[])
            ON CONFLICT (user_id, song_id) DO UPDATE SET score = EXCLUDED.score RETURNING song_id`,
-          [userId, songIds, scores]
+          [userId, songIds as number[], scores as number[]]
         );
         imported.ratings = result.rows.length;
       }
@@ -147,12 +147,12 @@ router.post('/import', requireAuth, async (req: AuthRequest, res: Response): Pro
           // Keep deduplication logic strictly aligned with PostgreSQL array structure
           const songIds = sl.songs.map(Number).filter(Number.isInteger);
           if (songIds.length > 0) {
-            const positions = songIds.map((_, i) => i + 1);
+            const positions = songIds.map((_: number, i: number) => i + 1);
             await query(
               `INSERT INTO setlist_songs (setlist_id, song_id, position)
                SELECT $1, unnest($2::int[]), unnest($3::int[])
                ON CONFLICT DO NOTHING`,
-              [newId, songIds, positions]
+              [newId, songIds as number[], positions as number[]]
             );
           }
         }
