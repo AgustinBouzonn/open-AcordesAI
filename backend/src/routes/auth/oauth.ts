@@ -6,6 +6,7 @@ import {
   OAuthProvider,
   buildJwt,
   getOAuthConfig,
+  parseCookies,
   redirectWithAuthResult,
   upsertOAuthUser,
 } from './utils';
@@ -44,6 +45,13 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
   if (!code || !state) {
+    redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  const cookies = parseCookies(req.headers.cookie);
+  const expectedState = cookies[OAUTH_COOKIE];
+  if (!expectedState || state !== expectedState) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
     return;
   }
