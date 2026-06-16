@@ -585,7 +585,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       {loopRange && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-brand text-white text-sm px-4 py-2 rounded-full shadow-xl flex items-center gap-3">
           <Repeat size={14} /> Loop activo
-          <button onClick={() => setLoopRange(null)} className="hover:opacity-80"><X size={14} /></button>
+          <button onClick={() => setLoopRange(null)} className="hover:opacity-80" aria-label="Cancelar loop"><X size={14} /></button>
         </div>
       )}
 
