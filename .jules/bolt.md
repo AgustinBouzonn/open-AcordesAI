@@ -1,0 +1,4 @@
+## 2023-10-24 - Serialization optimization
+
+**Learning:** `Object.fromEntries(Object.entries(...).filter(...))` is a common pattern for stripping `undefined` values, but it creates two intermediate arrays and iterates over the data multiple times. For serializers running on hundreds of rows, this adds significant garbage collection overhead.
+**Action:** When refactoring `Object.fromEntries(Object.entries(...).filter(...))` with manual object construction to optimize serializers, ensure all properties are assigned conditionally. Crucially, if the original code coerced `null` values to `undefined` (e.g., `row.lyrics ?? undefined`), use the loose inequality check `!= null` (instead of strict `!== undefined`) to prevent functional regressions that inadvertently include `null` values in the response.
