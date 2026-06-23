@@ -10,6 +10,8 @@ const AI_API_KEY =
 const AI_MODEL =
   process.env.AI_MODEL ||
   (AI_PROVIDER === 'gemini' ? 'gemini-2.0-flash' : 'gpt-4o-mini');
+import { sanitizeInput } from '../utils/security';
+
 const AI_BASE_URL = process.env.AI_BASE_URL || 'https://api.openai.com/v1';
 
 export interface ChordResult {
@@ -48,7 +50,11 @@ const buildPrompt = (title: string, artist: string, instrument: string): string 
   };
   const instr = instrumentInstructions[instrument] || instrumentInstructions.guitar;
 
-  return `Generate the ${instrument} chord sheet with lyrics for "${title}" by "${artist}".
+  const sanitizedTitle = sanitizeInput(title);
+  const sanitizedArtist = sanitizeInput(artist);
+  const sanitizedInstrument = sanitizeInput(instrument);
+
+  return `Generate the ${sanitizedInstrument} chord sheet with lyrics for """${sanitizedTitle}""" by """${sanitizedArtist}""".
 ${instr}
 Format: chords placed above the corresponding lyrics on separate lines (standard chord sheet format).
 Determine the musical key.
