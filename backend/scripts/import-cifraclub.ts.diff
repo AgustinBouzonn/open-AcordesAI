@@ -1,0 +1,6 @@
+<<<<<<< SEARCH
+import puppeteer from 'puppeteer';
+=======
+// @ts-ignore
+import puppeteer from 'puppeteer';
+>>>>>>> REPLACE
