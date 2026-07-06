@@ -11,16 +11,22 @@ export const OAUTH_COOKIE = 'oauth_state';
 
 export const parseCookies = (cookieHeader?: string): Record<string, string> => {
   if (!cookieHeader) return {};
-  return Object.fromEntries(
-    cookieHeader
-      .split(';')
-      .map((entry) => entry.trim())
-      .filter(Boolean)
-      .map((entry) => {
-        const [key, ...rest] = entry.split('=');
-        return [key, decodeURIComponent(rest.join('='))];
-      })
-  );
+  // ⚡ Bolt: Use manual string parsing and object construction to prevent multiple map/filter array allocations
+  const result: Record<string, string> = {};
+  const pairs = cookieHeader.split(';');
+  for (let i = 0; i < pairs.length; i++) {
+    const entry = pairs[i].trim();
+    if (!entry) continue;
+    const eqIdx = entry.indexOf('=');
+    if (eqIdx === -1) {
+      result[entry] = '';
+    } else {
+      const key = entry.slice(0, eqIdx);
+      const val = entry.slice(eqIdx + 1);
+      result[key] = decodeURIComponent(val);
+    }
+  }
+  return result;
 };
 
 export const getFrontendUrl = (req: Request): string => {
