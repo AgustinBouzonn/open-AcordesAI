@@ -29,45 +29,120 @@ export function transposeChordToken(token: string, steps: number): string {
   return `${prefix ?? ''}${transposeRoot(root, steps)}${normalizedSuffix ?? ''}${transposedBass}${closing ?? ''}`;
 }
 
+// ⚡ Bolt: Use manual string indexing and tokenization to avoid slow array allocations and regex overhead.
 export function isChordLine(line: string): boolean {
-  const tokens = line.trim().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return false;
-  const chordTokens = tokens.filter((token) => {
-    const cleaned = token.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
-    return CHORD_TOKEN.test(cleaned);
-  });
-  return chordTokens.length > 0 && chordTokens.length >= Math.ceil(tokens.length * 0.6);
+  let len = line.length;
+  let p = 0;
+  while (p < len && line.charCodeAt(p) <= 32) p++;
+  if (p === len) return false;
+
+  let totalTokens = 0;
+  let chordTokens = 0;
+
+  while (p < len) {
+    let start = p;
+    while (p < len && line.charCodeAt(p) > 32) p++;
+    if (start < p) {
+      totalTokens++;
+      let tStart = start;
+      let tEnd = p;
+      while (tStart < tEnd && (line.charCodeAt(tStart) === 91 || line.charCodeAt(tStart) === 40)) tStart++;
+      while (tEnd > tStart) {
+        const c = line.charCodeAt(tEnd - 1);
+        if (c === 93 || c === 41 || c === 46 || c === 44 || c === 59 || c === 58 || c === 33 || c === 63) {
+          tEnd--;
+        } else {
+          break;
+        }
+      }
+      if (tStart < tEnd) {
+        if (CHORD_TOKEN.test(line.substring(tStart, tEnd))) {
+          chordTokens++;
+        }
+      }
+    }
+    while (p < len && line.charCodeAt(p) <= 32) p++;
+  }
+  return totalTokens > 0 && chordTokens > 0 && chordTokens >= Math.ceil(totalTokens * 0.6);
 }
 
 export function transposeChords(text: string, steps: number): string {
   if (steps === 0 || !text) return text;
-  return text
-    .split('\n')
-    .map((line) => {
-      const withInlineChords = line.replace(/\[([^[\]]+)\]/g, (fullMatch, token: string) => {
-        return CHORD_TOKEN.test(token) ? `[${transposeChordToken(token, steps)}]` : fullMatch;
-      });
-      if (!isChordLine(withInlineChords)) return withInlineChords;
-      return withInlineChords.replace(
+
+  let result = '';
+  const len = text.length;
+  let startIdx = 0;
+
+  while (startIdx < len) {
+    let nextIdx = text.indexOf('\n', startIdx);
+    if (nextIdx === -1) nextIdx = len;
+
+    let line = text.substring(startIdx, nextIdx);
+    startIdx = nextIdx + 1;
+
+    if (line.indexOf('[') !== -1) {
+       line = line.replace(/\[([^\[\]]+)\]/g, (fullMatch, token) => {
+         return CHORD_TOKEN.test(token) ? `[${transposeChordToken(token, steps)}]` : fullMatch;
+       });
+    }
+
+    if (isChordLine(line)) {
+      line = line.replace(
         /(^|\s)(?:\[|\()?([A-G](?:#|b)?[^\s\]]*(?:\/[A-G](?:#|b)?)?)(?:\]|\))?(?=\s|$)/gi,
         (match, leading) => {
           const candidate = match.slice(leading.length);
-          const cleaned = candidate.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
+          const cleaned = candidate.replace(/^[[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
           return CHORD_TOKEN.test(cleaned) ? `${leading}${transposeChordToken(candidate, steps)}` : match;
-        },
+        }
       );
-    })
-    .join('\n');
+    }
+
+    result += line + (nextIdx === len ? '' : '\n');
+  }
+
+  return result;
 }
 
 export function extractUniqueChords(text: string): string[] {
   if (!text) return [];
   const found = new Set<string>();
-  for (const line of text.split('\n')) {
+  const len = text.length;
+  let startIdx = 0;
+
+  while (startIdx < len) {
+    let nextIdx = text.indexOf('\n', startIdx);
+    if (nextIdx === -1) nextIdx = len;
+
+    const line = text.substring(startIdx, nextIdx);
+    startIdx = nextIdx + 1;
+
     if (!isChordLine(line)) continue;
-    for (const raw of line.split(/\s+/)) {
-      const cleaned = raw.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
-      if (CHORD_TOKEN.test(cleaned)) found.add(cleaned);
+
+    let p = 0;
+    const lineLen = line.length;
+    while (p < lineLen) {
+      while (p < lineLen && line.charCodeAt(p) <= 32) p++;
+      let tStart = p;
+      while (p < lineLen && line.charCodeAt(p) > 32) p++;
+      if (tStart < p) {
+        let tEnd = p;
+        while (tStart < tEnd && (line.charCodeAt(tStart) === 91 || line.charCodeAt(tStart) === 40)) tStart++;
+        while (tEnd > tStart) {
+          const c = line.charCodeAt(tEnd - 1);
+          if (c === 93 || c === 41 || c === 46 || c === 44 || c === 59 || c === 58 || c === 33 || c === 63) {
+            tEnd--;
+          } else {
+            break;
+          }
+        }
+
+        if (tStart < tEnd) {
+          const clean = line.substring(tStart, tEnd);
+          if (CHORD_TOKEN.test(clean)) {
+            found.add(clean);
+          }
+        }
+      }
     }
   }
   return Array.from(found);
