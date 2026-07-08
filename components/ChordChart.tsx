@@ -5,29 +5,22 @@ import { UKULELE_SHAPES } from '../data/ukuleleShapes';
 import { ChordDiagram } from './ChordDiagram';
 import { UkuleleChordDiagram } from './UkuleleChordDiagram';
 import { PianoChordDiagram } from './PianoChordDiagram';
+import { extractUniqueChords } from '../services/chordTransposer';
 
 type Instrument = 'guitar' | 'ukulele' | 'piano';
 
-const CHORD_TOKEN_RE = /\b([A-G](?:#|b)?(?:m(?!aj)|maj|min|dim|aug|sus)?\d*(?:[#b](?:5|9|11|13))*(?:\/[A-G](?:#|b)?)?)\b/g;
 const FLAT_TO_SHARP: Record<string, string> = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' };
 
 function extractChords(text: string): string[] {
-  if (!text) return [];
+  // ⚡ Bolt: Reuse extractUniqueChords to avoid duplicating regex logic and slow array allocations.
+  const uniqueTokens = extractUniqueChords(text);
   const seen = new Set<string>();
   const result: string[] = [];
-  for (const line of text.split('\n')) {
-    const trimmed = line.trim();
-    const tokens = trimmed.split(/\s+/);
-    if (tokens.length === 0) continue;
-    const looksLikeChordLine = tokens.every((t) => /^[\[(]?[A-G](?:#|b)?[^\s]*[\])]?$/.test(t));
-    if (!looksLikeChordLine) continue;
-    for (const m of trimmed.matchAll(CHORD_TOKEN_RE)) {
-      const name = m[1];
-      const base = name.split('/')[0];
-      if (!seen.has(base)) {
-        seen.add(base);
-        result.push(base);
-      }
+  for (const token of uniqueTokens) {
+    const base = token.split('/')[0];
+    if (!seen.has(base)) {
+      seen.add(base);
+      result.push(base);
     }
   }
   return result;
