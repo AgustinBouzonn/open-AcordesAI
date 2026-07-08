@@ -1,0 +1,3 @@
+## 2025-01-20 - Disabled states require explicit context
+**Learning:** In SongViewer, icon-only buttons (like favorite/rate) were visually disabled when `!user` but lacked tooltips explaining *why* they were disabled. This is a common UX pitfall where a user might think a feature is broken rather than gated by authentication. Adding a `title` explaining "Inicia sesión para..." dramatically improves the clarity of the disabled state without needing modals.
+**Action:** Always pair `disabled` attributes on interactive elements with a dynamic `title` tooltip explaining the condition, especially for authentication-gated actions.
