@@ -6,7 +6,8 @@ interface Props {
   width?: number;
 }
 
-export const ChordDiagram: React.FC<Props> = ({ shape, width = 140 }) => {
+// ⚡ Bolt: Memoize SVG to prevent expensive re-renders when parent state changes
+export const ChordDiagram: React.FC<Props> = React.memo(({ shape, width = 140 }) => {
   const numStrings = 6;
   const numFrets = 5;
   const padX = 14;
@@ -70,4 +71,4 @@ export const ChordDiagram: React.FC<Props> = ({ shape, width = 140 }) => {
       })}
     </svg>
   );
-};
+});

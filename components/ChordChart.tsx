@@ -52,7 +52,8 @@ interface Props {
   instrument?: Instrument;
 }
 
-export const ChordChart: React.FC<Props> = ({ chords, instrument = 'guitar' }) => {
+// ⚡ Bolt: Memoize container to prevent recalculations and re-renders when SongViewer state changes
+export const ChordChart: React.FC<Props> = React.memo(({ chords, instrument = 'guitar' }) => {
   const [open, setOpen] = useState(true);
   const detected = useMemo(() => extractChords(chords), [chords]);
 
@@ -90,4 +91,4 @@ export const ChordChart: React.FC<Props> = ({ chords, instrument = 'guitar' }) =
       )}
     </div>
   );
-};
+});
