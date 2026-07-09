@@ -9,7 +9,8 @@ interface Props {
 const WHITE_NOTES = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 const NUM_OCTAVES = 2;
 
-export const PianoChordDiagram: React.FC<Props> = ({ chordName, width = 200 }) => {
+// ⚡ Bolt: Memoize SVG to prevent expensive re-renders when parent state changes
+export const PianoChordDiagram: React.FC<Props> = React.memo(({ chordName, width = 200 }) => {
   const data = chordToMidiNotes(chordName, 4);
   const totalWhite = WHITE_NOTES.length * NUM_OCTAVES;
   const whiteWidth = (width - 4) / totalWhite;
@@ -74,4 +75,4 @@ export const PianoChordDiagram: React.FC<Props> = ({ chordName, width = 200 }) =
       )}
     </svg>
   );
-};
+});
