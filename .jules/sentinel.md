@@ -1,4 +1,4 @@
-## 2026-02-07 - Prompt Injection in AI Services
-**Vulnerability:** User inputs (search queries, song IDs) were directly interpolated into LLM prompts without sanitization or delimitation, allowing potential prompt injection.
-**Learning:** In AI-centric applications, "Prompt Injection" is similar to SQL Injection. Malicious inputs can override system instructions if not properly delimited.
-**Prevention:** Always sanitize inputs to remove control characters and use robust delimiters (like triple quotes) to clearly separate user data from instructions in the prompt.
+## 2024-07-10 - Fix OAuth CSRF missing protection
+**Vulnerability:** The OAuth callback handler `/api/auth/oauth/:provider/callback` did not validate the `state` parameter against the one saved in the user's cookie, exposing the application to Cross-Site Request Forgery (CSRF) login attacks where an attacker could force a user to log in to the attacker's account.
+**Learning:** The state was correctly generated and sent to the OAuth provider, and saved in a cookie (`OAUTH_COOKIE`), but the callback endpoint lacked the crucial verification step of parsing the cookie and comparing it to the query parameter.
+**Prevention:** Always ensure that when implementing OAuth flows, the state parameter returned by the provider is explicitly verified against the securely stored state (e.g., in an HTTP-only cookie) before exchanging the code for a token.
