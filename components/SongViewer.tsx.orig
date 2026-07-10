@@ -371,12 +371,12 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <button aria-label="Compartir" onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition">
             <Share2 size={20} />
           </button>
-          <button aria-label={isFav ? "Quitar de favoritos" : "Añadir a favoritos"} title={!user ? "Inicia sesión para añadir a favoritos" : undefined} onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
+          <button aria-label="Añadir a favoritos" title={!user ? "Inicia sesión para añadir a favoritos" : undefined} onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
           <button aria-label={`Comentarios${comments.length > 0 ? ` (${comments.length})` : ''}`} onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative">
@@ -427,10 +427,10 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
               </>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <select 
-              value={instrument} 
+            <select
+              value={instrument}
                onChange={(e) => setInstrument(e.target.value as Instrument)}
               className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white"
             >
@@ -494,7 +494,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
               <span className="font-medium animate-pulse">Generando cifrado con IA...</span>
             </div>
           )}
-          
+
           {!displayChords && !loadingChords && !editMode && (
             <div className="flex flex-col items-center justify-center h-full">
               <p className="text-gray-400 mb-4">Esta canción no tiene cifrado todavía.</p>
@@ -516,7 +516,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
               </div>
             </div>
           )}
-          
+
           <pre style={{ fontSize: `${fontSize}px`, lineHeight: 1.6 }} className="font-mono whitespace-pre-wrap text-gray-200 overflow-x-auto font-medium">
             {displayChords}
           </pre>
@@ -526,7 +526,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-dark-800 p-4 rounded-xl border border-dark-700">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><MessageSquare size={18} className="text-brand" />Opiniones</h3>
-              
+
               {user ? (
                 <form onSubmit={handleAddComment} className="mb-6">
                   <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="¿Qué te parece este cifrado?" className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none" rows={3} maxLength={500} />
