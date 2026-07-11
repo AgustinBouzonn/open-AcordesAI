@@ -76,13 +76,17 @@ export default function createSongsRouter(): Router {
       const limit = parseInt(req.query.limit as string) || 50;
       const offset = parseInt(req.query.offset as string) || 0;
       const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+      // ⚡ Bolt Optimization: Use LEFT JOIN LATERAL to eliminate N+1 correlated subqueries while
+      // preserving condition pushdown. Consolidates multiple ratings aggregates into a single query.
       const result = await query(
         `SELECT s.*, u.username as author, 
-         (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
+         r.avg_score as rating,
+         COALESCE(r.cnt, 0) as rating_count,
+         COALESCE(cc.cnt, 0) as has_chords
          FROM songs s 
          LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN LATERAL (SELECT AVG(score) as avg_score, COUNT(*) as cnt FROM ratings WHERE song_id = s.id) r ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) as cnt FROM chord_cache WHERE song_id = s.id) cc ON true
          WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
          ORDER BY
            CASE

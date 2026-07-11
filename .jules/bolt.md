@@ -1,0 +1,3 @@
+## 2024-07-11 - Replace Correlated Subqueries with LATERAL Joins
+**Learning:** Standard correlated subqueries in the `SELECT` clause cause N+1 query patterns. However, replacing them with a simple `LEFT JOIN` on a fully aggregated subquery (e.g. `GROUP BY`) can inadvertently disable condition pushdown, forcing the DB to scan and aggregate the *entire* table before joining, which is a regression for highly selective searches.
+**Action:** Use `LEFT JOIN LATERAL` instead of correlated subqueries. This eliminates the N+1 problem and consolidates multiple aggregates (like AVG and COUNT) into a single subquery pass, while still allowing the database to safely push down filter conditions and utilize indexes efficiently for the specific rows being queried.
