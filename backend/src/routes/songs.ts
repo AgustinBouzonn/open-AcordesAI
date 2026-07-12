@@ -50,17 +50,18 @@ export default function createSongsRouter(): Router {
       const limit = parseInt(req.query.limit as string) || 20;
       const result = await query(
         `SELECT s.*, u.username AS author,
-                COALESCE(r.avg_score, 0) AS rating,
+                r.avg_score AS rating,
                 COALESCE(r.cnt, 0)       AS rating_count,
                 COALESCE(f.cnt, 0)       AS fav_count,
                 COALESCE(h.cnt, 0)       AS view_count,
-                cc.cnt                    AS has_chords
+                COALESCE(cc.cnt, 0)      AS has_chords
          FROM songs s
          LEFT JOIN users u ON s.user_id = u.id
-         LEFT JOIN (SELECT song_id, AVG(score) AS avg_score, COUNT(*) AS cnt FROM ratings GROUP BY song_id) r ON r.song_id = s.id
-         LEFT JOIN (SELECT song_id, COUNT(*) AS cnt FROM favorites GROUP BY song_id) f ON f.song_id = s.id
-         LEFT JOIN (SELECT song_id, COUNT(*) AS cnt FROM history GROUP BY song_id) h ON h.song_id = s.id
-         INNER JOIN (SELECT song_id, COUNT(*) AS cnt FROM chord_cache GROUP BY song_id) cc ON cc.song_id = s.id
+         LEFT JOIN LATERAL (SELECT AVG(score) AS avg_score, COUNT(*) AS cnt FROM ratings WHERE song_id = s.id) r ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) AS cnt FROM favorites WHERE song_id = s.id) f ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) AS cnt FROM history WHERE song_id = s.id) h ON true
+         INNER JOIN LATERAL (SELECT COUNT(*) AS cnt FROM chord_cache WHERE song_id = s.id) cc ON true
+         WHERE cc.cnt > 0
          ORDER BY rating_count DESC, fav_count DESC, view_count DESC
          LIMIT $1`,
         [limit]
@@ -78,11 +79,13 @@ export default function createSongsRouter(): Router {
       const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
       const result = await query(
         `SELECT s.*, u.username as author, 
-         (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
+         r.avg_score as rating,
+         COALESCE(r.cnt, 0) as rating_count,
+         COALESCE(cc.cnt, 0) as has_chords
          FROM songs s 
          LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN LATERAL (SELECT AVG(score) AS avg_score, COUNT(*) AS cnt FROM ratings WHERE song_id = s.id) r ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) AS cnt FROM chord_cache WHERE song_id = s.id) cc ON true
          WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
          ORDER BY
            CASE
