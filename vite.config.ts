@@ -116,8 +116,8 @@ export default defineConfig({
           },
         ]
       },
-      devOptions: { enabled: false,
-        enabled: false,
+      devOptions: {
+        enabled: true,
       },
     })
   ],
