@@ -6,6 +6,7 @@ import {
   OAuthProvider,
   buildJwt,
   getOAuthConfig,
+  parseCookies,
   redirectWithAuthResult,
   upsertOAuthUser,
 } from './utils';
@@ -45,6 +46,14 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
   const code = typeof req.query.code === 'string' ? req.query.code : '';
   if (!code || !state) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  // 🛡️ Sentinel: Validate state to prevent CSRF attacks
+  const cookies = parseCookies(req.headers.cookie);
+  const expectedState = cookies[OAUTH_COOKIE];
+  if (!expectedState || expectedState !== state) {
+    redirectWithAuthResult(req, res, { error: 'Estado de OAuth inválido o expirado' });
     return;
   }
 
