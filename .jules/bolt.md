@@ -1,0 +1,3 @@
+## 2024-05-18 - Refactor PostgreSQL N+1 Correlated Subqueries
+**Learning:** The previous implementation used standard correlated subqueries in the `SELECT` clause combined with `LEFT JOIN` on fully aggregated subqueries (e.g., `LEFT JOIN (SELECT song_id, AVG(score) FROM ratings GROUP BY song_id) r`). This resulted in PostgreSQL executing the subqueries per row and performing full table scans for the aggregates, bypassing indexes.
+**Action:** Always prefer `LEFT JOIN LATERAL` when resolving N+1 correlated queries that need to return aggregated data for specific joined rows. `LATERAL` preserves index usage and ensures filter conditions are pushed down to the specific rows being queried, preventing full table scans.
