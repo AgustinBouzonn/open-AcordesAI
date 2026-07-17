@@ -26,6 +26,18 @@ interface Props {
 export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, onSearch, performSearch, popularSongs, onSelectSong, hasUser }) => {
   const [recs, setRecs] = useState<{ source: 'collaborative' | 'popular'; results: Song[] } | null>(null);
 
+  const trendingCards = React.useMemo(() => (
+    TRENDING_SEARCHES.map((term, idx) => (
+      <div key={idx} onClick={() => performSearch(term)} className="group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition"><Music size={20} /></div>
+          <span className="font-medium text-sm text-gray-200">{term}</span>
+        </div>
+        <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" />
+      </div>
+    ))
+  ), [performSearch]);
+
   useEffect(() => {
     if (!hasUser) { setRecs(null); return; }
     api.recommendations.get(8).then(setRecs).catch(() => undefined);
@@ -62,15 +74,7 @@ export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, on
         <span>Tendencias</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {TRENDING_SEARCHES.map((term, idx) => (
-          <div key={idx} onClick={() => performSearch(term)} className="group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition"><Music size={20} /></div>
-              <span className="font-medium text-sm text-gray-200">{term}</span>
-            </div>
-            <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" />
-          </div>
-        ))}
+        {trendingCards}
       </div>
     </div>
 
