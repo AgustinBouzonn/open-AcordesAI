@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { chordToMidiNotes, midiToNoteName } from '../data/chordTheory';
 
 interface Props {
@@ -9,7 +9,8 @@ interface Props {
 const WHITE_NOTES = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 const NUM_OCTAVES = 2;
 
-export const PianoChordDiagram: React.FC<Props> = ({ chordName, width = 200 }) => {
+export const PianoChordDiagram: React.FC<Props> = memo(({ chordName, width = 200 }) => {
+  // ⚡ Bolt Performance Optimization: Memoized diagram to prevent re-renders when parent scroll changes
   const data = chordToMidiNotes(chordName, 4);
   const totalWhite = WHITE_NOTES.length * NUM_OCTAVES;
   const whiteWidth = (width - 4) / totalWhite;
@@ -74,4 +75,4 @@ export const PianoChordDiagram: React.FC<Props> = ({ chordName, width = 200 }) =
       )}
     </svg>
   );
-};
+});

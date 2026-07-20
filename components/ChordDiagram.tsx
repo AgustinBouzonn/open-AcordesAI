@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { ChordShape } from '../data/chordShapes';
 
 interface Props {
@@ -6,7 +6,8 @@ interface Props {
   width?: number;
 }
 
-export const ChordDiagram: React.FC<Props> = ({ shape, width = 140 }) => {
+export const ChordDiagram: React.FC<Props> = memo(({ shape, width = 140 }) => {
+  // ⚡ Bolt Performance Optimization: Memoized diagram to prevent re-renders when parent scroll changes
   const numStrings = 6;
   const numFrets = 5;
   const padX = 14;
@@ -70,4 +71,4 @@ export const ChordDiagram: React.FC<Props> = ({ shape, width = 140 }) => {
       })}
     </svg>
   );
-};
+});
