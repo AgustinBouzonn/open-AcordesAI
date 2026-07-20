@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, memo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { lookupChord } from '../data/chordShapes';
 import { UKULELE_SHAPES } from '../data/ukuleleShapes';
@@ -52,7 +52,8 @@ interface Props {
   instrument?: Instrument;
 }
 
-export const ChordChart: React.FC<Props> = ({ chords, instrument = 'guitar' }) => {
+export const ChordChart: React.FC<Props> = memo(({ chords, instrument = 'guitar' }) => {
+  // ⚡ Bolt Performance Optimization: Memoized ChordChart to prevent unnecessary re-renders when parent SongViewer re-renders due to unrelated state changes (like scroll)
   const [open, setOpen] = useState(true);
   const detected = useMemo(() => extractChords(chords), [chords]);
 
@@ -90,4 +91,4 @@ export const ChordChart: React.FC<Props> = ({ chords, instrument = 'guitar' }) =
       )}
     </div>
   );
-};
+});

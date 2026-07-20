@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Music } from 'lucide-react';
 
 interface ArtworkProps {
@@ -7,7 +7,8 @@ interface ArtworkProps {
   className?: string;
 }
 
-export const Artwork: React.FC<ArtworkProps> = ({ url, size = 48, className = '' }) => {
+export const Artwork: React.FC<ArtworkProps> = memo(({ url, size = 48, className = '' }) => {
+  // ⚡ Bolt Performance Optimization: Memoized Artwork to prevent unnecessary re-renders in lists
   if (url) {
     return (
       <img
@@ -25,4 +26,4 @@ export const Artwork: React.FC<ArtworkProps> = ({ url, size = 48, className = ''
       <Music size={size * 0.45} className="text-brand" />
     </div>
   );
-};
+});
