@@ -6,6 +6,7 @@ import {
   OAuthProvider,
   buildJwt,
   getOAuthConfig,
+  parseCookies,
   redirectWithAuthResult,
   upsertOAuthUser,
 } from './utils';
@@ -43,8 +44,18 @@ router.get('/oauth/:provider/start', authLimiter, async (req: Request, res: Resp
 async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: Response): Promise<void> {
   const state = typeof req.query.state === 'string' ? req.query.state : '';
   const code = typeof req.query.code === 'string' ? req.query.code : '';
+
+  const cookies = parseCookies(req.headers.cookie);
+  const savedState = cookies[OAUTH_COOKIE];
+
   if (!code || !state) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  // 🛡️ Sentinel: Validate OAuth state parameter against cookie to prevent CSRF attacks
+  if (state !== savedState) {
+    redirectWithAuthResult(req, res, { error: 'Estado de OAuth inválido (CSRF)' });
     return;
   }
 
