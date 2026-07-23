@@ -1,0 +1,3 @@
+## 2026-07-23 - PostgreSQL Correlated Subqueries in SELECT vs LEFT JOIN LATERAL
+**Learning:** Correlated subqueries in `SELECT` clauses often cause N+1 query overhead by executing once per row. Using standard fully-aggregated `LEFT JOIN` on a subquery (e.g., `LEFT JOIN (SELECT song_id, AVG(...) ...)`) performs a full table scan of the joined table and aggregates everything before joining, which is catastrophic for large tables.
+**Action:** Always resolve PostgreSQL N+1 correlated subqueries in `SELECT` clauses using `LEFT JOIN LATERAL`. `LATERAL` preserves index usage and filter condition pushdown for the specific rows queried, significantly reducing overhead without causing a full table scan.
