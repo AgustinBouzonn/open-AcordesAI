@@ -40,6 +40,11 @@ const extractJson = (raw: string): string => {
   return trimmed;
 };
 
+// 🛡️ Sentinel: Sanitized and delimited user inputs to prevent prompt injection.
+const sanitizeForPrompt = (text: string, max = 100): string => {
+  return text.replace(/[\x00-\x1F\x7F-\x9F"']/g, '').slice(0, max).trim();
+};
+
 const buildPrompt = (title: string, artist: string, instrument: string): string => {
   const instrumentInstructions: Record<string, string> = {
     guitar: 'Standard Guitar chords (e.g. G, Am, C, D).',
@@ -48,7 +53,10 @@ const buildPrompt = (title: string, artist: string, instrument: string): string 
   };
   const instr = instrumentInstructions[instrument] || instrumentInstructions.guitar;
 
-  return `Generate the ${instrument} chord sheet with lyrics for "${title}" by "${artist}".
+  const safeTitle = sanitizeForPrompt(title);
+  const safeArtist = sanitizeForPrompt(artist);
+
+  return `Generate the ${instrument} chord sheet with lyrics for """${safeTitle}""" by """${safeArtist}""".
 ${instr}
 Format: chords placed above the corresponding lyrics on separate lines (standard chord sheet format).
 Determine the musical key.
