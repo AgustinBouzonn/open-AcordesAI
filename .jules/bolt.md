@@ -1,0 +1,3 @@
+## 2024-11-20 - Optimize N+1 Subqueries in PostgreSQL with LATERAL Joins
+**Learning:** Using `LEFT JOIN LATERAL` rather than a standard `LEFT JOIN` on a fully aggregated subquery prevents full table scans while preserving index usage and filter condition pushdown for the specific rows queried, significantly improving query performance.
+**Action:** Always use `LEFT JOIN LATERAL` instead of correlated subqueries or `LEFT JOIN` on full aggregates in `SELECT` clauses when querying specific subsets of data.
