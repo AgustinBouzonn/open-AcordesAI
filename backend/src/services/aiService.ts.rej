@@ -1,0 +1,22 @@
+--- aiService.ts
++++ aiService.ts
+@@ -41,14 +41,18 @@
+   return trimmed;
+ };
+
+ const buildPrompt = (title: string, artist: string, instrument: string): string => {
++  // 🛡️ Sentinel: Sanitize user input to prevent prompt injection and use delimiters
++  const sanitizedTitle = title.replace(/"""/g, "'''").replace(/\n/g, ' ');
++  const sanitizedArtist = artist.replace(/"""/g, "'''").replace(/\n/g, ' ');
++
+   const instrumentInstructions: Record<string, string> = {
+     guitar: 'Standard Guitar chords (e.g. G, Am, C, D).',
+     ukulele: 'Ukulele chords in standard GCEA tuning.',
+     piano: 'Piano/Keyboard chords, include bass note where appropriate (e.g. C/G).',
+   };
+   const instr = instrumentInstructions[instrument] || instrumentInstructions.guitar;
+
+-  return `Generate the ${instrument} chord sheet with lyrics for "${title}" by "${artist}".
++  return \`Generate the \${instrument} chord sheet with lyrics for the song title """\${sanitizedTitle}""" by the artist """\${sanitizedArtist}""".
+ \${instr}
+ Format: chords placed above the corresponding lyrics on separate lines (standard chord sheet format).
