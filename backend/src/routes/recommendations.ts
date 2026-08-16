@@ -29,7 +29,8 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
        JOIN favorites f ON f.user_id = n.user_id
        JOIN songs s ON s.id = f.song_id
        LEFT JOIN users u ON u.id = s.user_id
-       LEFT JOIN (SELECT song_id, COUNT(*) AS cnt FROM chord_cache GROUP BY song_id) cc ON cc.song_id = s.id
+       -- ⚡ Bolt Performance Optimization: Replaced full table aggregation joins with LEFT JOIN LATERAL
+       LEFT JOIN LATERAL (SELECT COUNT(*) AS cnt FROM chord_cache WHERE song_id = s.id) cc ON true
        WHERE s.id NOT IN (SELECT song_id FROM my_favs)
          AND s.id NOT IN (SELECT song_id FROM history WHERE user_id = $1)
        GROUP BY s.id, u.username, cc.cnt
@@ -50,9 +51,10 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
               COALESCE(cc.cnt, 0)::int AS has_chords
        FROM songs s
        LEFT JOIN users u ON u.id = s.user_id
-       LEFT JOIN (SELECT song_id, AVG(score) AS avg FROM ratings GROUP BY song_id) r ON r.song_id = s.id
-       LEFT JOIN (SELECT song_id, COUNT(*) AS cnt FROM favorites GROUP BY song_id) f ON f.song_id = s.id
-       INNER JOIN (SELECT song_id, COUNT(*) AS cnt FROM chord_cache GROUP BY song_id) cc ON cc.song_id = s.id
+       -- ⚡ Bolt Performance Optimization: Replaced full table aggregation joins with LEFT JOIN LATERAL
+       LEFT JOIN LATERAL (SELECT AVG(score) AS avg FROM ratings WHERE song_id = s.id) r ON true
+       LEFT JOIN LATERAL (SELECT COUNT(*) AS cnt FROM favorites WHERE song_id = s.id) f ON true
+       INNER JOIN LATERAL (SELECT COUNT(*) AS cnt FROM chord_cache WHERE song_id = s.id) cc ON cc.cnt > 0
        WHERE s.id NOT IN (SELECT song_id FROM favorites WHERE user_id = $1)
        ORDER BY fav_count DESC, rating DESC, s.created_at DESC
        LIMIT $2`,

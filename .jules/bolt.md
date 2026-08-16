@@ -1,0 +1,1 @@
+## 2024-03-24 - N+1 correlated subqueries in songs.ts\n**Learning:** Correlated subqueries in SELECT clauses (like `(SELECT COUNT(*) FROM ratings WHERE song_id = s.id)`) are executed for every row, leading to N+1 performance issues.\n**Action:** Use `LEFT JOIN LATERAL` instead to fetch these aggregates, as it preserves index usage and filter pushdown.
