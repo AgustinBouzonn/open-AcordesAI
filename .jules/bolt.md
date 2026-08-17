@@ -1,0 +1,3 @@
+## 2024-08-17 - Optimize Correlated Subqueries with LATERAL Joins
+**Learning:** In PostgreSQL, using correlated subqueries directly in the `SELECT` clause (or trying to fix them with full `LEFT JOIN` aggregations) can cause N+1 execution plans or full table scans. Using `LEFT JOIN LATERAL` preserves index usage and pushes down filter conditions for the specific rows being queried.
+**Action:** When seeing `(SELECT COUNT(*) FROM x WHERE id = outer.id)` in a SELECT clause, refactor to use `LEFT JOIN LATERAL (SELECT COUNT(*) FROM x WHERE id = outer.id) ON true`.
