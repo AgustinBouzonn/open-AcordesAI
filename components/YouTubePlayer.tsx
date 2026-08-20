@@ -98,8 +98,8 @@ export const YouTubePlayer: React.FC<Props> = ({ songId, initialUrl, canEdit, on
             placeholder="https://www.youtube.com/watch?v=..."
             className="flex-1 bg-dark-900 border border-dark-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-brand"
           />
-          <button onClick={save} disabled={saving || !draft.trim()} className="bg-brand hover:bg-brand/90 text-white px-3 rounded disabled:opacity-50"><Check size={16} /></button>
-          {videoId && <button onClick={() => { setEditing(false); setDraft(''); }} className="bg-dark-700 hover:bg-dark-600 text-gray-300 px-3 rounded"><X size={16} /></button>}
+          <button onClick={save} disabled={saving || !draft.trim()} className="bg-brand hover:bg-brand/90 text-white px-3 rounded disabled:opacity-50" aria-label="Guardar URL" title="Guardar URL"><Check size={16} /></button>
+          {videoId && <button onClick={() => { setEditing(false); setDraft(''); }} className="bg-dark-700 hover:bg-dark-600 text-gray-300 px-3 rounded" aria-label="Cancelar" title="Cancelar"><X size={16} /></button>}
         </div>
       )}
     </div>
