@@ -48,6 +48,7 @@ export default function createSongsRouter(): Router {
   router.get('/popular', async (req: Request, res: Response) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
+      // ⚡ Bolt Performance Optimization: using LATERAL JOINs avoids scanning the entire ratings/favorites/history/chord_cache tables and aggregating them before joining
       const result = await query(
         `SELECT s.*, u.username AS author,
                 COALESCE(r.avg_score, 0) AS rating,
@@ -57,10 +58,10 @@ export default function createSongsRouter(): Router {
                 cc.cnt                    AS has_chords
          FROM songs s
          LEFT JOIN users u ON s.user_id = u.id
-         LEFT JOIN (SELECT song_id, AVG(score) AS avg_score, COUNT(*) AS cnt FROM ratings GROUP BY song_id) r ON r.song_id = s.id
-         LEFT JOIN (SELECT song_id, COUNT(*) AS cnt FROM favorites GROUP BY song_id) f ON f.song_id = s.id
-         LEFT JOIN (SELECT song_id, COUNT(*) AS cnt FROM history GROUP BY song_id) h ON h.song_id = s.id
-         INNER JOIN (SELECT song_id, COUNT(*) AS cnt FROM chord_cache GROUP BY song_id) cc ON cc.song_id = s.id
+         LEFT JOIN LATERAL (SELECT AVG(score) AS avg_score, COUNT(*) AS cnt FROM ratings WHERE song_id = s.id) r ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) AS cnt FROM favorites WHERE song_id = s.id) f ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) AS cnt FROM history WHERE song_id = s.id) h ON true
+         INNER JOIN LATERAL (SELECT COUNT(*) AS cnt FROM chord_cache WHERE song_id = s.id) cc ON cc.cnt > 0
          ORDER BY rating_count DESC, fav_count DESC, view_count DESC
          LIMIT $1`,
         [limit]
@@ -76,13 +77,16 @@ export default function createSongsRouter(): Router {
       const limit = parseInt(req.query.limit as string) || 50;
       const offset = parseInt(req.query.offset as string) || 0;
       const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+      // ⚡ Bolt Performance Optimization: using LATERAL JOINs avoids scanning the entire ratings and chord_cache tables and aggregating them before joining
       const result = await query(
         `SELECT s.*, u.username as author, 
-         (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
+         r.rating,
+         r.rating_count,
+         cc.has_chords
          FROM songs s 
          LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN LATERAL (SELECT AVG(score) as rating, COUNT(*) as rating_count FROM ratings WHERE song_id = s.id) r ON true
+         LEFT JOIN LATERAL (SELECT COUNT(*) as has_chords FROM chord_cache WHERE song_id = s.id) cc ON true
          WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
          ORDER BY
            CASE
