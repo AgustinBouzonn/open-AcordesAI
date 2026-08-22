@@ -8,6 +8,7 @@ import {
   getOAuthConfig,
   redirectWithAuthResult,
   upsertOAuthUser,
+  parseCookies,
 } from './utils';
 
 const router = Router();
@@ -45,6 +46,15 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
   const code = typeof req.query.code === 'string' ? req.query.code : '';
   if (!code || !state) {
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
+    return;
+  }
+
+  // 🛡️ Sentinel: Prevent OAuth Login CSRF by validating the state parameter against the cookie
+  const cookies = parseCookies(req.headers.cookie);
+  const savedState = cookies[OAUTH_COOKIE];
+
+  if (!savedState || state !== savedState) {
+    redirectWithAuthResult(req, res, { error: 'Error de validación de seguridad (CSRF) en la autenticación' });
     return;
   }
 
