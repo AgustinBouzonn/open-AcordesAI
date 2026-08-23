@@ -1,0 +1,3 @@
+## 2024-03-24 - PostgreSQL LATERAL joins for correlated N+1 aggregations
+**Learning:** Using multiple correlated subqueries in the SELECT clause (e.g. `(SELECT AVG(score)...), (SELECT COUNT(*)...) FROM ratings`) causes multiple index scans per row. We can consolidate them into a single pass using `LEFT JOIN LATERAL (SELECT AVG(score) as rating, COUNT(*) as rating_count FROM ratings WHERE song_id = s.id) r ON true`, which preserves the pushdown optimization and allows the outer `LIMIT` to apply before calculating rows that will be discarded.
+**Action:** Always prefer `LEFT JOIN LATERAL` when extracting multiple aggregates from the same related table in a limited or paginated query.
