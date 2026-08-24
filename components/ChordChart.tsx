@@ -9,6 +9,7 @@ import { PianoChordDiagram } from './PianoChordDiagram';
 type Instrument = 'guitar' | 'ukulele' | 'piano';
 
 const CHORD_TOKEN_RE = /\b([A-G](?:#|b)?(?:m(?!aj)|maj|min|dim|aug|sus)?\d*(?:[#b](?:5|9|11|13))*(?:\/[A-G](?:#|b)?)?)\b/g;
+const CHORD_LINE_RE = /^(?:[\[(]?[A-G](?:#|b)?[^\s]*[\])]?(?:\s+|$))+$/;
 const FLAT_TO_SHARP: Record<string, string> = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' };
 
 function extractChords(text: string): string[] {
@@ -17,13 +18,12 @@ function extractChords(text: string): string[] {
   const result: string[] = [];
   for (const line of text.split('\n')) {
     const trimmed = line.trim();
-    const tokens = trimmed.split(/\s+/);
-    if (tokens.length === 0) continue;
-    const looksLikeChordLine = tokens.every((t) => /^[\[(]?[A-G](?:#|b)?[^\s]*[\])]?$/.test(t));
-    if (!looksLikeChordLine) continue;
+    if (!trimmed) continue;
+    // ⚡ Bolt Performance Optimization: Use a single regex test instead of string splitting array allocations
+    if (!CHORD_LINE_RE.test(trimmed)) continue;
     for (const m of trimmed.matchAll(CHORD_TOKEN_RE)) {
       const name = m[1];
-      const base = name.split('/')[0];
+      const base = name.includes('/') ? name.split('/')[0] : name;
       if (!seen.has(base)) {
         seen.add(base);
         result.push(base);
