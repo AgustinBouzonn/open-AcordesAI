@@ -98,8 +98,8 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       `SELECT s.id, s.name, s.created_at, s.updated_at,
               COALESCE(c.cnt, 0)::int AS song_count
        FROM setlists s
-       LEFT JOIN (SELECT setlist_id, COUNT(*) AS cnt FROM setlist_songs GROUP BY setlist_id) c
-              ON c.setlist_id = s.id
+       -- ⚡ Bolt Performance Optimization: Replaced N+1 correlated subqueries in SELECT with LEFT JOIN LATERAL to combine index scans on the same tables and preserve filter pushdown.
+       LEFT JOIN LATERAL (SELECT COUNT(*) AS cnt FROM setlist_songs WHERE setlist_id = s.id) c ON true
        WHERE s.user_id = $1
        ORDER BY s.updated_at DESC`,
       [req.userId!],

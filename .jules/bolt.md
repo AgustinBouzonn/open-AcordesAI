@@ -1,0 +1,3 @@
+## 2023-10-27 - Optimizing correlated subqueries in PostgreSQL
+**Learning:** Correlated subqueries in the SELECT clause (e.g. `(SELECT COUNT(*) FROM child WHERE parent_id = parent.id)`) can cause an N+1 problem at the database level where the subquery is executed for every row returned.
+**Action:** Replaced these subqueries with `LEFT JOIN LATERAL` where possible. This preserves index usage and allows Postgres to optimize the query plan by pushing down filters. Note that for `JOIN (SELECT ... GROUP BY song_id)` cases on the entire table, replacing them with `LATERAL` joins limits the grouping to only the rows matched in the main query, significantly speeding up queries that return a subset of rows (e.g. paginated results).
