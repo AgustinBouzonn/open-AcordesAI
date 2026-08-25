@@ -51,7 +51,7 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
 
   const cookies = parseCookies(req.headers.cookie);
   // 🛡️ Sentinel: Validate state parameter against the stored OAUTH_COOKIE to prevent CSRF attacks.
-  if (!state || !cookies[OAUTH_COOKIE] || state !== cookies[OAUTH_COOKIE]) {
+  if (state !== cookies[OAUTH_COOKIE]) {
     redirectWithAuthResult(req, res, { error: 'El estado de la autenticación no es válido (posible CSRF)' });
     return;
   }
