@@ -8,6 +8,7 @@ import {
   getOAuthConfig,
   redirectWithAuthResult,
   upsertOAuthUser,
+  parseCookies,
 } from './utils';
 
 const router = Router();
@@ -47,6 +48,15 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
     redirectWithAuthResult(req, res, { error: 'No se pudo completar la autenticación social' });
     return;
   }
+
+  // 🛡️ Sentinel: Validate OAuth CSRF state to prevent cross-site request forgery attacks
+  const cookies = parseCookies(req.headers.cookie);
+  if (!state || !cookies[OAUTH_COOKIE] || state !== cookies[OAUTH_COOKIE]) {
+    res.clearCookie(OAUTH_COOKIE, { httpOnly: true, sameSite: 'none', secure: true });
+    redirectWithAuthResult(req, res, { error: 'Fallo de seguridad: estado CSRF inválido' });
+    return;
+  }
+  res.clearCookie(OAUTH_COOKIE, { httpOnly: true, sameSite: 'none', secure: true });
 
   try {
     const config = getOAuthConfig(provider, req);
