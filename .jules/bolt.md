@@ -1,0 +1,3 @@
+## 2024-08-27 - Optimize PostgreSQL aggregate subqueries to use LATERAL joins
+**Learning:** In endpoints like GET / (search) and GET /setlists, the queries previously used multiple correlated subqueries in the SELECT clause (causing redundant index scans) and unconstrained derived tables like `LEFT JOIN (SELECT ... GROUP BY)` against a filtered driving table (causing full table aggregation).
+**Action:** Use `LEFT JOIN LATERAL` to execute correlated aggregates specifically for the filtered rows to preserve early limits and pushdown conditions. Do not use LATERAL when the outer query has a LIMIT with an ORDER BY dependent on the aggregate itself.
