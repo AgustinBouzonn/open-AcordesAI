@@ -1,0 +1,3 @@
+## 2024-03-24 - Accessibility for Icon Buttons with Badges
+**Learning:** When adding aria-label to an icon button that contains a visible dynamic badge (like a comment count), the aria-label completely overrides the inner content for screen readers. The count must be dynamically injected into the aria-label itself, and the visual badge must be explicitly hidden from screen readers using aria-hidden="true" to prevent redundant or confusing readout.
+**Action:** Always verify if an icon button contains dynamic visual indicators (like badges or dots) before applying a static aria-label. Incorporate the dynamic data into the label and hide the visual element.
