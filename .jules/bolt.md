@@ -1,0 +1,3 @@
+## 2025-02-23 - Replaced N+1 subqueries in SELECT with LEFT JOIN LATERAL
+**Learning:** Correlated subqueries inside the SELECT clause (like `(SELECT AVG(score) FROM ratings WHERE song_id = s.id)`) trigger an N+1 execution pattern that cannot effectively use index pushdown if the result set is large or involves multiple aggregates. This degrades performance significantly when sorting by these aggregates on large tables without strict limits.
+**Action:** Replaced these subqueries with `LEFT JOIN LATERAL` against grouped subqueries that filter by `song_id`. This allows Postgres to use index lookups on the target tables (e.g. `ratings` or `chord_cache`) and only compute aggregates for rows that match the driving query, preserving index usage and early limits.

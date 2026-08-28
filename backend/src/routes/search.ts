@@ -17,11 +17,14 @@ router.get('/local', async (req: Request, res: Response) => {
     const result = await query(
       `SELECT s.*,
               u.username as author,
-              (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
-              (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-              (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
+              r.rating,
+              r.rating_count,
+              cc.has_chords
        FROM songs s
        LEFT JOIN users u ON s.user_id = u.id
+       /* ⚡ Bolt Performance Optimization: Replace N+1 correlated subqueries in SELECT with LEFT JOIN LATERAL to preserve index pushdown and avoid full-table scans. */
+       LEFT JOIN LATERAL (SELECT AVG(score) AS rating, COUNT(*) AS rating_count FROM ratings WHERE song_id = s.id) r ON true
+       LEFT JOIN LATERAL (SELECT COUNT(*) AS has_chords FROM chord_cache WHERE song_id = s.id) cc ON true
        WHERE s.title ILIKE $1 OR s.artist ILIKE $1
        ORDER BY
          CASE
