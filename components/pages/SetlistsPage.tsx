@@ -133,8 +133,8 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
             placeholder="Nombre de la setlist"
             className="flex-1 bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand"
           />
-          <button onClick={create} className="bg-brand hover:bg-brand/90 text-white px-4 rounded-lg"><Check size={16} /></button>
-          <button onClick={() => { setCreating(false); setNewName(''); }} className="bg-dark-700 hover:bg-dark-600 text-gray-300 px-4 rounded-lg"><X size={16} /></button>
+          <button aria-label="Crear setlist" title="Crear setlist" onClick={create} className="bg-brand hover:bg-brand/90 text-white px-4 rounded-lg"><Check size={16} /></button>
+          <button aria-label="Cancelar" title="Cancelar" onClick={() => { setCreating(false); setNewName(''); }} className="bg-dark-700 hover:bg-dark-600 text-gray-300 px-4 rounded-lg"><X size={16} /></button>
         </div>
       )}
 
@@ -163,8 +163,8 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
                 )}
                 {renamingId === sl.id ? (
                   <>
-                    <button onClick={() => void submitRename(sl.id)} className="p-2 text-emerald-400 hover:text-emerald-300"><Check size={16} /></button>
-                    <button onClick={() => setRenamingId(null)} className="p-2 text-gray-400 hover:text-white"><X size={16} /></button>
+                    <button aria-label="Guardar nombre" title="Guardar nombre" onClick={() => void submitRename(sl.id)} className="p-2 text-emerald-400 hover:text-emerald-300"><Check size={16} /></button>
+                    <button aria-label="Cancelar" title="Cancelar" onClick={() => setRenamingId(null)} className="p-2 text-gray-400 hover:text-white"><X size={16} /></button>
                   </>
                 ) : (
                   <>
@@ -219,9 +219,9 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
                         <div className="text-sm font-medium text-white truncate">{song.title}</div>
                         <div className="text-xs text-gray-400 truncate">{song.artist}</div>
                       </button>
-                      <button onClick={() => void move(idx, -1)} disabled={idx === 0} className="p-1 text-gray-500 hover:text-white disabled:opacity-30"><ChevronUp size={14} /></button>
-                      <button onClick={() => void move(idx, 1)} disabled={idx === detail.songs.length - 1} className="p-1 text-gray-500 hover:text-white disabled:opacity-30"><ChevronDown size={14} /></button>
-                      <button onClick={() => void removeSong(sl.id, song.id)} className="p-1 text-gray-500 hover:text-red-400"><Trash2 size={14} /></button>
+                      <button aria-label="Mover arriba" title="Mover arriba" onClick={() => void move(idx, -1)} disabled={idx === 0} className="p-1 text-gray-500 hover:text-white disabled:opacity-30"><ChevronUp size={14} /></button>
+                      <button aria-label="Mover abajo" title="Mover abajo" onClick={() => void move(idx, 1)} disabled={idx === detail.songs.length - 1} className="p-1 text-gray-500 hover:text-white disabled:opacity-30"><ChevronDown size={14} /></button>
+                      <button aria-label="Eliminar canción" title="Eliminar canción" onClick={() => void removeSong(sl.id, song.id)} className="p-1 text-gray-500 hover:text-red-400"><Trash2 size={14} /></button>
                     </div>
                   ))}
                 </div>
