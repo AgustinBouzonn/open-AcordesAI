@@ -1,0 +1,3 @@
+## 2024-05-24 - PostgreSQL LATERAL Join Refactoring for Aggregates
+**Learning:** In this codebase, N+1 correlated subqueries in SELECT clauses (like fetching `rating` and `rating_count` from `ratings`) are common. While refactoring them into a single `LEFT JOIN LATERAL` consolidates index lookups and speeds up queries, it must be avoided if the outer query uses an `ORDER BY` dependent on those aggregates alongside a `LIMIT` (e.g., in `/songs/popular`), as it prevents early limits and causes nested loop performance regressions.
+**Action:** Consolidate multiple aggregates on the same table into a single `LEFT JOIN LATERAL` subquery when the `ORDER BY` does not depend on them.
