@@ -77,34 +77,46 @@ export default function createSongsRouter(): Router {
       const offset = parseInt(req.query.offset as string) || 0;
       const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
       const result = await query(
-        `SELECT s.*, u.username as author, 
-         (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
-         FROM songs s 
-         LEFT JOIN users u ON s.user_id = u.id
-         WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
-         ORDER BY
-           CASE
-             WHEN $1 = '' THEN 0
-             WHEN LOWER(s.title) = LOWER($1) THEN 0
-             WHEN LOWER(s.title) LIKE LOWER($1) || '%' THEN 1
-             WHEN LOWER(s.artist) = LOWER($1) THEN 2
-             WHEN LOWER(s.artist) LIKE LOWER($1) || '%' THEN 3
-             WHEN s.title ILIKE '%' || $1 || '%' THEN 4
-             WHEN s.artist ILIKE '%' || $1 || '%' THEN 5
-             ELSE 6
-           END,
-           CASE
-             WHEN s.title ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.title))
-             ELSE 999999
-           END,
-           CASE
-             WHEN s.artist ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.artist))
-             ELSE 999999
-           END,
-           s.created_at DESC
-         LIMIT $2 OFFSET $3`,
+        `SELECT ps.*,
+         r.rating,
+         COALESCE(r.rating_count, 0) as rating_count,
+         COALESCE(cc.has_chords, 0) as has_chords
+         FROM (
+           SELECT s.*, u.username as author
+           FROM songs s
+           LEFT JOIN users u ON s.user_id = u.id
+           WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
+           ORDER BY
+             CASE
+               WHEN $1 = '' THEN 0
+               WHEN LOWER(s.title) = LOWER($1) THEN 0
+               WHEN LOWER(s.title) LIKE LOWER($1) || '%' THEN 1
+               WHEN LOWER(s.artist) = LOWER($1) THEN 2
+               WHEN LOWER(s.artist) LIKE LOWER($1) || '%' THEN 3
+               WHEN s.title ILIKE '%' || $1 || '%' THEN 4
+               WHEN s.artist ILIKE '%' || $1 || '%' THEN 5
+               ELSE 6
+             END,
+             CASE
+               WHEN s.title ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.title))
+               ELSE 999999
+             END,
+             CASE
+               WHEN s.artist ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.artist))
+               ELSE 999999
+             END,
+             s.created_at DESC
+           LIMIT $2 OFFSET $3
+         ) ps
+         -- ⚡ Bolt: Using LEFT JOIN LATERAL on paginated results to combine rating aggregates into a single pass and resolve N+1 SELECTs efficiently without causing full-table nested loops.
+         LEFT JOIN LATERAL (
+           SELECT AVG(score) as rating, COUNT(*) as rating_count
+           FROM ratings WHERE song_id = ps.id
+         ) r ON true
+         LEFT JOIN LATERAL (
+           SELECT COUNT(*) as has_chords
+           FROM chord_cache WHERE song_id = ps.id
+         ) cc ON true`,
         [q, limit, offset]
       );
       res.json(result.rows.map(serializeSong));
