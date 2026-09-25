@@ -48,7 +48,7 @@ describe('song routes', () => {
       rating: '4.5',
       hasChords: 1,
     }]);
-    expect(mockedQuery).toHaveBeenCalledWith(expect.stringContaining("WHEN LOWER(s.title) LIKE LOWER($1) || '%' THEN 1"), ['wonder', 50, 0]);
+    expect(mockedQuery).toHaveBeenCalledWith(expect.stringContaining("WHEN LOWER(title) LIKE LOWER($1) || '%' THEN 1"), ['wonder', 50, 0]);
   });
 
   it('returns cached chords for the requested instrument without calling AI', async () => {
