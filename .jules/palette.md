@@ -1,0 +1,3 @@
+## 2025-02-27 - Icon-Only Button Accessibility in SongViewer
+**Learning:** Icon-only buttons (like Share, Favorite, Comments) in complex components (like `SongViewer.tsx`) frequently lack `aria-label` and `title` attributes, hindering both screen reader compatibility and mouse hover discoverability. Badges displaying counts inside these buttons create redundant noise for screen readers.
+**Action:** Always add localized `aria-label` and `title` properties to icon-only buttons, dynamically updating them based on active states (e.g., if favorited, or including comment counts). Apply `aria-hidden="true"` to inner numeric badges so screen readers read the full context from the parent button's label instead of reading the badge independently.
