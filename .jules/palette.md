@@ -1,0 +1,3 @@
+## 2024-05-18 - Tooltips en botones sin texto
+**Learning:** Los botones que solo contienen iconos (como los de confirmar/cancelar o borrar de listas) carecen de contexto para lectores de pantalla y usuarios de ratón si no se les proporciona `aria-label` y `title`. En este proyecto, que utiliza íconos de Lucide repetidamente en modales y listas de setlists, la ausencia de etiquetas reduce la intuición.
+**Action:** Al añadir botones que solo tienen iconos a componentes interactivos, asegurarse siempre de incluir explícitamente `aria-label` y `title` para garantizar el soporte de lectores de pantalla y mejorar la usabilidad visual.
