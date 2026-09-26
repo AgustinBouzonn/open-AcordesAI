@@ -1,0 +1,3 @@
+## 2024-05-18 - Resolving N+1 correlated subqueries with LATERAL JOIN on paginated endpoints
+**Learning:** Using standard LEFT JOIN on paginated endpoints can evaluate joins for every matched row before sorting and limiting, causing huge performance regressions. Correlated subqueries in the SELECT clause also cause N+1 index lookups.
+**Action:** Isolate the base query (with WHERE, ORDER BY, and LIMIT clauses) into a subquery first, then apply LEFT JOIN LATERAL to those paginated results to fetch aggregates. Ensure multiple aggregates on the same table are grouped into a single LATERAL query when possible, and avoid wrapping LATERAL outputs in COALESCE to prevent functional regressions if the API expects NULL.
