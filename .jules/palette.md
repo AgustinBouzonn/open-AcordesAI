@@ -1,0 +1,3 @@
+## 2024-03-13 - Add accessibility labels to SongViewer icon buttons
+**Learning:** Icon-only buttons (like Share, Favorite, Comments) are completely inaccessible to screen reader users and lack tooltips for sighted users without explicit `aria-label` and `title` attributes. When a button also contains a dynamic visual counter (like the comments badge), the entire text is overridden by the `aria-label`. The counter must be dynamically included in the label string itself while applying `aria-hidden="true"` to the badge element to prevent redundant reading.
+**Action:** When creating icon-only buttons, always supply Spanish localized `aria-label` and `title` attributes. If the button has badges, merge their data into the aria-label and hide the badge from screen readers.
