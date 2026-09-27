@@ -1,0 +1,3 @@
+## 2026-09-27 - Subquery Optimization with LATERAL joins
+**Learning:** Using correlated subqueries in the SELECT clause executes the subquery for every matching row before LIMIT is applied, leading to performance degradation. Grouping aggregates (e.g. AVG, COUNT) directly causes multiple index scans. Applying LATERAL joins before limits does the same.
+**Action:** Isolate the base query with LIMIT into a WITH or subquery block first, then use LEFT JOIN LATERAL on that paginated result set to compute aggregates. Combine multiple aggregate columns targeting the same table into a single LATERAL query.
