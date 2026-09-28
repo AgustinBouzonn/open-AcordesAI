@@ -373,15 +373,15 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         </div>
         
         <div className="flex items-center gap-3">
-          <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition">
-            <Share2 size={20} />
+          <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition" title="Compartir canción" aria-label="Compartir canción">
+            <Share2 size={20} aria-hidden="true" />
           </button>
-          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
-            <Heart size={20} fill={isFav ? "currentColor" : "none"} />
+          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`} title={!user ? "Iniciá sesión para guardar favoritos" : isFav ? "Quitar de favoritos" : "Agregar a favoritos"} aria-label={isFav ? "Quitar de favoritos" : "Agregar a favoritos"}>
+            <Heart size={20} fill={isFav ? "currentColor" : "none"} aria-hidden="true" />
           </button>
-          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative">
-            <MessageSquare size={20} />
-            {comments.length > 0 && <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
+          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative" title={showComments ? "Ocultar comentarios" : "Ver comentarios"} aria-label={"Comentarios (" + comments.length + ")"}>
+            <MessageSquare size={20} aria-hidden="true" />
+            {comments.length > 0 && <span aria-hidden="true" className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
           </button>
         </div>
       </div>
@@ -584,8 +584,8 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
 
       {loopRange && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-brand text-white text-sm px-4 py-2 rounded-full shadow-xl flex items-center gap-3">
-          <Repeat size={14} /> Loop activo
-          <button onClick={() => setLoopRange(null)} className="hover:opacity-80"><X size={14} /></button>
+          <Repeat size={14} aria-hidden="true" /> Loop activo
+          <button onClick={() => setLoopRange(null)} className="hover:opacity-80" aria-label="Cancelar loop" title="Cancelar loop"><X size={14} aria-hidden="true" /></button>
         </div>
       )}
 
