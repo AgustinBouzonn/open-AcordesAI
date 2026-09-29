@@ -151,6 +151,8 @@ export const Metronome: React.FC = () => {
             className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold text-white shadow-lg transition ${
               running ? 'bg-red-600 hover:bg-red-700' : 'bg-brand hover:bg-brand/90'
             }`}
+            aria-label={running ? "Pausar metrónomo" : "Iniciar metrónomo"}
+            title={running ? "Pausar metrónomo" : "Iniciar metrónomo"}
           >
             {running ? <Pause size={20} /> : <Play size={20} />}
             {running ? 'Pausar' : 'Iniciar'}
@@ -158,6 +160,7 @@ export const Metronome: React.FC = () => {
           <button
             onClick={handleTap}
             className="flex items-center gap-2 px-5 py-3 rounded-full bg-dark-700 hover:bg-dark-600 text-white shadow-lg"
+            aria-label="Tocá al ritmo para detectar el BPM"
             title="Tocá al ritmo para detectar el BPM"
           >
             <Hand size={18} /> Tap

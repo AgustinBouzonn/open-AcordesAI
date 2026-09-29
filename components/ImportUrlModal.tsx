@@ -94,7 +94,7 @@ export function ImportUrlModal({ isOpen, onClose, onImported, initialUrl }: Prop
             onKeyDown={(e) => { if (e.key === 'Enter') handleImport(); }}
             style={{ ...inputStyle, flex: 1 }}
           />
-          <button onClick={handlePaste} style={iconButtonStyle} title="Pegar" disabled={loading}>
+          <button onClick={handlePaste} style={iconButtonStyle} title="Pegar" aria-label="Pegar" disabled={loading}>
             <Copy size={18} />
           </button>
         </div>
