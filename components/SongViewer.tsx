@@ -341,7 +341,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} disabled={!user} onClick={() => handleRating(star)} className={`${!user ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition`}>
+                  <button key={star} disabled={!user} onClick={() => handleRating(star)} className={`${!user ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition`} aria-label={"Calificar con " + star + " estrellas"} title={"Calificar con " + star + " estrellas"}>
                     <Star size={16} className={star <= userRating ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-gray-500'} />
                   </button>
                 ))}
@@ -357,12 +357,16 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
                   <button
                     onClick={() => setProgress(progressStatus === 'learning' ? null : 'learning')}
                     className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full border transition ${progressStatus === 'learning' ? 'bg-yellow-900/40 border-yellow-700 text-yellow-200' : 'bg-dark-800 border-dark-700 text-gray-400 hover:bg-dark-700'}`}
+                    aria-label={progressStatus === 'learning' ? "Dejar de aprender" : "Marcar como aprendiendo"}
+                    title={progressStatus === 'learning' ? "Dejar de aprender" : "Marcar como aprendiendo"}
                   >
                     <GraduationCap size={12} /> Aprendiendo
                   </button>
                   <button
                     onClick={() => setProgress(progressStatus === 'learned' ? null : 'learned')}
                     className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full border transition ${progressStatus === 'learned' ? 'bg-emerald-900/40 border-emerald-700 text-emerald-200' : 'bg-dark-800 border-dark-700 text-gray-400 hover:bg-dark-700'}`}
+                    aria-label={progressStatus === 'learned' ? "Desmarcar como aprendida" : "Marcar como aprendida"}
+                    title={progressStatus === 'learned' ? "Desmarcar como aprendida" : "Marcar como aprendida"}
                   >
                     <CheckCircle2 size={12} /> Sé tocarla
                   </button>
@@ -373,15 +377,15 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         </div>
         
         <div className="flex items-center gap-3">
-          <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition">
+          <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition" aria-label="Compartir canción" title="Compartir canción">
             <Share2 size={20} />
           </button>
-          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}>
+          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`} aria-label={isFav ? "Quitar de favoritos" : "Añadir a favoritos"} title={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}>
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
-          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative">
+          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative" aria-label={comments.length > 0 ? "Comentarios (" + comments.length + ")" : "Comentarios"} title="Comentarios">
             <MessageSquare size={20} />
-            {comments.length > 0 && <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
+            {comments.length > 0 && <span aria-hidden="true" className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
           </button>
         </div>
       </div>
