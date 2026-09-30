@@ -1,0 +1,3 @@
+## 2026-09-30 - Optimize Postgres correlated subqueries with LEFT JOIN LATERAL
+**Learning:** Using correlated subqueries in `SELECT` clauses (like `(SELECT AVG(score)...)`) forces Postgres to perform redundant index lookups per row. However, refactoring unconstrained derived tables on a driving table without index-backed constraints using `LATERAL` joins causes nested loop performance regressions.
+**Action:** Refactor correlated subqueries in `SELECT` clauses into `LEFT JOIN LATERAL` to consolidate multiple aggregates into a single subquery. Specifically, for paginated endpoints, isolate the base query into a subquery first, and then apply `LATERAL` joins to those paginated results. Avoid using `LATERAL` joins to replace unconstrained derived tables.
