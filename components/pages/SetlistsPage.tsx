@@ -133,8 +133,8 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
             placeholder="Nombre de la setlist"
             className="flex-1 bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand"
           />
-          <button onClick={create} className="bg-brand hover:bg-brand/90 text-white px-4 rounded-lg"><Check size={16} /></button>
-          <button onClick={() => { setCreating(false); setNewName(''); }} className="bg-dark-700 hover:bg-dark-600 text-gray-300 px-4 rounded-lg"><X size={16} /></button>
+          <button onClick={create} className="bg-brand hover:bg-brand/90 text-white px-4 rounded-lg" aria-label="Guardar setlist" title="Guardar setlist"><Check size={16} /></button>
+          <button onClick={() => { setCreating(false); setNewName(''); }} className="bg-dark-700 hover:bg-dark-600 text-gray-300 px-4 rounded-lg" aria-label="Cancelar" title="Cancelar"><X size={16} /></button>
         </div>
       )}
 
@@ -163,8 +163,8 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
                 )}
                 {renamingId === sl.id ? (
                   <>
-                    <button onClick={() => void submitRename(sl.id)} className="p-2 text-emerald-400 hover:text-emerald-300"><Check size={16} /></button>
-                    <button onClick={() => setRenamingId(null)} className="p-2 text-gray-400 hover:text-white"><X size={16} /></button>
+                    <button onClick={() => void submitRename(sl.id)} className="p-2 text-emerald-400 hover:text-emerald-300" aria-label="Guardar nombre" title="Guardar nombre"><Check size={16} /></button>
+                    <button onClick={() => setRenamingId(null)} className="p-2 text-gray-400 hover:text-white" aria-label="Cancelar renombrado" title="Cancelar renombrado"><X size={16} /></button>
                   </>
                 ) : (
                   <>
