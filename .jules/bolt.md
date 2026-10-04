@@ -1,0 +1,3 @@
+## 2024-10-04 - LATERAL joins combined with LIMIT/Pagination
+**Learning:** Replacing inline correlated subqueries with LATERAL joins in Postgres can sometimes cause regressions if the LATERAL joins are evaluated before a limit clause. We must isolate the base query with its limit into a subquery first, and then apply LATERAL joins to the paginated results to ensure O(k) scaling instead of evaluating aggregates for every matching row.
+**Action:** When resolving PostgreSQL N+1 correlated subqueries using `LEFT JOIN LATERAL` on paginated endpoints, always isolate the base query (with `WHERE`, `ORDER BY`, and `LIMIT`) into a subquery first before applying the LATERAL joins.
