@@ -1,0 +1,4 @@
+## 2023-10-05 - Add ARIA labels and tooltips to interactive buttons in SongViewer
+
+**Learning:** When using visual indicators alongside icon-only buttons (like a badge with the number of comments), adding an `aria-label` completely overrides the inner text for screen readers. It is critical to dynamically include the count within the `aria-label` itself (e.g., `aria-label={"Comentarios (" + comments.length + ")"}`) to ensure the badge information is still communicated, while also applying `aria-hidden="true"` to the visual badge element so it's not redundantly read if not overridden. The app's UI language is Spanish, requiring Spanish localized ARIA labels and title attributes.
+**Action:** When adding `aria-label` to buttons containing badges, always dynamically include the badge's value in the `aria-label` text and hide the actual badge element from screen readers using `aria-hidden="true"`. Use Spanish for all accessibility text and tooltips.
