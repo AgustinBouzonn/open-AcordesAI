@@ -102,7 +102,7 @@ class ApiClient {
 
       if (response.status === 401) {
         const reason: 'expired' | 'invalid' | 'unauthorized' =
-          code === 'TOKEN_EXPIRED' ? 'expired' :
+          code === 'TOKEN_EXPIRED' || code === 'TOKEN_REVOKED' ? 'expired' :
           code === 'TOKEN_INVALID' ? 'invalid' : 'unauthorized';
         if (this.token) {
           this.setToken(null);

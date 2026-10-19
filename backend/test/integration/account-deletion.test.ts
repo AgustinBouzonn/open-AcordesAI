@@ -44,7 +44,9 @@ describe('DELETE /api/auth/me against Postgres', () => {
     expect(song.rows[0].user_id).toBeNull();
     expect(await count('SELECT COUNT(*) FROM ratings WHERE user_id = $1', [other.id])).toBe(1);
 
-    const again = await request(app).delete('/api/auth/me').set(auth(user.token)).send({ confirm: 'ELIMINAR' });
-    expect(again.status).toBe(404);
+    // La sesión de la cuenta borrada deja de valer en el acto.
+    const again = await request(app).get('/api/auth/me').set(auth(user.token));
+    expect(again.status).toBe(401);
+    expect(again.body.code).toBe('TOKEN_REVOKED');
   });
 });

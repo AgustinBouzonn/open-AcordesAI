@@ -52,8 +52,8 @@ export const getOAuthConfig = (provider: OAuthProvider, req: Request) => {
   };
 };
 
-export const buildJwt = (user: { id: number; username: string }) =>
-  jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+export const buildJwt = (user: { id: number; username: string; token_version?: number }) =>
+  jwt.sign({ userId: user.id, username: user.username, tv: user.token_version ?? 0 }, JWT_SECRET, { expiresIn: '7d' });
 
 export const toUserDto = (user: { id: number; email: string; username: string; auth_provider?: string | null }) => ({
   id: user.id,
@@ -86,7 +86,7 @@ export const upsertOAuthUser = async (params: { email: string; username: string;
   const { email, username, provider, providerId } = params;
   const normalizedEmail = email.toLowerCase();
   const existingByProvider = await query(
-    'SELECT id, email, username, auth_provider FROM users WHERE auth_provider = $1 AND auth_provider_id = $2',
+    'SELECT id, email, username, auth_provider, token_version FROM users WHERE auth_provider = $1 AND auth_provider_id = $2',
     [provider, providerId]
   );
   if (existingByProvider.rows.length) return existingByProvider.rows[0];
@@ -98,15 +98,17 @@ export const upsertOAuthUser = async (params: { email: string; username: string;
   if (existingByEmail.rows.length) {
     // Una cuenta con contraseña y sin proveedor nunca probó ser dueña del email (/register no lo verifica).
     // Al vincularla al proveedor (que sí verificó el email) se invalida esa contraseña: si la creó otra
-    // persona registrando el email de la víctima antes que ella, pierde el acceso.
+    // persona registrando el email de la víctima antes que ella, pierde el acceso, y token_version + 1
+    // le corta las sesiones que ya tenía abiertas.
     const rotatedHash = await bcrypt.hash(crypto.randomUUID(), 10);
     const updated = await query(
       `UPDATE users
        SET password_hash = CASE WHEN auth_provider IS NULL THEN $4 ELSE password_hash END,
+           token_version = CASE WHEN auth_provider IS NULL THEN token_version + 1 ELSE token_version END,
            auth_provider = COALESCE(auth_provider, $1),
            auth_provider_id = COALESCE(auth_provider_id, $2)
        WHERE id = $3
-       RETURNING id, email, username, auth_provider`,
+       RETURNING id, email, username, auth_provider, token_version`,
       [provider, providerId, existingByEmail.rows[0].id, rotatedHash]
     );
     return updated.rows[0];
@@ -117,7 +119,7 @@ export const upsertOAuthUser = async (params: { email: string; username: string;
   const inserted = await query(
     `INSERT INTO users (email, username, password_hash, auth_provider, auth_provider_id)
      VALUES ($1, $2, $3, $4, $5)
-     RETURNING id, email, username, auth_provider`,
+     RETURNING id, email, username, auth_provider, token_version`,
     [normalizedEmail, uniqueUsername, passwordHash, provider, providerId]
   );
   return inserted.rows[0];
