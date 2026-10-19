@@ -62,6 +62,11 @@ section "Errores generando con IA" \
      FROM product_events WHERE kind = 'ai_failed' AND $since
     GROUP BY 1, 2 ORDER BY n DESC LIMIT 10"
 
+section "Errores del frontend" \
+  "SELECT detail->>'source' AS origen, detail->>'route' AS ruta, left(detail->>'message', 90) AS mensaje, count(*) AS n
+     FROM product_events WHERE kind = 'client_error' AND $since
+    GROUP BY 1, 2, 3 ORDER BY n DESC LIMIT 15"
+
 section "Cifrados por origen (acumulado)" \
   "SELECT COALESCE(origin, '(previo)') AS origen, count(*) AS n FROM chord_cache GROUP BY 1 ORDER BY n DESC"
 
@@ -73,4 +78,5 @@ cat <<'MD'
 - Páginas sin cifrado: el parser de esa fuente cambió; arreglarlo.
 - Búsquedas sin resultados repetidas: candidatas para `scripts/import-bulk.mjs`.
 - Muchos cifrados de IA corregidos: revisar el prompt o el modelo en `backend/src/services/aiService.ts`.
+- Errores del frontend repetidos: reproducir en esa ruta, arreglar y sumar un test del componente.
 MD

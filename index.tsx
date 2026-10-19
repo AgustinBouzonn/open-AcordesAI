@@ -5,8 +5,10 @@ import App from './App';
 import { AuthProvider } from './components/AuthContext';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { installGlobalErrorReporting } from './services/errorReporter';
 
 registerSW({ immediate: true });
+installGlobalErrorReporting();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

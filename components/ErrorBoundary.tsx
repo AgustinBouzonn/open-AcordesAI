@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { reportClientError } from '../services/errorReporter';
 
 interface Props {
   children: React.ReactNode;
@@ -35,6 +36,7 @@ export class ErrorBoundary extends (Base as new (p: Props) => ErrorBoundaryThis)
 
   componentDidCatch(error: Error, info: { componentStack?: string | null }): void {
     console.error('[ErrorBoundary]', error, info?.componentStack);
+    reportClientError(error, 'boundary');
   }
 
   reset = () => {

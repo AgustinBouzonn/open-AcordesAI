@@ -82,6 +82,18 @@ describe('product signals against Postgres', () => {
     expect(after.rows[0].origin).toBe('user');
   });
 
+  it('stores frontend error reports and rejects malformed ones', async () => {
+    const ok = await request(app).post('/api/signals/client-error')
+      .send({ message: 'TypeError: x is undefined', source: 'boundary', route: '/song/:id?leak=1' });
+    expect(ok.status).toBe(204);
+    expect(await events('client_error')).toEqual([
+      { source: 'boundary', message: 'TypeError: x is undefined', route: '/song/:id' },
+    ]);
+
+    expect((await request(app).post('/api/signals/client-error').send({ message: 'x', source: 'evil' })).status).toBe(400);
+    expect((await request(app).post('/api/signals/client-error').send({ source: 'window' })).status).toBe(400);
+  });
+
   it('does not record an edit when the chords were already the user\'s', async () => {
     const songId = await createSong('Mía', 'Yo', user.id);
     await request(app).put(`/api/songs/${songId}/chords`).set(auth()).send({ chords: 'C' });
