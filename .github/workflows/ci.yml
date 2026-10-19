@@ -35,12 +35,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
       - name: Install frontend deps
-        run: npm install
+        run: npm ci
 
+      # puppeteer es devDependency solo para scripts de import: los tests no necesitan Chromium.
       - name: Install backend deps
-        run: npm --prefix backend install
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
+        run: npm --prefix backend ci
 
       - name: Frontend typecheck
         run: npm run typecheck
