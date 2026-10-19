@@ -32,6 +32,6 @@ describe('rating routes', () => {
     const response = await request(app).get('/api/ratings/song-1');
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ average: '4.5', count: 2 });
+    expect(response.body).toEqual({ average: '4.5', count: 2, mine: null });
   });
 });

@@ -114,10 +114,10 @@ export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, on
                   <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
                   <p className="text-gray-400 text-sm truncate">{song.artist}</p>
                   <div className="flex items-center gap-3 mt-1">
-                    {song.rating && (
+                    {Number(song.rating) > 0 && (
                       <div className="flex items-center gap-1 text-yellow-500">
                         <Star size={12} fill="currentColor" />
-                        <span className="text-xs">{song.rating}</span>
+                        <span className="text-xs">{Number(song.rating).toFixed(1)}</span>
                       </div>
                     )}
                   </div>

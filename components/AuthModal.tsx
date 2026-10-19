@@ -150,7 +150,7 @@ const inputStyle: React.CSSProperties = {
 const buttonStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.75rem',
-  background: '#4f46e5',
+  background: '#FF6B00',
   color: '#fff',
   border: 'none',
   borderRadius: '4px',
@@ -189,7 +189,7 @@ const oauthButtonStyle: React.CSSProperties = {
 const linkStyle: React.CSSProperties = {
   background: 'none',
   border: 'none',
-  color: '#4f46e5',
+  color: '#FF6B00',
   cursor: 'pointer',
   textDecoration: 'underline',
 };

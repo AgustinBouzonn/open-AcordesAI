@@ -78,6 +78,10 @@ describe('setlists + ratings against Postgres', () => {
     await request(app).post(`/api/ratings/${songs[0]}`).set(auth(other.token)).send({ score: 4 });
 
     const r = await request(app).get(`/api/ratings/${songs[0]}`);
-    expect(r.body).toEqual({ average: '4.5', count: 2 });
+    expect(r.body).toEqual({ average: '4.5', count: 2, mine: null });
+
+    // Con sesión se devuelve la calificación propia, para pintar las estrellas al recargar.
+    const mine = await request(app).get(`/api/ratings/${songs[0]}`).set(auth(user.token));
+    expect(mine.body).toEqual({ average: '4.5', count: 2, mine: 5 });
   });
 });

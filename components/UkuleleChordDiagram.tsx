@@ -51,7 +51,7 @@ export const UkuleleChordDiagram: React.FC<Props> = ({ shape, width = 110 }) => 
         const fret = shape.barre.fret - offset;
         const x1 = xForString(shape.barre.fromString);
         const x2 = xForString(shape.barre.toString);
-        return <rect x={x1 - 6} y={yForFret(fret) - 6} width={x2 - x1 + 12} height={12} rx={6} fill="#4f46e5" opacity={0.85} />;
+        return <rect x={x1 - 6} y={yForFret(fret) - 6} width={x2 - x1 + 12} height={12} rx={6} fill="#FF6B00" opacity={0.85} />;
       })()}
 
       {shape.frets.map((f, i) => {
@@ -63,7 +63,7 @@ export const UkuleleChordDiagram: React.FC<Props> = ({ shape, width = 110 }) => 
         const finger = shape.fingers?.[i] ?? 0;
         return (
           <g key={`d-${i}`}>
-            <circle cx={cx} cy={cy} r={7} fill="#4f46e5" />
+            <circle cx={cx} cy={cy} r={7} fill="#FF6B00" />
             {finger > 0 && <text x={cx} y={cy + 3} textAnchor="middle" fontSize="9" fill="#fff" fontWeight="700">{finger}</text>}
           </g>
         );

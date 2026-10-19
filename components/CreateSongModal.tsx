@@ -179,5 +179,5 @@ const secondaryButtonStyle: React.CSSProperties = {
 };
 
 const primaryButtonStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', background: '#4f46e5', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', background: '#FF6B00', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
 };

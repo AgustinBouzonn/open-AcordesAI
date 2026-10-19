@@ -180,6 +180,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     try {
       const data = await api.ratings.get(song.id);
       setAvgRating(data);
+      if (data.mine) setUserRating(data.mine);
     } catch {}
   };
 

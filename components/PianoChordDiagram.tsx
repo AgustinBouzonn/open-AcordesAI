@@ -38,7 +38,7 @@ export const PianoChordDiagram: React.FC<Props> = ({ chordName, width = 200 }) =
           const isHi = highlighted.has(midi);
           return (
             <g key={`w-${oct}-${note}`}>
-              <rect x={x} y={padTop} width={whiteWidth - 1} height={whiteHeight} rx={2} fill={isHi ? '#4f46e5' : '#f9fafb'} stroke="#6b7280" />
+              <rect x={x} y={padTop} width={whiteWidth - 1} height={whiteHeight} rx={2} fill={isHi ? '#FF6B00' : '#f9fafb'} stroke="#6b7280" />
               {isHi && (
                 <text x={x + whiteWidth / 2} y={padTop + whiteHeight - 6} textAnchor="middle" fontSize="9" fontWeight="700" fill="#fff">{noteName}</text>
               )}
@@ -62,7 +62,7 @@ export const PianoChordDiagram: React.FC<Props> = ({ chordName, width = 200 }) =
           const isHi = highlighted.has(midi);
           const x = baseX + offset * whiteWidth - blackWidth / 2;
           return (
-            <rect key={`b-${oct}-${sharp}`} x={x} y={padTop} width={blackWidth} height={blackHeight} rx={1.5} fill={isHi ? '#4f46e5' : '#1f2937'} stroke="#0f172a" strokeWidth={0.6} />
+            <rect key={`b-${oct}-${sharp}`} x={x} y={padTop} width={blackWidth} height={blackHeight} rx={1.5} fill={isHi ? '#FF6B00' : '#1f2937'} stroke="#0f172a" strokeWidth={0.6} />
           );
         });
       })}
