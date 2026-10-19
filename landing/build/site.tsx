@@ -38,7 +38,21 @@ interface PageMeta {
   /** Ruta de salida relativa a outDir, p. ej. "acordes/am.html". */
   path: string;
   nav?: string;
+  lang?: Lang;
+  /** Páginas con versión en los tres idiomas: suman <link rel="alternate" hreflang>. */
+  alternates?: Record<Lang, string>;
 }
+
+export type Lang = 'es' | 'en' | 'pt';
+
+// El resto del sitio (diccionario, ayuda, legales) está en español: en/pt lo marcan con "(ES)".
+const UI: Record<Lang, Record<string, string>> = {
+  es: { sections: 'Secciones', features: 'Funciones', chords: 'Acordes', help: 'Ayuda', news: 'Novedades', open: 'Abrir app', footer: 'Pie de página', license: 'Licencia MIT', status: 'Estado', privacy: 'Privacidad', terms: 'Términos', anchor: 'funciones' },
+  en: { sections: 'Sections', features: 'Features', chords: 'Chords (ES)', help: 'Help (ES)', news: 'Changelog (ES)', open: 'Open app', footer: 'Footer', license: 'MIT License', status: 'Status', privacy: 'Privacy (ES)', terms: 'Terms (ES)', anchor: 'features' },
+  pt: { sections: 'Seções', features: 'Recursos', chords: 'Acordes (ES)', help: 'Ajuda (ES)', news: 'Novidades (ES)', open: 'Abrir app', footer: 'Rodapé', license: 'Licença MIT', status: 'Status', privacy: 'Privacidade (ES)', terms: 'Termos (ES)', anchor: 'recursos' },
+};
+const LANG_NAMES: Record<Lang, string> = { es: 'Español', en: 'English', pt: 'Português' };
+const HOME: Record<Lang, string> = { es: '', en: 'en/', pt: 'pt/' };
 
 interface Ctx extends BuildOptions {
   apkUrl: string;
@@ -57,10 +71,17 @@ function canonical(ctx: Ctx, path: string): string {
 function layout(ctx: Ctx, meta: PageMeta, body: string): string {
   const r = rootPrefix(meta.path);
   const url = canonical(ctx, meta.path);
+  const lang = meta.lang ?? 'es';
+  const t = UI[lang];
+  const alternates = meta.alternates
+    ? (Object.entries(meta.alternates) as Array<[Lang, string]>)
+        .map(([l, path]) => `\n  <link rel="alternate" hreflang="${l}" href="${canonical(ctx, path)}">`)
+        .join('') + `\n  <link rel="alternate" hreflang="x-default" href="${canonical(ctx, meta.alternates.es)}">`
+    : '';
   const link = (key: string, href: string, label: string, cls = '') =>
     `<a${cls ? ` class="${cls}"` : ''} href="${href}"${meta.nav === key ? ' aria-current="page"' : ''}>${label}</a>`;
   return `<!doctype html>
-<html lang="es">
+<html lang="${lang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -70,7 +91,7 @@ function layout(ctx: Ctx, meta: PageMeta, body: string): string {
     // GitHub Pages sirve 404.html en cualquier ruta: sin <base> los enlaces relativos se rompen.
     meta.path === '404.html' ? `\n  <base href="${ctx.siteUrl}">\n  <meta name="robots" content="noindex">` : ''
   }
-  <link rel="canonical" href="${url}">
+  <link rel="canonical" href="${url}">${alternates}
   <link rel="icon" href="${r}assets/pwa-192x192.png">
   <link rel="apple-touch-icon" href="${r}assets/apple-touch-icon.png">
   <meta property="og:type" content="website">
@@ -88,13 +109,13 @@ function layout(ctx: Ctx, meta: PageMeta, body: string): string {
 <body>
   <header>
     <div class="wrap nav">
-      <a class="logo" href="${r || './'}"><span class="logo-mark" aria-hidden="true">${NOTE_SVG}</span><span>Acordes<span style="color:var(--brand)">AI</span></span></a>
-      <nav class="nav-links" aria-label="Secciones">
-        ${link('home', `${r}#funciones`, 'Funciones', 'hide-sm')}
-        ${link('acordes', `${r}acordes/`, 'Acordes')}
-        ${link('ayuda', `${r}ayuda.html`, 'Ayuda', 'hide-sm')}
-        ${link('novedades', `${r}novedades.html`, 'Novedades', 'hide-sm')}
-        <a class="btn btn-primary btn-sm" href="${APP_URL}">Abrir app</a>
+      <a class="logo" href="${r + HOME[lang] || './'}"><span class="logo-mark" aria-hidden="true">${NOTE_SVG}</span><span>Acordes<span style="color:var(--brand)">AI</span></span></a>
+      <nav class="nav-links" aria-label="${t.sections}">
+        ${link('home', `${r}${HOME[lang]}#${t.anchor}`, t.features, 'hide-sm')}
+        ${link('acordes', `${r}acordes/`, t.chords)}
+        ${link('ayuda', `${r}ayuda.html`, t.help, 'hide-sm')}
+        ${link('novedades', `${r}novedades.html`, t.news, 'hide-sm')}
+        <a class="btn btn-primary btn-sm" href="${APP_URL}">${t.open}</a>
       </nav>
     </div>
   </header>
@@ -105,17 +126,20 @@ ${body}
 
   <footer>
     <div class="wrap row">
-      <span>© AcordesAI · <a href="https://github.com/${ctx.repo}/blob/main/LICENSE">Licencia MIT</a></span>
-      <nav class="foot-links" aria-label="Pie de página">
+      <span>© AcordesAI · <a href="https://github.com/${ctx.repo}/blob/main/LICENSE">${t.license}</a></span>
+      <nav class="foot-links" aria-label="${t.footer}">
         <a href="${APP_URL}">App</a>
-        <a href="${r}acordes/">Acordes</a>
-        <a href="${r}ayuda.html">Ayuda</a>
-        <a href="${r}novedades.html">Novedades</a>
-        <a href="${r}estado.html">Estado</a>
-        <a href="${r}privacidad.html">Privacidad</a>
-        <a href="${r}terminos.html">Términos</a>
+        <a href="${r}acordes/">${t.chords}</a>
+        <a href="${r}ayuda.html">${t.help}</a>
+        <a href="${r}novedades.html">${t.news}</a>
+        <a href="${r}estado.html">${t.status}</a>
+        <a href="${r}privacidad.html">${t.privacy}</a>
+        <a href="${r}terminos.html">${t.terms}</a>
         <a href="https://github.com/${ctx.repo}">GitHub</a>
       </nav>
+      <nav class="foot-links langs" aria-label="Idioma / Language">${(Object.keys(LANG_NAMES) as Lang[])
+        .map((l) => `<a href="${r}${HOME[l] || './'}" hreflang="${l}" lang="${l}"${l === lang ? ' aria-current="true"' : ''}>${LANG_NAMES[l]}</a>`)
+        .join('')}</nav>
     </div>
   </footer>
 </body>
@@ -152,11 +176,11 @@ function chordCard(e: ChordEntry): string {
   return `<a class="chord-card" href="${chordHref(e)}">${svg(<ChordDiagram shape={e.guitar} width={120} />)}<span>${esc(e.spanishName)}</span></a>`;
 }
 
-function chordTeaser(entries: ChordEntry[]): string {
+function chordTeaser(entries: ChordEntry[], root: string, lang: Lang): string {
   const popular = ['C', 'G', 'Am', 'F', 'D', 'Em'];
   const picks = popular.map((n) => entries.find((e) => e.name === n)).filter((e): e is ChordEntry => !!e);
   return picks
-    .map((e) => `<a class="chord-card" href="acordes/${chordHref(e)}">${svg(<ChordDiagram shape={e.guitar} width={120} />)}<span>${esc(e.spanishName)}</span></a>`)
+    .map((e) => `<a class="chord-card" href="${root}acordes/${chordHref(e)}">${svg(<ChordDiagram shape={e.guitar} width={120} />)}<span>${esc(lang === 'es' ? e.spanishName : e.name)}</span></a>`)
     .join('\n');
 }
 
@@ -336,17 +360,28 @@ export async function buildSite(opts: BuildOptions): Promise<{ pages: string[] }
     APK_URL: ctx.apkUrl,
     REPO_URL: `https://github.com/${opts.repo}`,
     STATUS_URL: `https://raw.githubusercontent.com/${opts.repo}/status-data/history.json`,
-    CHORD_TEASER: chordTeaser(entries),
   };
+  const HOME_ALTERNATES: Record<Lang, string> = { es: 'index.html', en: 'en/index.html', pt: 'pt/index.html' };
 
-  for (const file of readdirSync(join(landing, 'pages')).filter((f) => f.endsWith('.html')).sort()) {
-    const { meta, body } = parseFragment(readFileSync(join(landing, 'pages', file), 'utf8'));
+  // landing/pages/*.html en español; landing/pages/<lang>/*.html para las traducciones.
+  const pagesDir = join(landing, 'pages');
+  const files = readdirSync(pagesDir, { recursive: true, encoding: 'utf8' })
+    .map((f) => f.split('\\').join('/'))
+    .filter((f) => f.endsWith('.html'))
+    .sort();
+  for (const file of files) {
+    const { meta, body } = parseFragment(readFileSync(join(pagesDir, file), 'utf8'));
+    const lang = (meta.lang ?? 'es') as Lang;
+    if (!(lang in UI)) throw new Error(`landing/pages/${file}: idioma desconocido ${lang}`);
+    const root = rootPrefix(file);
+    const pageVars: Record<string, string> = { ...vars, ROOT: root, CHORD_TEASER: chordTeaser(entries, root, lang) };
     const html = body.replace(/\{\{(\w+)\}\}/g, (all, key: string) => {
-      if (!(key in vars)) throw new Error(`landing/pages/${file}: variable desconocida ${all}`);
-      return vars[key];
+      if (!(key in pageVars)) throw new Error(`landing/pages/${file}: variable desconocida ${all}`);
+      return pageVars[key];
     });
     if (!meta.title || !meta.description) throw new Error(`landing/pages/${file}: falta title o description`);
-    emit(ctx, { path: file, title: meta.title, description: meta.description, nav: meta.nav }, html);
+    const alternates = Object.values(HOME_ALTERNATES).includes(file) ? HOME_ALTERNATES : undefined;
+    emit(ctx, { path: file, title: meta.title, description: meta.description, nav: meta.nav, lang, alternates }, html);
   }
 
   chordIndex(ctx, entries, buildKeys());

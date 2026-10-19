@@ -93,6 +93,14 @@ describe('buildSite (offline)', () => {
     expect(am).toContain('<link rel="canonical" href="https://example.test/sub/acordes/am.html">');
     expect((am.match(/<svg/g) ?? []).length).toBeGreaterThanOrEqual(3);
     expect(readFileSync(join(out, 'sitemap.xml'), 'utf8')).not.toContain('404.html');
+
+    // Traducciones de la portada: idioma correcto, hreflang en las tres y enlaces relativos que funcionan.
+    for (const [file, lang] of [['index.html', 'es'], ['en/index.html', 'en'], ['pt/index.html', 'pt']]) {
+      const html = readFileSync(join(out, file), 'utf8');
+      expect(html, file).toContain(`<html lang="${lang}">`);
+      expect(html, file).toContain('<link rel="alternate" hreflang="pt" href="https://example.test/sub/pt/">');
+    }
+    expect(readFileSync(join(out, 'en/index.html'), 'utf8')).toContain('href="../acordes/am.html"');
   });
 });
 
