@@ -37,6 +37,12 @@ services:
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # Opcionales: vacías, el backend usa sus valores por defecto.
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
     ports:
       - "127.0.0.1:3003:3001"
     depends_on:

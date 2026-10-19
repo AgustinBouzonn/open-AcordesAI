@@ -1,553 +1,152 @@
-# 🎸 AcordesAI - Cifrados Inteligentes con IA
-
-<div align="center">
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"/>
-  <img src="https://img.shields.io/badge/Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini"/>
-  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind"/>
-  <img src="https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA"/>
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
-</div>
-
-<div align="center">
-  <h3>🎵 Tu asistente musical con Inteligencia Artificial</h3>
-  <p>
-    Genera cifrados, acordes y letras de cualquier canción en tiempo real con el poder de Google Gemini
-  </p>
-</div>
-
-<div align="center">
-  <p>
-    <a href="https://acordesai.bthings.com.ar"><b>Abrir la app</b></a> ·
-    <a href="https://agustinbouzonn.github.io/open-AcordesAI/">Sitio</a> ·
-    <a href="https://agustinbouzonn.github.io/open-AcordesAI/acordes/">Diccionario de acordes</a> ·
-    <a href="https://agustinbouzonn.github.io/open-AcordesAI/estado.html">Estado</a> ·
-    <a href="https://agustinbouzonn.github.io/open-AcordesAI/novedades.html">Novedades</a> ·
-    <a href="https://agustinbouzonn.github.io/open-AcordesAI/privacidad.html">Privacidad</a>
-  </p>
-</div>
-
----
-
-## 🤖 Disclaimer de Responsabilidad
-
 <div align="center">
 
-```
-╔══════════════════════════════════════════════════════════════╗
-║                                                              ║
-║   ⚠️ ESTE README FUE 85% ESCRITO POR IA ⚠️                 ║
-║                                                              ║
-║   Mi aporte:                                                ║
-║   ✓ Tuve la idea del proyecto                              ║
-║   ✓ Le dije a la IA qué escribir                           ║
-║   ✓ Revisé que no dijera cosas raras                       ║
-║   ✓ Añadí el chiste del 85%                                ║
-║   ✓ Probablemente escribí algo de código                   ║
-║   (pero también puede que la IA lo hiciera)                 ║
-║                                                              ║
-║   La IA hizo:                                              ║
-║   ✓ Todo el formateo bonito                                ║
-║   ✓ Los badges (soy muy malo acordándome los nombres)     ║
-║   ✓ La tabla de features                                   ║
-║   ✓ Este disclaimer                                        ║
-║                                                              ║
-║   ¿Resultado?                                              ║
-║   Un README que se ve profesional mientras                 ║
-║   yo practico guitarra (que es lo que realmente            ║
-║   me importa).                                             ║
-║                                                              ║
-╚══════════════════════════════════════════════════════════════╝
-```
+<img src="public/pwa-192x192.png" width="96" alt="Logo de AcordesAI"/>
+
+# AcordesAI
+
+**Cifrados, acordes y letras de cualquier canción, generados con IA.**
+
+[![CI](https://img.shields.io/github/actions/workflow/status/AgustinBouzonn/open-AcordesAI/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/AgustinBouzonn/open-AcordesAI/actions/workflows/ci.yml)
+[![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green?style=flat-square)](LICENSE)
+![React 19](https://img.shields.io/badge/React-19-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-instalable-5A0FC8?style=flat-square&logo=pwa&logoColor=white)
+
+[**Abrir la app**](https://acordesai.bthings.com.ar) · [Sitio del proyecto](https://agustinbouzonn.github.io/open-AcordesAI/) · [Descargar para Android](https://github.com/AgustinBouzonn/open-AcordesAI/releases/latest)
 
 </div>
 
 ---
 
-## 📖 Descripción
+AcordesAI es una Progressive Web App para músicos. En lugar de depender de una base de canciones ya transcritas, usa un modelo de lenguaje para generar el cifrado de **cualquier canción**, y lo combina con herramientas de práctica: transposición, autoscroll, afinador, metrónomo y estadísticas.
 
-**AcordesAI** es una Progressive Web App (PWA) revolucionaria diseñada para músicos de todos los niveles. A diferencia de las bases de datos tradicionales que solo contienen canciones preexistentes, AcordesAI utiliza la **inteligencia artificial de Google Gemini** para generar cifrados, acordes y letras de **cualquier canción**, incluso si nunca antes fue transcrita.
+## Capturas
 
-## 🏗️ Arquitectura
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="docs/screenshots/01-home.png" alt="Pantalla principal"/><br/><sub>Inicio</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/02-search.png" alt="Búsqueda de canciones"/><br/><sub>Búsqueda</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/03-song-view.png" alt="Visor de cifrados"/><br/><sub>Visor de cifrados</sub></td>
+  </tr>
+</table>
 
-La app hoy funciona como una arquitectura full-stack:
+## Características
 
-- `frontend`: React + Vite en la raíz del repo
-- `backend`: Express + TypeScript en `backend/`
-- `db`: PostgreSQL con migraciones en `backend/migrations`
-- `proxy`: Nginx para servir frontend y enrutar `/api`
+**Cifrados**
+- Generación con IA de cifrado, letra y tonalidad para guitarra, ukelele y piano.
+- Diagramas de acordes interactivos para los tres instrumentos.
+- Importación desde Cifra Club, Ultimate Guitar y CifraSpot pegando la URL.
+- Búsqueda por título, artista o progresión de acordes.
 
-La generación de cifrados y las integraciones de IA viven en el backend. El frontend consume la API mediante `services/apiClient.ts`.
+**Práctica**
+- Transposición de tono y capo virtual, con normalización de bemoles.
+- Autoscroll con velocidad ajustable y bucle de sección.
+- Modo presentación a pantalla completa, con la pantalla siempre encendida.
+- Afinador, metrónomo y estadísticas de práctica de los últimos 30 días.
 
-### 🌟 ¿Por qué AcordesAI?
+**Biblioteca y comunidad**
+- Favoritos e historial sincronizados entre dispositivos.
+- Setlists privadas o compartidas por enlace, con vencimiento a los 30 días.
+- Comentarios, valoraciones y recomendaciones.
+- Exportación a PDF y TXT.
 
-- 🎯 **Sin límites:** No estás restringido a una base de datos preexistente
-- ⚡ **Instantáneo:** Obtén cifrados en segundos, no en horas
-- 🎸 **Multi-instrumento:** Guitarra, Ukelele y Piano
-- 💾 **Offline real:** Service worker con `stale-while-revalidate` para listados y `network-first` para tu biblioteca
-- 📊 **Estadísticas de práctica:** Tiempo total, sesiones, gráfico de 30 días y top de canciones más tocadas
-- 🆓 **Gratis:** Código abierto para la comunidad
+**Plataforma**
+- PWA instalable que funciona sin conexión para lo que ya visitaste.
+- App Android nativa con Capacitor.
+- Inicio de sesión con email, Google o GitHub.
 
----
+## Inicio rápido
 
-## 📸 Screenshots
-
-<div align="center">
-
-### Pantalla Principal
-![Home](docs/screenshots/01-home.png)
-
-### Búsqueda de Canciones
-![Search](docs/screenshots/02-search.png)
-
-### Visualizador con Acordes IA
-![Song View](docs/screenshots/03-song-view.png)
-
-</div>
-
----
-
-## ✨ Características Principales
-
-### 🎯 Búsqueda Inteligente
-```
-🔍 Busca cualquier canción → 🧠 IA detecta metadatos → 🎸 Obtén cifrado al instante
-```
-
-- **Búsqueda universal:** Encuentra cualquier canción o artista
-- **Detección automática:** Identifica título, artista y tonalidad
-- **Sin restricciones:** No dependes de bases de datos externas
-
-### 🎸 Visualizador Avanzado
-
-| Feature | Descripción |
-|---------|-------------|
-| 🎼 **Cifrados IA** | Acordes generados por Gemini |
-| 🎹 **Multi-instrumento** | Guitarra, Ukelele, Piano |
-| 📜 **Autoscroll** | Velocidad ajustable 1-5 con bucle de sección |
-| 🔤 **Fuente ajustable** | Tamaño personalizable |
-| 🎚️ **Transposición** | Cambio de tono y capo virtual con normalización de bemoles |
-| 🖥️ **Modo presentación** | Pantalla completa con `ESC` para salir y wake-lock |
-| 📄 **Exportar PDF / TXT** | Descarga directa con `jspdf` |
-| 📋 **Setlists públicas** | Compartir con token con TTL de 30 días |
-| 🎯 **Práctica registrada** | Tiempo en pantalla automático → estadísticas |
-
-### 📚 Gestión de Biblioteca
-
-```yaml
-Biblioteca Inteligente:
-  Favoritos:
-    - Acceso rápido a tus canciones preferidas
-    - Sincronización cross-device
-
-  Historial:
-    - Últimas 10 canciones visualizadas
-    - Acceso rápido a canciones recientes
-
-  Caché Local:
-    - Ahorro de datos
-    - Acceso instantáneo
-    - Funciona offline
-```
-
----
-
-## 🛠️ Stack Tecnológico
-
-### Frontend
-<div>
-  <img src="https://img.shields.io/badge/React-19-black?style=flat-square&logo=react&logoColor=61DAFB" alt="React 19"/>
-  <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5.8"/>
-  <img src="https://img.shields.io/badge/Tailwind-4.2-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind 4.2"/>
-  <img src="https://img.shields.io/badge/Vite-6.4-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite 6.4"/>
-  <img src="https://img.shields.io/badge/Vitest-4.1-6E9F18?style=flat-square&logo=vitest&logoColor=white" alt="Vitest 4.1"/>
-</div>
-
-### Backend & IA
-<div>
-  <img src="https://img.shields.io/badge/Express-4.19-black?style=flat-square&logo=express&logoColor=white" alt="Express"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-15-336791?style=flat-square&logo=postgresql&logoColor=white" alt="Postgres 15"/>
-  <img src="https://img.shields.io/badge/Gemini_2.0-4285F4?style=flat-square&logo=google&logoColor=white" alt="Gemini 2.0 Flash"/>
-  <img src="https://img.shields.io/badge/JWT-secure-000?style=flat-square&logo=jsonwebtokens&logoColor=white" alt="JWT"/>
-</div>
-
-### Mobile / PWA
-<div>
-  <img src="https://img.shields.io/badge/Capacitor-8.3-119EFF?style=flat-square&logo=capacitor&logoColor=white" alt="Capacitor 8.3"/>
-  <img src="https://img.shields.io/badge/Workbox-stale--while--revalidate-FF6F00?style=flat-square&logo=googlechrome&logoColor=white" alt="Workbox"/>
-  <img src="https://img.shields.io/badge/PWA-share__target-5A0FC8?style=flat-square&logo=pwa&logoColor=white" alt="PWA share target"/>
-</div>
-
----
-
-## 📦 Instalación Rápida
+Requisitos: Node.js 22 y PostgreSQL 15.
 
 ```bash
-# 1. Clonar el repositorio
 git clone https://github.com/AgustinBouzonn/open-AcordesAI.git
 cd open-AcordesAI
 
-# 2. Instalar dependencias del frontend y backend
 npm install
 npm --prefix backend install
 
-# 3. Configurar entorno
-copy .env.example .env
+cp .env.example backend/.env      # el backend lee su .env desde backend/
+# editá backend/.env: DATABASE_URL apuntando a localhost, JWT_SECRET y una API key de IA
+npm --prefix backend run migrate  # crea las tablas
 
-# 4. Levantar frontend
-npm run dev
-
-# 5. Levantar backend en otra terminal
-npm --prefix backend run dev
+npm --prefix backend run dev      # API en http://localhost:3001
+npm run dev                       # app en http://localhost:3000
 ```
 
-Para correr la app completa también necesitás PostgreSQL y variables reales para `DATABASE_URL` y `JWT_SECRET`.
+En desarrollo, Vite redirige `/api` al backend, así que no hace falta configurar CORS. Para probar desde el celular, abrí `http://<IP-de-tu-computadora>:3000` en la misma red Wi-Fi.
 
-## 🧪 Scripts Útiles
+## Configuración
+
+| Variable | Obligatoria | Descripción |
+|---|:---:|---|
+| `DATABASE_URL` | Sí | Cadena de conexión a PostgreSQL. |
+| `JWT_SECRET` | Sí | Secreto para firmar sesiones, de al menos 32 caracteres. |
+| `GEMINI_API_KEY` u `OPENAI_API_KEY` | Para IA | Sin clave, la app funciona solo con cifrados importados o creados a mano. |
+| `FRONTEND_URL` | No | URL pública, usada en los callbacks de OAuth. |
+| `GOOGLE_CLIENT_ID` y `GITHUB_CLIENT_ID` | No | Habilitan el login con cada proveedor, junto con su secreto. |
+
+La lista completa, con los valores por defecto y la configuración del modelo, está en [docs/configuracion.md](docs/configuracion.md).
+
+## Arquitectura
+
+```mermaid
+flowchart LR
+  A[PWA / Android] -->|/api| B[Nginx]
+  B --> C[API Express]
+  B -.->|estáticos| A
+  C --> D[(PostgreSQL)]
+  C --> E[Gemini u OpenAI]
+```
+
+- **Frontend:** React 19, Vite, Tailwind CSS 4 y Workbox, en la raíz del repo.
+- **Backend:** Express y TypeScript en `backend/`, con migraciones SQL en `backend/migrations/`.
+- **IA:** toda la generación ocurre en el backend; las claves nunca llegan al navegador.
+
+Detalle de carpetas, endpoints, seguridad y estrategia de caché: [docs/arquitectura.md](docs/arquitectura.md).
+
+## Desarrollo
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Servidor de desarrollo del frontend. |
+| `npm run typecheck` | Chequeo de tipos del frontend. |
+| `npm run test:run` | Tests del frontend con Vitest. |
+| `npm run test:backend` | Tests del backend con Vitest y Supertest. |
+| `npm run test:e2e` | Tests end-to-end con Playwright. |
+| `npm run build:all` | Build de producción del frontend y el backend. |
+
+Antes de abrir un PR, corré la misma verificación que la CI:
 
 ```bash
-# Frontend
-npm run dev          # Vite dev server (puerto 3000)
-npm run build        # Build producción → dist/
-npm run typecheck    # tsc --noEmit
-npm run test         # Vitest watch
-npm run test:run     # Vitest run (CI)
-
-# Full build
-npm run build:all    # Frontend + backend
-npm run build:landing  # Sitio de GitHub Pages → _site/ (landing/, diccionario, novedades)
-npm run test:e2e     # Playwright contra el build real (requiere Postgres con migraciones)
-
-# Backend
-npm --prefix backend run dev
-npm --prefix backend run build
-npm --prefix backend run migrate
-npm --prefix backend test
+npm run typecheck && npm run test:run && npm run test:backend
 ```
 
-## 🔍 Verificación Rápida
+## Despliegue
 
-```bash
-npm run typecheck && npm --prefix backend run typecheck   # Ambos lados
-npm run test:run && npm --prefix backend test             # Tests (66 totales)
-npm run build:all                                         # Build de prod
-```
+- **Producción:** `docker compose` levanta PostgreSQL, la API y Nginx, pensado para correr detrás de un reverse proxy con TLS.
+- **Deploy continuo:** cuando la CI pasa en `main`, un workflow ejecuta `scripts/deploy.sh` en el servidor. El script aplica las migraciones, reconstruye los contenedores y vuelve a la versión anterior si falla el health check.
+- **Android:** cada release publica el APK y el AAB firmados. Para compilar a mano, seguí [docs/android-release.md](docs/android-release.md).
+- **Sitio y estado:** GitHub Pages publica la landing y una página de estado que mide la disponibilidad cada 15 minutos.
 
-Notas:
-- El backend requiere `DATABASE_URL` y `JWT_SECRET` reales.
-- `JWT_SECRET` debe tener al menos 32 caracteres.
-- Si frontend y backend corren en orígenes distintos, definir `CORS_ORIGIN`.
-- La generación de acordes usa variables backend como `AI_API_KEY`, `AI_PROVIDER`, `AI_MODEL` y `AI_BASE_URL`.
+Las migraciones deben ser idempotentes, porque el deploy las corre todas en cada release.
 
----
+## Roadmap
 
-## 🚀 Uso
+Próximas versiones: reproductor de audio con control de tono y tempo, modo karaoke sincronizado, interfaz en inglés y portugués, renovación automática de sesiones y app para iOS. El historial de versiones está en [docs/roadmap.md](docs/roadmap.md).
 
-### 1️⃣ Configurar API Key
-```bash
-# Editar .env
-VITE_GEMINI_API_KEY=tu_api_key_aqui
-```
+## Contribuir
 
-### 2️⃣ Buscar Canción
-```
-1. Escribe nombre de canción o artista
-2. La IA detecta metadatos automáticamente
-3. Espera la generación (segundos)
-```
+1. Hacé un fork y creá una rama desde `main`.
+2. Si arreglás un bug, sumá un test que lo cubra.
+3. Corré la verificación de la sección [Desarrollo](#desarrollo).
+4. Abrí un Pull Request; se fusiona con la CI en verde.
 
-### 3️⃣ Visualizar y Practicar
-```
-1. Selecciona instrumento (Guitarra/Ukelele/Piano)
-2. Ajusta tamaño de fuente y autoscroll
-3. ¡Practica como un profesional!
-```
+## Licencia
 
-## 📱 Acceso Desde El Celular
-
-Para abrirla desde tu teléfono en la misma red Wi-Fi:
-
-```bash
-# frontend en desarrollo
-npm run dev
-
-# o build de producción servido por nginx + backend + postgres
-docker compose up --build
-```
-
-Si ya habías levantado Postgres antes y agregaste nuevas migraciones, recuerda que los scripts de `backend/migrations/` solo corren automáticamente al crear el volumen por primera vez. Para aplicar todas las migraciones sobre una base existente:
-
-```bash
-for m in backend/migrations/*.sql; do
-  docker compose exec -T postgres psql -U acordesai -d acordesai < "$m"
-done
-```
-
-O una específica (ej. la de v1.1.0 con índices, share TTL y `practice_sessions`):
-
-```bash
-docker compose exec -T postgres psql -U acordesai -d acordesai \
-  < backend/migrations/006_indexes_share_ttl_practice.sql
-```
-
-Luego entra desde tu celular a:
-
-```text
-http://TU_IP_LOCAL:3000     # modo desarrollo
-http://TU_IP_LOCAL:8081     # docker compose / producción local
-```
-
-Importante:
-
-- No uses `localhost` desde el celular; usa la IP local de tu computadora.
-- El frontend ya está configurado con `VITE_API_URL=/api` para que funcione bien detrás del mismo host.
-- En Android y Chrome vas a ver el botón `Instalar app` cuando el navegador permita instalar la PWA.
-- En iPhone, abre la web en Safari y usa `Compartir > Agregar a pantalla de inicio`.
-
-## 🤖 Android Con Capacitor
-
-Para generar la app Android nativa:
-
-```bash
-# si tu backend vive en un dominio o IP pública/local accesible desde el teléfono
-echo "VITE_NATIVE_API_URL=https://tu-dominio.com/api" >> .env
-
-# compilar web y sincronizar Android
-npm run android:sync
-
-# abrir Android Studio
-npm run android:open
-```
-
-Notas:
-
-- `VITE_API_URL=/api` es ideal para web/PWA detrás de nginx.
-- `VITE_NATIVE_API_URL` se usa solo dentro de Capacitor, donde `/api` no existe por sí solo.
-- Si querés compartir links correctos desde la app nativa, configurá también `VITE_PUBLIC_APP_URL=https://tu-dominio.com`.
-- Guía de release Android: [docs/android-release.md](docs/android-release.md)
-
----
-
-## 📁 Estructura del Proyecto
-
-```
-open-AcordesAI/
-├── App.tsx                      # Root con HashRouter + lazy routes
-├── index.tsx                    # ErrorBoundary + AuthProvider + ToastProvider
-├── components/
-│   ├── ErrorBoundary.tsx        # Boundary global y por ruta
-│   ├── SongViewer.tsx           # Orquestador del visor
-│   ├── songViewer/              # TransportBar, PresentationOverlay, usePracticeTracker
-│   ├── hooks/useModalA11y.ts    # Focus trap + Escape + body lock
-│   ├── pages/
-│   │   ├── StatsPage.tsx        # Estadísticas de práctica
-│   │   └── ...                  # Home, Search, Favorites, History, Community, Setlists, Learning
-│   ├── ChordDiagram.tsx         # Guitarra
-│   ├── UkuleleChordDiagram.tsx
-│   ├── PianoChordDiagram.tsx
-│   ├── Tuner.tsx / Metronome.tsx
-│   └── ...modales (Auth, Create, Import, Share, AddToSetlist...)
-├── services/
-│   ├── apiClient.ts             # Fetch wrapper con retry y onAuthError
-│   ├── chordTransposer.ts       # Transposición (módulo puro y testeado)
-│   ├── safeStorage.ts           # localStorage con fallback en memoria
-│   ├── tunerEngine.ts / metronomeEngine.ts / wakeLock.ts
-│   └── storageService.ts
-├── types.ts
-├── backend/
-│   ├── src/
-│   │   ├── app.ts / index.ts
-│   │   ├── db.ts                # query() + withTransaction()
-│   │   ├── env.ts               # validación de env
-│   │   ├── middleware/          # auth (códigos TOKEN_EXPIRED/INVALID), rateLimit
-│   │   ├── routes/              # auth, songs, setlists, import, practice, ratings, …
-│   │   ├── serializers/
-│   │   └── services/aiService.ts (Gemini/OpenAI con logs sanitizados)
-│   ├── migrations/              # 001-006 SQL (006: índices, share TTL, practice_sessions)
-│   ├── test/                    # Vitest + supertest (24 tests)
-│   └── package.json
-├── android/                     # Capacitor 8 (versionCode 14, versionName 1.1.0)
-├── test/                        # Vitest jsdom (41 tests)
-├── public/                      # Assets PWA
-├── docker-compose.yml           # Postgres + backend + nginx (Traefik labels)
-├── nginx.conf
-├── vite.config.ts               # manualChunks, PWA manifest, share_target, runtime caching
-├── capacitor.config.ts
-├── .env.example
-└── package.json
-```
-
----
-
-## 🔧 Configuración
-
-### Variables de Entorno
-```bash
-# Frontend
-VITE_API_URL=http://localhost:3001/api          # Web local
-VITE_NATIVE_API_URL=https://tu-dominio.com/api  # App nativa Capacitor
-VITE_PUBLIC_APP_URL=https://tu-dominio.com      # Para shares desde la nativa
-
-# Backend obligatorias
-DATABASE_URL=postgres://acordesai:password@localhost:5432/acordesai
-JWT_SECRET=una-clave-larga-de-al-menos-32-caracteres
-
-# Backend opcionales
-PORT=3001
-CORS_ORIGIN=http://localhost:5173,https://tu-dominio.com
-FRONTEND_URL=https://tu-dominio.com             # Para callbacks OAuth
-AI_API_KEY=
-AI_PROVIDER=gemini
-AI_MODEL=gemini-2.0-flash
-AI_BASE_URL=https://api.openai.com/v1
-GOOGLE_CLIENT_ID=                               # OAuth Google (opcional)
-GOOGLE_CLIENT_SECRET=
-GITHUB_CLIENT_ID=                               # OAuth GitHub (opcional)
-GITHUB_CLIENT_SECRET=
-```
-
-Referencia rápida:
-- `DATABASE_URL` y `JWT_SECRET` (≥32 chars) son obligatorias.
-- `AI_API_KEY` es necesaria para generar cifrados con IA — sin ella la app sigue funcionando, pero sólo con los cifrados creados/importados manualmente.
-- `VITE_API_URL` solo hace falta si el frontend no usa el proxy por defecto.
-- `CORS_ORIGIN` acepta lista separada por comas.
-
----
-
-## 🔐 Notas de seguridad y operación
-
-- **Transacciones atómicas** en operaciones multi-tabla (import song+chord_cache, reorder de setlists con `unnest()`).
-- **JWT con códigos de error** (`TOKEN_EXPIRED` / `TOKEN_INVALID`) → el frontend hace auto-logout en 401 con `onAuthError`.
-- **Anti timing attacks** en `/login`: bcrypt dummy si el email no existe.
-- **Logs sanitizados** en `aiService` (nunca se loguea el body completo del provider; `?key=` redacted).
-- **Share tokens de setlists** caducan a los **30 días** (columna `share_token_expires_at`).
-- **Rate limiting** por usuario/IP en `/auth/*`, `/import/*`, generación y guardado de cifrados.
-- **PWA caching**:
-  - `StaleWhileRevalidate` para `/api/songs*` (excepto `/chords`).
-  - `NetworkFirst` con timeout de 4 s para `/api/favorites`, `/api/history`, `/api/setlists`.
-- **Storage cliente** vía `safeStorage` (probe + fallback a memoria si el navegador bloquea localStorage).
-
-## 🌟 Roadmap
-
-### ✅ Versión 1.0
-- [x] Búsqueda de canciones con IA
-- [x] Multi-instrumento (Guitarra, Ukelele, Piano)
-- [x] Caché local e historial
-- [x] Autoscroll y fuente ajustable
-- [x] PWA functionality
-- [x] 🎸 Diagramas de acordes interactivos (guitarra, ukelele, piano)
-- [x] 🎤 Modo presentación con wake-lock
-- [x] 📄 Exportar a PDF / TXT
-- [x] 🎚️ Transposición de tono y capo virtual
-- [x] 📋 Setlists privadas y públicas
-- [x] 🤖 Recomendaciones colaborativas
-- [x] 👥 Comunidad y sharing
-- [x] 📱 App nativa Android (Capacitor)
-- [x] 🎼 Búsqueda por progresión de acordes
-- [x] 🔁 Loop de sección con autoscroll
-
-### ✅ Versión 1.1 (Actual)
-- [x] 📊 **Estadísticas de práctica** (tiempo total, sesiones, top 10, gráfico 30 días)
-- [x] 🔐 **Hardening backend**: transacciones atómicas, índices nuevos, JWT con códigos de error, bcrypt dummy anti-timing, share TTL 30d
-- [x] ⚡ **Performance frontend**: lazy load de páginas, manualChunks (react-vendor / pdf / audio), `useMemo` en transposición, ErrorBoundary global, `safeStorage` con fallback en memoria
-- [x] ♿ **Accesibilidad**: focus trap + Escape en todos los modales, `aria-modal`, touch targets ≥44px, skeletons reales
-- [x] 📲 **PWA**: `share_target` + service worker con `stale-while-revalidate` para canciones y `network-first` para favoritos/setlists
-- [x] 🎯 **Tracker de práctica** automático: detecta actividad/idle y descarta tiempo inactivo
-
-### 🔜 Versión 2.0 (Próximamente)
-- [ ] 🎵 **Reproductor de audio** integrado con pitch/tempo
-- [ ] 🎤 **Modo karaoke** sincronizado (timestamps por línea)
-- [ ] 🌐 **Multi-idioma** (EN, PT, FR)
-- [ ] 🔄 **Refresh tokens** reales (auto-renovación de JWT)
-- [ ] 📜 **Virtualización** de listas largas (`react-window`)
-- [ ] 🎓 **Tutoriales** integrados
-- [ ] 🍎 **App nativa iOS**
-
----
-
-## 🤝 Contribuir
-
-¡Las contribuciones son bienvenidas! 🎉
-
-1. Fork el proyecto
-2. Crea tu feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'feat: Add some amazing feature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-**Ver [CONTRIBUTING.md](CONTRIBUTING.md) para más detalles.**
-
----
-
-## 📝 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver archivo [LICENSE](LICENSE) para detalles.
-
----
-
-## 👨‍💻 Autor
-
-**Agustín Bouzon**
-
-- 💼 [LinkedIn](https://linkedin.com/in/agustinbouzon)
-- 🌐 [Website](https://bthings.space)
-- 📧 [Email](mailto:abouzon@linksolution.com.ar)
-
----
-
-## 🙏 Agradecimientos
-
-- **Google Gemini** - Por la API de IA que hace posible este proyecto
-- **Vite** - Por la herramienta de build increíblemente rápida
-- **React** - Por el framework frontend que facilita el desarrollo
-- **Tailwind CSS** - Por el sistema de diseño utility-first
-- **La comunidad** - Por el feedback y soporte constante
-- **ChatGPT/Claude/Gemini** - Por ayudarme a escribir este README (y probablemente algo de código)
-
----
-
-## 🎭 Nota Final
+[MIT](LICENSE) © Agustín Bouzon y colaboradores.
 
 <div align="center">
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│   Si estás leyendo esto y pensás:                          │
-│   "¡Qué README más profesional!"                           │
-│                                                             │
-│   Gracias, me lo escribió mi asistente IA.                 │
-│   Yo solo le dije qué poner.                               │
-│                                                             │
-│   Si pensás:                                               │
-│   "¡Qué README más largo e innecesario!"                   │
-│                                                             │
-│   También me lo escribió la IA.                            │
-│   Le gusta mucho explicar cosas.                           │
-│                                                             │
-│   En fin... ¿usás la app o seguis leyendo READMEs?        │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-</div>
-
----
-
-<div align="center">
-
-## ⭐ ¿Te gusta este proyecto? ¡Dejame una star! ⭐
-
-[![GitHub stars](https://img.shields.io/github/stars/AgustinBouzonn/open-AcordesAI?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e)](https://github.com/AgustinBouzonn/open-AcordesAI)
-
-[![GitHub forks](https://img.shields.io/github/forks/AgustinBouzonn/open-AcordesAI?style=for-the-badge&logo=github&logoColor=white&labelColor=1a1a2e)](https://github.com/AgustinBouzonn/open-AcordesAI/fork)
-
----
-
-<sub>Hecho con ❤️, 🎸 y mucho ☕ (con ayuda de IA) por <a href="https://github.com/AgustinBouzonn">Agustín Bouzon</a></sub>
-
-<i>"La música es el lenguaje universal, la IA es el traductor"</i>
-
-<i>"Y yo soy el tipo que le dice a la IA qué traducir"</i>
-
+<sub>Hecho por <a href="https://github.com/AgustinBouzonn">Agustín Bouzon</a> · <a href="https://linkedin.com/in/agustinbouzon">LinkedIn</a></sub>
 </div>
