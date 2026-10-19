@@ -96,13 +96,18 @@ export const upsertOAuthUser = async (params: { email: string; username: string;
     [normalizedEmail]
   );
   if (existingByEmail.rows.length) {
+    // Una cuenta con contraseña y sin proveedor nunca probó ser dueña del email (/register no lo verifica).
+    // Al vincularla al proveedor (que sí verificó el email) se invalida esa contraseña: si la creó otra
+    // persona registrando el email de la víctima antes que ella, pierde el acceso.
+    const rotatedHash = await bcrypt.hash(crypto.randomUUID(), 10);
     const updated = await query(
       `UPDATE users
-       SET auth_provider = COALESCE(auth_provider, $1),
+       SET password_hash = CASE WHEN auth_provider IS NULL THEN $4 ELSE password_hash END,
+           auth_provider = COALESCE(auth_provider, $1),
            auth_provider_id = COALESCE(auth_provider_id, $2)
        WHERE id = $3
        RETURNING id, email, username, auth_provider`,
-      [provider, providerId, existingByEmail.rows[0].id]
+      [provider, providerId, existingByEmail.rows[0].id, rotatedHash]
     );
     return updated.rows[0];
   }

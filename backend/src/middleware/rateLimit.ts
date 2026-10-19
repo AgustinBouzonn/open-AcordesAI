@@ -43,3 +43,21 @@ export const chordSaveLimiter = rateLimit({
   keyGenerator: userOrIpKey,
   message: jsonMessage('Demasiados guardados de cifrados. Intenta de nuevo más tarde.'),
 });
+
+export const commentLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userOrIpKey,
+  message: jsonMessage('Demasiados comentarios. Intenta de nuevo más tarde.'),
+});
+
+// Reportes de errores del frontend: públicos, así que se limitan por IP.
+export const clientErrorLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: jsonMessage('Demasiados reportes.'),
+});

@@ -65,6 +65,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
               <div className="flex items-center gap-3">
                 <button 
                   onClick={onProfileClick}
+                  aria-label={`Perfil de ${user.username}`}
                   className="flex items-center gap-2 px-3 py-1.5 bg-dark-700 hover:bg-dark-600 rounded-lg transition"
                 >
                   <div className="w-7 h-7 bg-brand rounded-full flex items-center justify-center">
@@ -75,7 +76,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <button onClick={onLoginClick} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm text-gray-300 hover:text-white transition">
+                <button onClick={onLoginClick} aria-label="Entrar" className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm text-gray-300 hover:text-white transition">
                   <LogIn size={16} /> <span className="hidden sm:inline">Entrar</span>
                 </button>
                 <button onClick={onRegisterClick} className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand hover:bg-brand/90 text-sm text-white transition">

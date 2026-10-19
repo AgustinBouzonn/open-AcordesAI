@@ -6,7 +6,9 @@ on:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    # Fijado: ubuntu-latest pasó a 26.04 y Playwright 1.56 no instala Chromium ahí.
+    # Subir junto con @playwright/test cuando lo soporte.
+    runs-on: ubuntu-24.04
     services:
       # Misma versión que producción (docker-compose.yml). Coincide con DATABASE_URL de abajo.
       postgres:
@@ -35,12 +37,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
       - name: Install frontend deps
-        run: npm install
+        run: npm ci
 
+      # puppeteer es devDependency solo para scripts de import: los tests no necesitan Chromium.
       - name: Install backend deps
-        run: npm --prefix backend install
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
+        run: npm --prefix backend ci
 
       - name: Frontend typecheck
         run: npm run typecheck
@@ -68,3 +76,20 @@ jobs:
 
       - name: Backend integration tests (Postgres)
         run: npm --prefix backend run test:integration
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Smoke e2e contra la app real (backend compilado + vite preview + Postgres de arriba).
+      - name: E2E smoke (Playwright)
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

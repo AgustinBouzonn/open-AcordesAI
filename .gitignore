@@ -37,3 +37,7 @@ keystore.properties
 
 # Dumps de la base (scripts/backup-db.sh, scripts/deploy.sh)
 backups/
+
+# Playwright
+test-results/
+playwright-report/

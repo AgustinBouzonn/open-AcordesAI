@@ -13,8 +13,9 @@ android {
         applicationId "com.acordesai.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 14
-        versionName "1.1.0"
+        // En CI (android-release.yml) se pasan por env: versionCode = 100 + número de run, versionName = tag sin la v.
+        versionCode Integer.parseInt(System.getenv('ACORDESAI_VERSION_CODE') ?: '14')
+        versionName System.getenv('ACORDESAI_VERSION_NAME') ?: "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

@@ -1,6 +1,6 @@
 import { query } from '../db';
 
-export type SignalKind = 'import_failed' | 'search_empty' | 'ai_failed' | 'chords_edited';
+export type SignalKind = 'import_failed' | 'search_empty' | 'ai_failed' | 'chords_edited' | 'client_error';
 
 // En tests unitarios (DB mockeada) no se registra nada salvo que se pida con SIGNALS_ENABLED=1.
 const enabled = () => process.env.NODE_ENV !== 'test' || process.env.SIGNALS_ENABLED === '1';

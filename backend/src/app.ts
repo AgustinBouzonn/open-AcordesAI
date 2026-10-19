@@ -14,6 +14,7 @@ import setlistsRouter from './routes/setlists';
 import progressRouter from './routes/progress';
 import practiceRouter from './routes/practice';
 import recommendationsRouter from './routes/recommendations';
+import signalsRouter from './routes/signals';
 import { query } from './db';
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api/setlists', setlistsRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/practice', practiceRouter);
 app.use('/api/recommendations', recommendationsRouter);
+app.use('/api/signals', signalsRouter);
 
 app.get('/api/health', async (_, res) => {
   const aiConfigured = Boolean(
