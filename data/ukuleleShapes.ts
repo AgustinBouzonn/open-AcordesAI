@@ -1,6 +1,4 @@
-import type { ChordShape } from './chordShapes';
-
-const x = -1;
+import { lookupShape, type ChordShape } from './chordShapes';
 
 const make = (name: string, frets: number[], fingers: number[], barre?: ChordShape['barre']): ChordShape => ({ name, frets, fingers, barre });
 
@@ -41,4 +39,36 @@ export const UKULELE_SHAPES: Record<string, ChordShape> = {
   Dmaj7:make('Dmaj7',[2, 2, 2, 4], [1, 1, 1, 4], { fret: 2, fromString: 0, toString: 2 }),
   Fmaj7:make('Fmaj7',[2, 4, 1, 0], [2, 4, 1, 0]),
   Gmaj7:make('Gmaj7',[0, 2, 2, 2], [0, 1, 2, 3]),
+
+  'C#m':  make('C#m',  [1, 1, 0, 4], [1, 2, 0, 4]),
+  'D#m':  make('D#m',  [3, 3, 2, 1], [3, 4, 2, 1]),
+  'F#m':  make('F#m',  [2, 1, 2, 0], [2, 1, 3, 0]),
+  'G#m':  make('G#m',  [1, 3, 4, 2], [1, 3, 4, 2]),
+  'A#m':  make('A#m',  [3, 1, 1, 1], [3, 1, 1, 1], { fret: 1, fromString: 1, toString: 3 }),
+
+  Cm7:    make('Cm7',    [3, 3, 3, 3], [1, 1, 1, 1], { fret: 3, fromString: 0, toString: 3 }),
+  Fm7:    make('Fm7',    [1, 3, 1, 3], [1, 3, 2, 4]),
+  Gm7:    make('Gm7',    [0, 2, 1, 1], [0, 2, 1, 1], { fret: 1, fromString: 2, toString: 3 }),
+  Bm7:    make('Bm7',    [2, 2, 2, 2], [1, 1, 1, 1], { fret: 2, fromString: 0, toString: 3 }),
+  'C#m7': make('C#m7',   [1, 1, 0, 2], [1, 1, 0, 2]),
+  'F#m7': make('F#m7',   [2, 4, 2, 4], [1, 3, 2, 4]),
+
+  C6:     make('C6',     [0, 0, 0, 0], [0, 0, 0, 0]),
+  Cadd9:  make('Cadd9',  [0, 2, 0, 3], [0, 1, 0, 3]),
+  Caug:   make('Caug',   [1, 0, 0, 3], [1, 0, 0, 4]),
+  Dsus2:  make('Dsus2',  [2, 2, 0, 0], [1, 2, 0, 0]),
+  Asus2:  make('Asus2',  [2, 4, 0, 2], [1, 3, 0, 2]),
+
+  // dim7 es simétrico: tres formas cubren las doce notas.
+  ...dim7([2, 3, 2, 3], [1, 3, 2, 4], ['C', 'D#', 'F#', 'A']),
+  ...dim7([0, 1, 0, 1], [0, 1, 0, 2], ['C#', 'E', 'G', 'A#']),
+  ...dim7([1, 2, 1, 2], [1, 3, 2, 4], ['D', 'F', 'G#', 'B']),
 };
+
+function dim7(frets: number[], fingers: number[], roots: string[]): Record<string, ChordShape> {
+  return Object.fromEntries(roots.map((r) => [`${r}dim7`, make(`${r}dim7`, frets, fingers)]));
+}
+
+export function lookupUkulele(name: string): ChordShape | null {
+  return lookupShape(name, UKULELE_SHAPES);
+}

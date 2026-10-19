@@ -82,7 +82,7 @@ class ApiClient {
     let response: Response;
     try {
       response = await this.doFetch(endpoint, options, true);
-    } catch (e) {
+    } catch {
       try {
         response = await this.doFetch(endpoint, options, true);
       } catch (e2) {

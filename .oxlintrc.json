@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "unicorn", "oxc", "import", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    // JSX transform automático (React 17+): no hace falta importar React.
+    "react/react-in-jsx-scope": "off",
+    // Reglas del React Compiler: señalan patrones a mejorar (setState de "cargando" en efectos,
+    // funciones usadas en efectos antes de declararlas), no errores en runtime. Quedan como aviso.
+    "react/set-state-in-effect": "warn",
+    "react/immutability": "warn",
+    "react/refs": "warn",
+    "react/exhaustive-effect-dependencies": "warn",
+    // El backend usa express-async-errors: los handlers async ya propagan sus errores.
+    "oxc/no-async-endpoint-handlers": "off",
+    "vitest/require-mock-type-parameters": "off",
+    // Vitest acepta un mensaje como segundo argumento de expect(): lo usamos en los tests por dato.
+    "vitest/valid-expect": ["error", { "maxArgs": 2 }],
+    "vitest/no-conditional-expect": "off"
+  },
+  "ignorePatterns": ["dist/**", "backend/dist/**", "android/**", "coverage/**", "playwright-report/**", "test-results/**", "_site/**", ".claude/**"]
+}

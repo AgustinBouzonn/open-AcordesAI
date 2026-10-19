@@ -3,9 +3,6 @@ import { HashRouter, Routes, Route, useNavigate, useLocation, useParams } from '
 import { Loader2, Plus, Globe, Download } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { AuthModal } from './components/AuthModal';
-import { CreateSongModal } from './components/CreateSongModal';
-import { AddFromCommunityModal } from './components/AddFromCommunityModal';
-import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './components/AuthContext';
 import { useToast } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -18,6 +15,9 @@ import { Song, SearchResult } from './types';
 import * as storage from './services/storageService';
 
 const SongViewer = lazy(() => import('./components/SongViewer').then((m) => ({ default: m.SongViewer })));
+const CreateSongModal = lazy(() => import('./components/CreateSongModal').then((m) => ({ default: m.CreateSongModal })));
+const AddFromCommunityModal = lazy(() => import('./components/AddFromCommunityModal').then((m) => ({ default: m.AddFromCommunityModal })));
+const ProfileModal = lazy(() => import('./components/ProfileModal').then((m) => ({ default: m.ProfileModal })));
 const ImportUrlModal = lazy(() => import('./components/ImportUrlModal').then((m) => ({ default: m.ImportUrlModal })));
 const Tuner = lazy(() => import('./components/Tuner').then((m) => ({ default: m.Tuner })));
 const Metronome = lazy(() => import('./components/Metronome').then((m) => ({ default: m.Metronome })));
@@ -34,6 +34,14 @@ const PageLoader: React.FC = () => (
     <span className="sr-only">Cargando…</span>
   </div>
 );
+
+// Un modal lazy se monta (y baja su chunk) la primera vez que se abre y después queda montado,
+// así conserva su estado entre aperturas igual que cuando se importaba de forma estática.
+function useMountOnFirstOpen(isOpen: boolean): boolean {
+  const [mounted, setMounted] = useState(isOpen);
+  if (isOpen && !mounted) setMounted(true);
+  return mounted || isOpen;
+}
 
 function SongDetailRoute() {
   const { id } = useParams<{ id: string }>();
@@ -138,6 +146,9 @@ function AppContent() {
   const [sharedImportUrl, setSharedImportUrl] = useState<string | undefined>(undefined);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const mountCreateModal = useMountOnFirstOpen(showCreateModal);
+  const mountAddFromCommunityModal = useMountOnFirstOpen(showAddFromCommunityModal);
+  const mountProfileModal = useMountOnFirstOpen(showProfileModal);
 
   const activeTab = location.pathname === '/' ? 'HOME' :
     location.pathname === '/search' ? 'SEARCH' :
@@ -365,18 +376,22 @@ function AppContent() {
         </ErrorBoundary>
       </Layout>
       <AuthModal isOpen={showAuthModal} mode={authMode} onClose={() => setShowAuthModal(false)} />
-      <CreateSongModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={async (data) => { const song = await storage.createSong(data); navigate(`/song/${song.id}`); }}
-      />
-      <AddFromCommunityModal
-        isOpen={showAddFromCommunityModal}
-        onClose={() => setShowAddFromCommunityModal(false)}
-        onSelect={async (data) => { const song = await storage.createSong(data); navigate(`/song/${song.id}`); }}
-      />
-      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
       <Suspense fallback={null}>
+        {mountCreateModal && (
+          <CreateSongModal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onSubmit={async (data) => { const song = await storage.createSong(data); navigate(`/song/${song.id}`); }}
+          />
+        )}
+        {mountAddFromCommunityModal && (
+          <AddFromCommunityModal
+            isOpen={showAddFromCommunityModal}
+            onClose={() => setShowAddFromCommunityModal(false)}
+            onSelect={async (data) => { const song = await storage.createSong(data); navigate(`/song/${song.id}`); }}
+          />
+        )}
+        {mountProfileModal && <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />}
         {showImportUrlModal && (
           <ImportUrlModal
             isOpen={showImportUrlModal}

@@ -37,10 +37,12 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
+        // jspdf NO va acá: tiene import() internos, así que Rollup metería el preload helper de Vite en su
+        // chunk y el entry lo importaría estáticamente (~380 KB modulepreload en la carga inicial). Sin
+        // manualChunk sale solo en jspdf.es.min-*.js, que se baja recién al exportar el PDF.
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'icons': ['lucide-react'],
-          'pdf': ['jspdf'],
           'audio': ['pitchy'],
         },
       },
@@ -88,7 +90,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         // Chunks de la exportación a PDF (jspdf y sus dependencias): ~780 KB que solo se usan al exportar.
         // Se descargan bajo demanda en vez de precargarse en cada instalación/actualización de la PWA.
-        globIgnores: ['**/assets/pdf-*.js', '**/assets/html2canvas*.js', '**/assets/index.es-*.js', '**/assets/purify*.js'],
+        globIgnores: ['**/assets/jspdf*.js', '**/assets/html2canvas*.js', '**/assets/index.es-*.js', '**/assets/purify*.js'],
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {

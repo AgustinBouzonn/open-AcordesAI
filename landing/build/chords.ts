@@ -20,10 +20,18 @@ export interface Quality {
 export const QUALITIES: Quality[] = [
   { suffix: '', name: 'mayor', group: 'Mayores', formula: '1 – 3 – 5' },
   { suffix: 'm', name: 'menor', group: 'Menores', formula: '1 – ♭3 – 5' },
-  { suffix: '7', name: 'séptima', group: 'Séptima', formula: '1 – 3 – 5 – ♭7' },
-  { suffix: 'm7', name: 'menor séptima', group: 'Menor séptima', formula: '1 – ♭3 – 5 – ♭7' },
-  { suffix: 'maj7', name: 'séptima mayor', group: 'Séptima mayor', formula: '1 – 3 – 5 – 7' },
-  { suffix: 'sus4', name: 'cuarta suspendida', group: 'Suspendidos', formula: '1 – 4 – 5' },
+  { suffix: '7', name: 'séptima', group: 'De séptima', formula: '1 – 3 – 5 – ♭7' },
+  { suffix: 'm7', name: 'menor séptima', group: 'Menores con séptima', formula: '1 – ♭3 – 5 – ♭7' },
+  { suffix: 'maj7', name: 'séptima mayor', group: 'Con séptima mayor', formula: '1 – 3 – 5 – 7' },
+  { suffix: 'sus4', name: 'cuarta suspendida', group: 'Suspendidos con cuarta', formula: '1 – 4 – 5' },
+  { suffix: 'sus2', name: 'segunda suspendida', group: 'Suspendidos con segunda', formula: '1 – 2 – 5' },
+  { suffix: '6', name: 'sexta', group: 'De sexta', formula: '1 – 3 – 5 – 6' },
+  { suffix: 'm6', name: 'menor sexta', group: 'Menores de sexta', formula: '1 – ♭3 – 5 – 6' },
+  { suffix: 'add9', name: 'con novena agregada', group: 'Con novena agregada (add9)', formula: '1 – 3 – 5 – 9' },
+  { suffix: '9', name: 'novena', group: 'De novena', formula: '1 – 3 – 5 – ♭7 – 9' },
+  { suffix: 'm7b5', name: 'semidisminuido', group: 'Semidisminuidos (m7♭5)', formula: '1 – ♭3 – ♭5 – ♭7' },
+  { suffix: 'dim7', name: 'disminuido', group: 'Disminuidos', formula: '1 – ♭3 – ♭5 – 𝄫7' },
+  { suffix: 'aug', name: 'aumentado', group: 'Aumentados', formula: '1 – 3 – ♯5' },
 ];
 
 export interface ChordEntry {
@@ -72,7 +80,8 @@ export function buildChordEntries(): ChordEntry[] {
       ukulele: UKULELE_SHAPES[name] ?? null,
     });
   }
-  return entries;
+  const order = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  return entries.sort((a, b) => order.indexOf(a.root) - order.indexOf(b.root));
 }
 
 const FINGERS = ['', 'índice', 'medio', 'anular', 'meñique'];

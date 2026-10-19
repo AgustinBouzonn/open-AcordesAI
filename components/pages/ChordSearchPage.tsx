@@ -51,7 +51,7 @@ export const ChordSearchPage: React.FC<Props> = ({ onSelectSong }) => {
     }
   };
 
-  const usePreset = (preset: string) => {
+  const applyPreset = (preset: string) => {
     const list = preset.split(/\s+/);
     setChips(list);
     void search(list);
@@ -96,7 +96,7 @@ export const ChordSearchPage: React.FC<Props> = ({ onSelectSong }) => {
           <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Progresiones populares</p>
           <div className="flex flex-wrap gap-2">
             {SUGGESTIONS.map((s) => (
-              <button key={s} onClick={() => usePreset(s)} className="bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-lg px-3 py-2 text-sm font-mono text-gray-300">
+              <button key={s} onClick={() => applyPreset(s)} className="bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-lg px-3 py-2 text-sm font-mono text-gray-300">
                 {s}
               </button>
             ))}

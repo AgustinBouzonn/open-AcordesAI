@@ -13,7 +13,8 @@ export class TunerEngine {
   private source: MediaStreamAudioSourceNode | null = null;
   private stream: MediaStream | null = null;
   private detector: PitchDetector<Float32Array> | null = null;
-  private buffer: Float32Array | null = null;
+  // getFloatTimeDomainData exige un Float32Array respaldado por ArrayBuffer (no SharedArrayBuffer).
+  private buffer: Float32Array<ArrayBuffer> | null = null;
   private rafId: number | null = null;
   private smoothedPitch = 0;
   private onUpdate: ((s: TunerSample) => void) | null = null;

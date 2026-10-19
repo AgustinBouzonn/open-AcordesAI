@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    // TypeScript 6+ pasó el default de strict a true; se fija el comportamiento previo.
+    "strict": false,
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "module": "ESNext",
@@ -30,6 +32,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    ".claude",
     "android",
     "backend",
     "scripts/import-cifraclub.ts"

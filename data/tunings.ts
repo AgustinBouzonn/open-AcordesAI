@@ -16,7 +16,7 @@ export interface Tuning {
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
 const FLAT_TO_SHARP: Record<string, string> = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' };
 
-function noteToMidi(note: string, a4Hz = 440): number {
+function noteToMidi(note: string): number {
   const match = note.match(/^([A-G][#b]?)(-?\d+)$/);
   if (!match) throw new Error(`Invalid note: ${note}`);
   let [, name, octStr] = match;
@@ -33,7 +33,7 @@ export function midiToFreq(midi: number, a4Hz = 440): number {
 
 function makeStrings(notes: string[], a4Hz = 440): TuningString[] {
   return notes.map((n) => {
-    const midi = noteToMidi(n, a4Hz);
+    const midi = noteToMidi(n);
     const noteIdx = midi % 12;
     const octave = Math.floor(midi / 12) - 1;
     return { note: NOTE_NAMES[noteIdx], octave, freq: midiToFreq(midi, a4Hz) };

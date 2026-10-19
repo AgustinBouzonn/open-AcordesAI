@@ -134,7 +134,7 @@ async function fetchSong(url) {
 
     if (lyrics.length < 50) return null;
     return { title, artist, lyrics, source: 'cifraclub', source_url: url };
-  } catch (e) {
+  } catch {
     return null;
   }
 }

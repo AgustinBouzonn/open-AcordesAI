@@ -12,6 +12,7 @@ import { ChordDiagram } from '../../components/ChordDiagram';
 import { UkuleleChordDiagram } from '../../components/UkuleleChordDiagram';
 import { PianoChordDiagram } from '../../components/PianoChordDiagram';
 import { QUALITIES, GUITAR_STRINGS, UKULELE_STRINGS, buildChordEntries, describeShape, noteToSpanish, type ChordEntry } from './chords';
+import { buildKeys, type KeyChord, type KeyInfo } from './keys';
 import { fetchLatestApk, fetchMergedPrs, groupByMonth, type ChangelogMonth } from './changelog';
 
 export interface BuildOptions {
@@ -37,7 +38,21 @@ interface PageMeta {
   /** Ruta de salida relativa a outDir, p. ej. "acordes/am.html". */
   path: string;
   nav?: string;
+  lang?: Lang;
+  /** Páginas con versión en los tres idiomas: suman <link rel="alternate" hreflang>. */
+  alternates?: Record<Lang, string>;
 }
+
+export type Lang = 'es' | 'en' | 'pt';
+
+// El resto del sitio (diccionario, ayuda, legales) está en español: en/pt lo marcan con "(ES)".
+const UI: Record<Lang, Record<string, string>> = {
+  es: { sections: 'Secciones', features: 'Funciones', chords: 'Acordes', help: 'Ayuda', news: 'Novedades', open: 'Abrir app', footer: 'Pie de página', license: 'Licencia MIT', status: 'Estado', privacy: 'Privacidad', terms: 'Términos', anchor: 'funciones' },
+  en: { sections: 'Sections', features: 'Features', chords: 'Chords (ES)', help: 'Help (ES)', news: 'Changelog (ES)', open: 'Open app', footer: 'Footer', license: 'MIT License', status: 'Status', privacy: 'Privacy (ES)', terms: 'Terms (ES)', anchor: 'features' },
+  pt: { sections: 'Seções', features: 'Recursos', chords: 'Acordes (ES)', help: 'Ajuda (ES)', news: 'Novidades (ES)', open: 'Abrir app', footer: 'Rodapé', license: 'Licença MIT', status: 'Status', privacy: 'Privacidade (ES)', terms: 'Termos (ES)', anchor: 'recursos' },
+};
+const LANG_NAMES: Record<Lang, string> = { es: 'Español', en: 'English', pt: 'Português' };
+const HOME: Record<Lang, string> = { es: '', en: 'en/', pt: 'pt/' };
 
 interface Ctx extends BuildOptions {
   apkUrl: string;
@@ -56,10 +71,17 @@ function canonical(ctx: Ctx, path: string): string {
 function layout(ctx: Ctx, meta: PageMeta, body: string): string {
   const r = rootPrefix(meta.path);
   const url = canonical(ctx, meta.path);
+  const lang = meta.lang ?? 'es';
+  const t = UI[lang];
+  const alternates = meta.alternates
+    ? (Object.entries(meta.alternates) as Array<[Lang, string]>)
+        .map(([l, path]) => `\n  <link rel="alternate" hreflang="${l}" href="${canonical(ctx, path)}">`)
+        .join('') + `\n  <link rel="alternate" hreflang="x-default" href="${canonical(ctx, meta.alternates.es)}">`
+    : '';
   const link = (key: string, href: string, label: string, cls = '') =>
     `<a${cls ? ` class="${cls}"` : ''} href="${href}"${meta.nav === key ? ' aria-current="page"' : ''}>${label}</a>`;
   return `<!doctype html>
-<html lang="es">
+<html lang="${lang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -69,7 +91,7 @@ function layout(ctx: Ctx, meta: PageMeta, body: string): string {
     // GitHub Pages sirve 404.html en cualquier ruta: sin <base> los enlaces relativos se rompen.
     meta.path === '404.html' ? `\n  <base href="${ctx.siteUrl}">\n  <meta name="robots" content="noindex">` : ''
   }
-  <link rel="canonical" href="${url}">
+  <link rel="canonical" href="${url}">${alternates}
   <link rel="icon" href="${r}assets/pwa-192x192.png">
   <link rel="apple-touch-icon" href="${r}assets/apple-touch-icon.png">
   <meta property="og:type" content="website">
@@ -87,13 +109,13 @@ function layout(ctx: Ctx, meta: PageMeta, body: string): string {
 <body>
   <header>
     <div class="wrap nav">
-      <a class="logo" href="${r || './'}"><span class="logo-mark" aria-hidden="true">${NOTE_SVG}</span><span>Acordes<span style="color:var(--brand)">AI</span></span></a>
-      <nav class="nav-links" aria-label="Secciones">
-        ${link('home', `${r}#funciones`, 'Funciones', 'hide-sm')}
-        ${link('acordes', `${r}acordes/`, 'Acordes')}
-        ${link('ayuda', `${r}ayuda.html`, 'Ayuda', 'hide-sm')}
-        ${link('novedades', `${r}novedades.html`, 'Novedades', 'hide-sm')}
-        <a class="btn btn-primary btn-sm" href="${APP_URL}">Abrir app</a>
+      <a class="logo" href="${r + HOME[lang] || './'}"><span class="logo-mark" aria-hidden="true">${NOTE_SVG}</span><span>Acordes<span style="color:var(--brand)">AI</span></span></a>
+      <nav class="nav-links" aria-label="${t.sections}">
+        ${link('home', `${r}${HOME[lang]}#${t.anchor}`, t.features, 'hide-sm')}
+        ${link('acordes', `${r}acordes/`, t.chords)}
+        ${link('ayuda', `${r}ayuda.html`, t.help, 'hide-sm')}
+        ${link('novedades', `${r}novedades.html`, t.news, 'hide-sm')}
+        <a class="btn btn-primary btn-sm" href="${APP_URL}">${t.open}</a>
       </nav>
     </div>
   </header>
@@ -104,17 +126,20 @@ ${body}
 
   <footer>
     <div class="wrap row">
-      <span>© AcordesAI · <a href="https://github.com/${ctx.repo}/blob/main/LICENSE">Licencia MIT</a></span>
-      <nav class="foot-links" aria-label="Pie de página">
+      <span>© AcordesAI · <a href="https://github.com/${ctx.repo}/blob/main/LICENSE">${t.license}</a></span>
+      <nav class="foot-links" aria-label="${t.footer}">
         <a href="${APP_URL}">App</a>
-        <a href="${r}acordes/">Acordes</a>
-        <a href="${r}ayuda.html">Ayuda</a>
-        <a href="${r}novedades.html">Novedades</a>
-        <a href="${r}estado.html">Estado</a>
-        <a href="${r}privacidad.html">Privacidad</a>
-        <a href="${r}terminos.html">Términos</a>
+        <a href="${r}acordes/">${t.chords}</a>
+        <a href="${r}ayuda.html">${t.help}</a>
+        <a href="${r}novedades.html">${t.news}</a>
+        <a href="${r}estado.html">${t.status}</a>
+        <a href="${r}privacidad.html">${t.privacy}</a>
+        <a href="${r}terminos.html">${t.terms}</a>
         <a href="https://github.com/${ctx.repo}">GitHub</a>
       </nav>
+      <nav class="foot-links langs" aria-label="Idioma / Language">${(Object.keys(LANG_NAMES) as Lang[])
+        .map((l) => `<a href="${r}${HOME[l] || './'}" hreflang="${l}" lang="${l}"${l === lang ? ' aria-current="true"' : ''}>${LANG_NAMES[l]}</a>`)
+        .join('')}</nav>
     </div>
   </footer>
 </body>
@@ -151,15 +176,16 @@ function chordCard(e: ChordEntry): string {
   return `<a class="chord-card" href="${chordHref(e)}">${svg(<ChordDiagram shape={e.guitar} width={120} />)}<span>${esc(e.spanishName)}</span></a>`;
 }
 
-function chordTeaser(entries: ChordEntry[]): string {
+function chordTeaser(entries: ChordEntry[], root: string, lang: Lang): string {
   const popular = ['C', 'G', 'Am', 'F', 'D', 'Em'];
   const picks = popular.map((n) => entries.find((e) => e.name === n)).filter((e): e is ChordEntry => !!e);
   return picks
-    .map((e) => `<a class="chord-card" href="acordes/${chordHref(e)}">${svg(<ChordDiagram shape={e.guitar} width={120} />)}<span>${esc(e.spanishName)}</span></a>`)
+    .map((e) => `<a class="chord-card" href="${root}acordes/${chordHref(e)}">${svg(<ChordDiagram shape={e.guitar} width={120} />)}<span>${esc(lang === 'es' ? e.spanishName : e.name)}</span></a>`)
     .join('\n');
 }
 
-function chordPage(ctx: Ctx, e: ChordEntry, all: ChordEntry[]): void {
+function chordPage(ctx: Ctx, e: ChordEntry, all: ChordEntry[], keys: KeyInfo[]): void {
+  const inKeys = keys.filter((k) => k.chords.some((c) => c.lookup === e.name));
   const sameRoot = all.filter((o) => o.root === e.root && o.name !== e.name);
   const sameQuality = all.filter((o) => o.quality.suffix === e.quality.suffix && o.name !== e.name);
   const chips = (list: ChordEntry[]) =>
@@ -192,8 +218,9 @@ function chordPage(ctx: Ctx, e: ChordEntry, all: ChordEntry[]): void {
           <a class="btn btn-primary" href="${APP_URL}">Abrir AcordesAI</a>
         </div>
 
+        ${inKeys.length ? `<h2 class="h3">Aparece en estas tonalidades</h2><div class="chips">${inKeys.map((k) => `<a class="chip" href="${k.slug}.html">${esc(k.spanish)}</a>`).join('')}</div>` : ''}
         ${sameRoot.length ? `<h2 class="h3">Otros acordes de ${esc(noteToSpanish(e.root))}</h2><div class="chips">${chips(sameRoot)}</div>` : ''}
-        <h2 class="h3">Otros acordes ${esc(e.quality.name === 'mayor' ? 'mayores' : `de ${e.quality.name}`)}</h2>
+        <h2 class="h3">Otros acordes ${esc(e.quality.group.charAt(0).toLowerCase() + e.quality.group.slice(1))}</h2>
         <div class="chips">${chips(sameQuality)}</div>
       </div>
     </section>`;
@@ -206,13 +233,15 @@ function chordPage(ctx: Ctx, e: ChordEntry, all: ChordEntry[]): void {
   }, body);
 }
 
-function chordIndex(ctx: Ctx, entries: ChordEntry[]): void {
+function chordIndex(ctx: Ctx, entries: ChordEntry[], keys: KeyInfo[]): void {
   const groups = QUALITIES.map((q) => ({ q, items: entries.filter((e) => e.quality.suffix === q.suffix) })).filter((g) => g.items.length);
   const body = `    <section class="page">
       <div class="wrap">
         <nav class="crumbs" aria-label="Ruta"><a href="../">Inicio</a> / <span>Acordes</span></nav>
         <h1 class="page-title">Diccionario de acordes</h1>
-        <p class="page-lead">Los ${entries.length} acordes más usados con su diagrama para guitarra, ukelele y piano. Tocá uno para ver las notas y dónde va cada dedo.</p>
+        <p class="page-lead">${entries.length} acordes con su diagrama para guitarra, ukelele y piano. Tocá uno para ver las notas y dónde va cada dedo.</p>
+        <h2 class="h3">Por tonalidad</h2>
+        <div class="chips">${keys.map((k) => `<a class="chip" href="${k.slug}.html">${esc(k.spanish)} (${esc(k.tonic)})</a>`).join('')}</div>
         ${groups.map((g) => `<h2 class="h3">${esc(g.q.group)}</h2>\n        <div class="chord-grid">${g.items.map(chordCard).join('')}</div>`).join('\n        ')}
       </div>
     </section>`;
@@ -220,7 +249,55 @@ function chordIndex(ctx: Ctx, entries: ChordEntry[]): void {
     path: 'acordes/index.html',
     nav: 'acordes',
     title: 'Diccionario de acordes para guitarra, ukelele y piano · AcordesAI',
-    description: `Diagramas de ${entries.length} acordes (mayores, menores, séptimas, sus4) para guitarra, ukelele y piano, con notas y posición de los dedos.`,
+    description: `Diagramas de ${entries.length} acordes (mayores, menores, séptimas, disminuidos, sus, add9) para guitarra, ukelele y piano, con notas, posición de los dedos y acordes por tonalidad.`,
+  }, body);
+}
+
+function keyPage(ctx: Ctx, k: KeyInfo, entries: ChordEntry[], keys: KeyInfo[]): void {
+  const byName = new Map(entries.map((e) => [e.name, e]));
+  const card = (c: KeyChord, caption: string) => {
+    const e = byName.get(c.lookup);
+    const diagram = e ? svg(<ChordDiagram shape={{ ...e.guitar, name: c.label }} width={120} />) : `<strong>${esc(c.label)}</strong>`;
+    const inner = `${diagram}<span><b>${esc(c.roman)}</b> · ${esc(caption)}</span>`;
+    return e ? `<a class="chord-card" href="${chordHref(e)}">${inner}</a>` : `<div class="chord-card">${inner}</div>`;
+  };
+  const chip = (c: KeyChord) => {
+    const e = byName.get(c.lookup);
+    return e ? `<a class="chip" href="${chordHref(e)}">${esc(c.label)}</a>` : `<span class="chip">${esc(c.label)}</span>`;
+  };
+  const names = k.chords.map((c) => c.label).join(', ');
+  const rel = k.relativeMinor;
+
+  const body = `    <section class="page">
+      <div class="wrap">
+        <nav class="crumbs" aria-label="Ruta"><a href="../">Inicio</a> / <a href="./">Acordes</a> / <span>${esc(k.spanish)}</span></nav>
+        <h1 class="page-title">Acordes de ${esc(k.spanish)} <span class="muted">· ${esc(k.tonic)}</span></h1>
+        <p class="page-lead">Los acordes de la escala de ${esc(k.spanish)} son <strong>${esc(names)}</strong>. Con ellos se tocan la mayoría de las canciones en este tono.</p>
+
+        <div class="chord-grid">${k.chords.map((c) => card(c, c.role ?? '')).join('')}${card(k.dominantSeventh, 'Dominante con séptima')}</div>
+
+        <h2 class="h3">Progresiones que vas a encontrar</h2>
+        <ul class="progs">${k.progressions.map((p) => `<li><span class="prog-name">${esc(p.name)} <span class="muted">(${esc(p.romans)})</span></span><span class="chips">${p.chords.map(chip).join('')}</span></li>`).join('')}</ul>
+
+        <div class="cols">
+          <div class="card"><h2 class="h3">Relativa menor: ${esc(rel.label)}</h2><p class="muted">${esc(noteToSpanish(rel.label.replace(/m$/, '')))} menor usa los mismos acordes que ${esc(k.spanish)}, pero la canción gira alrededor de ${esc(rel.label)}: empieza y termina ahí.</p></div>
+          <div class="card"><h2 class="h3">Con capo y formas fáciles</h2>${
+            k.capo.length
+              ? `<ul class="howto">${k.capo.map((c) => `<li>Capo en el traste ${c.capo} y formas de ${esc(c.shapes)} (${esc(noteToSpanish(c.shapes))} mayor)</li>`).join('')}</ul>`
+              : `<p class="muted">Es una tonalidad cómoda: se toca sin capo.</p>`
+          }<p class="muted">En AcordesAI, el control de capo de cada canción hace esta cuenta solo.</p></div>
+        </div>
+
+        <h2 class="h3">Otras tonalidades</h2>
+        <div class="chips">${keys.filter((o) => o !== k).map((o) => `<a class="chip" href="${o.slug}.html">${esc(o.spanish)}</a>`).join('')}</div>
+      </div>
+    </section>`;
+
+  emit(ctx, {
+    path: `acordes/${k.slug}.html`,
+    nav: 'acordes',
+    title: `Acordes de ${k.spanish} (${k.tonic}): escala, progresiones y capo · AcordesAI`,
+    description: `Los acordes de la tonalidad de ${k.spanish}: ${names}. Diagramas para guitarra, progresiones típicas, relativa menor y con qué capo tocarla.`,
   }, body);
 }
 
@@ -283,21 +360,34 @@ export async function buildSite(opts: BuildOptions): Promise<{ pages: string[] }
     APK_URL: ctx.apkUrl,
     REPO_URL: `https://github.com/${opts.repo}`,
     STATUS_URL: `https://raw.githubusercontent.com/${opts.repo}/status-data/history.json`,
-    CHORD_TEASER: chordTeaser(entries),
   };
+  const HOME_ALTERNATES: Record<Lang, string> = { es: 'index.html', en: 'en/index.html', pt: 'pt/index.html' };
 
-  for (const file of readdirSync(join(landing, 'pages')).filter((f) => f.endsWith('.html')).sort()) {
-    const { meta, body } = parseFragment(readFileSync(join(landing, 'pages', file), 'utf8'));
+  // landing/pages/*.html en español; landing/pages/<lang>/*.html para las traducciones.
+  const pagesDir = join(landing, 'pages');
+  const files = readdirSync(pagesDir, { recursive: true, encoding: 'utf8' })
+    .map((f) => f.split('\\').join('/'))
+    .filter((f) => f.endsWith('.html'))
+    .sort();
+  for (const file of files) {
+    const { meta, body } = parseFragment(readFileSync(join(pagesDir, file), 'utf8'));
+    const lang = (meta.lang ?? 'es') as Lang;
+    if (!(lang in UI)) throw new Error(`landing/pages/${file}: idioma desconocido ${lang}`);
+    const root = rootPrefix(file);
+    const pageVars: Record<string, string> = { ...vars, ROOT: root, CHORD_TEASER: chordTeaser(entries, root, lang) };
     const html = body.replace(/\{\{(\w+)\}\}/g, (all, key: string) => {
-      if (!(key in vars)) throw new Error(`landing/pages/${file}: variable desconocida ${all}`);
-      return vars[key];
+      if (!(key in pageVars)) throw new Error(`landing/pages/${file}: variable desconocida ${all}`);
+      return pageVars[key];
     });
     if (!meta.title || !meta.description) throw new Error(`landing/pages/${file}: falta title o description`);
-    emit(ctx, { path: file, title: meta.title, description: meta.description, nav: meta.nav }, html);
+    const alternates = Object.values(HOME_ALTERNATES).includes(file) ? HOME_ALTERNATES : undefined;
+    emit(ctx, { path: file, title: meta.title, description: meta.description, nav: meta.nav, lang, alternates }, html);
   }
 
-  chordIndex(ctx, entries);
-  for (const e of entries) chordPage(ctx, e, entries);
+  chordIndex(ctx, entries, buildKeys());
+  const keys = buildKeys();
+  for (const e of entries) chordPage(ctx, e, entries, keys);
+  for (const k of keys) keyPage(ctx, k, entries, keys);
   changelogPage(ctx, prs ? groupByMonth(prs) : null);
 
   writeFileSync(join(opts.outDir, 'sitemap.xml'), sitemap(ctx));

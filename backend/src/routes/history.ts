@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { query } from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { serializeSong } from '../serializers/song';
@@ -22,7 +22,7 @@ export default function createHistoryRouter(): Router {
         [userId, limit]
       );
       res.json(result.rows.map(serializeSong));
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Failed to fetch history' });
     }
   });
@@ -39,7 +39,7 @@ export default function createHistoryRouter(): Router {
         [userId, songId]
       );
       res.status(201).json({ message: 'View recorded' });
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Failed to record view' });
     }
   });
@@ -51,7 +51,7 @@ export default function createHistoryRouter(): Router {
       
       await query('DELETE FROM history WHERE user_id = $1', [userId]);
       res.json({ message: 'History cleared' });
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Failed to clear history' });
     }
   });
