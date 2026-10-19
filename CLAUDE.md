@@ -34,3 +34,4 @@ Compose v2 usa guiones (`open-acordesai-nginx-1`), no underscores. Si se ven con
 - Antes de pushear: `npm run typecheck && npm run test:run && npm run test:backend`.
 - Nunca pushear directo a `main`: siempre PR con CI en verde.
 - Cada bug arreglado trae un test de regresión. Si el bug enseña algo no obvio del proyecto, agregar una línea acá.
+- **@claude en GitHub** (`.github/workflows/claude.yml`): mencionar `@claude` en un issue/PR, o poner la etiqueta `claude` a un issue, lanza Claude Code en Actions. Requiere el secret `CLAUDE_CODE_OAUTH_TOKEN` o `ANTHROPIC_API_KEY`.
