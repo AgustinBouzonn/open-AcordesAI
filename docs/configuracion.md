@@ -35,7 +35,7 @@ En `.env.example`, `DATABASE_URL` apunta al host `postgres` de Docker Compose. P
 
 Sin ninguna clave, la app funciona igual, pero solo con cifrados importados o creados a mano.
 
-`docker-compose.yml` hoy pasa al contenedor solo `GEMINI_API_KEY` y `OPENAI_API_KEY`. Para usar `AI_PROVIDER`, `AI_MODEL` o `AI_BASE_URL` en Docker, agregalas al bloque `environment` del servicio `backend`.
+`docker-compose.yml` pasa al contenedor todas estas variables desde el `.env` del servidor. Si alguna queda vacía, el backend usa su valor por defecto.
 
 ### Opcionales
 
