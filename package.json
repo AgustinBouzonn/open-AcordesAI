@@ -11,7 +11,8 @@
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit",
     "build:all": "npm run build && npm --prefix backend run build",
-    "test:backend": "npm --prefix backend test"
+    "test:backend": "npm --prefix backend test",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "jspdf": "^4.2.1",
@@ -28,6 +29,7 @@
     "@capacitor/android": "^8.3.0",
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

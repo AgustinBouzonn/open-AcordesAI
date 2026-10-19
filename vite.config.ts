@@ -25,6 +25,13 @@ export default defineConfig({
   preview: {
     port: 4173,
     host: '0.0.0.0',
+    // Lo usan los tests e2e (playwright.config.ts) contra el build real.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     sourcemap: false,
