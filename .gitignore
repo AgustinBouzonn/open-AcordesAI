@@ -34,3 +34,6 @@ android/app/release/
 android/app/debug/
 keystore.properties
 *.jks.bak*
+
+# Dumps de la base (scripts/backup-db.sh, scripts/deploy.sh)
+backups/

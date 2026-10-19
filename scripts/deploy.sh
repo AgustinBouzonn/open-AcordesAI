@@ -4,7 +4,7 @@
 #   APP_DIR=/ruta/al/repo bash scripts/deploy.sh [sha]
 #
 # Pasos: fast-forward a <sha> (default origin/main) → build de imágenes →
-# migraciones (todas idempotentes) → recrear contenedores → esperar /api/health
+# pg_dump a backups/ → migraciones (todas idempotentes) → recrear contenedores → esperar /api/health
 # en backend y a través de nginx. Si algo falla después de mover el código,
 # vuelve al commit anterior y re-levanta.
 #
@@ -52,6 +52,13 @@ for _ in $(seq 1 30); do
   docker compose exec -T postgres pg_isready -U acordesai -q && break
   sleep 2
 done
+log "Backup previo a migraciones"
+mkdir -p backups
+docker compose exec -T postgres pg_dump -U acordesai -Fc acordesai \
+  > "backups/pre-deploy-$(date +%Y%m%d-%H%M%S)-${TARGET_SHA:0:7}.dump"
+# Conserva los últimos 10 dumps de deploy.
+ls -1t backups/pre-deploy-*.dump 2>/dev/null | tail -n +11 | xargs -r rm -- || true
+
 for m in backend/migrations/*.sql; do
   docker compose exec -T postgres psql -U acordesai -d acordesai -v ON_ERROR_STOP=1 -q < "$m"
 done

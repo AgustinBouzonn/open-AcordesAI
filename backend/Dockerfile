@@ -1,5 +1,7 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
+# puppeteer es devDependency (solo scripts de import); no hace falta Chromium en la imagen.
+ENV PUPPETEER_SKIP_DOWNLOAD=1
 COPY package*.json ./
 RUN npm ci
 COPY tsconfig.json ./
