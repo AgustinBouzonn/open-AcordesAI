@@ -16,6 +16,8 @@
 - Endpoint: `POST /api/import/from-url` (requireAuth) con body `{ url }`. Valida hostname contra `ALLOWED_HOSTS` (Cifra Club, Ultimate Guitar, CifraSpot), scrapea el `<pre>` más largo y el `og:title`, inserta en `songs` + `chord_cache (instrument='guitar')` atómicamente. Dedup por `source_url` (devuelve `existed: true`).
 - Frontend: botón flotante ⬇ en `App.tsx` → `ImportUrlModal` → llama `api.imports.fromUrl(url)` → navega a `/song/:id`.
 - El mismo patrón (insert en `songs` + `chord_cache` con mismo contenido) lo usa `scripts/import-bulk.mjs` para imports masivos por CLI.
+- Carga masiva desde Ultimate Guitar: `DATABASE_URL=... node scripts/seed-songs.mjs [--per-artist 15] [--top-pages 4] [--artists "A,B"] [--dry-run]`. Deduplica por `source_url` y título+artista, así que se puede volver a correr. Con un host de Neon usa `@neondatabase/serverless` (HTTP, puerto 443).
+- Cifra Club (Akamai) responde 403 a IPs de datacenter. A UG, el `fetch` de Node le da un challenge de Cloudflare (429) y curl no: el seed baja con curl y sin `Accept-Language` (con `es` redirige a `es.ultimate-guitar.com`).
 
 ## Automatización (CI/CD)
 - **CI** (`.github/workflows/ci.yml`): lint, typecheck, tests frontend (vitest), build, tests backend, migraciones dos veces, integración, e2e. El job `vercel-build` corre `vercel build` con un proyecto ficticio y carga la función empaquetada. Corre en cada push/PR.
