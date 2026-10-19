@@ -14,7 +14,6 @@
     "test:backend": "npm --prefix backend test"
   },
   "dependencies": {
-    "@google/genai": "^1.39.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.563.0",
     "pitchy": "^4.1.0",

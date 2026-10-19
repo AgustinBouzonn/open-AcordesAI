@@ -8,10 +8,6 @@ RUN npm ci
 
 COPY . .
 
-# Las variables VITE_ se inyectan en build time
-ARG VITE_GEMINI_API_KEY
-ENV VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY
-
 RUN npm run build \
  && WORKBOX_FILE="$(find dist -maxdepth 1 -name 'workbox-*.js' | head -n 1)" \
  && cp "$WORKBOX_FILE" dist/workbox.js \

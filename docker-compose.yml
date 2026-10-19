@@ -9,7 +9,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/migrations:/docker-entrypoint-initdb.d
     ports:
-      - "5433:5432"
+      # Solo localhost: Docker publica puertos saltándose el firewall del VPS.
+      - "127.0.0.1:5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U acordesai"]
       interval: 5s
@@ -37,7 +38,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
-      - "3003:3001"
+      - "127.0.0.1:3003:3001"
     depends_on:
       postgres:
         condition: service_healthy
