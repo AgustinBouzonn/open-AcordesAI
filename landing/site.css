@@ -150,6 +150,13 @@ footer a:hover { color: var(--text); }
 .chord-card:hover { border-color: var(--brand); color: var(--text); }
 .chord-card svg { max-width: 100%; height: auto; }
 
+/* Tonalidades */
+.progs { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.progs li { display: grid; gap: 6px; }
+.prog-name { font-weight: 600; }
+.chord-card b { color: var(--brand-soft); }
+span.chip { cursor: default; }
+
 /* Novedades */
 .changes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .changes li { display: flex; gap: 12px; align-items: baseline; }

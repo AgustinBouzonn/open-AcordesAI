@@ -12,6 +12,7 @@ import { ChordDiagram } from '../../components/ChordDiagram';
 import { UkuleleChordDiagram } from '../../components/UkuleleChordDiagram';
 import { PianoChordDiagram } from '../../components/PianoChordDiagram';
 import { QUALITIES, GUITAR_STRINGS, UKULELE_STRINGS, buildChordEntries, describeShape, noteToSpanish, type ChordEntry } from './chords';
+import { buildKeys, type KeyChord, type KeyInfo } from './keys';
 import { fetchLatestApk, fetchMergedPrs, groupByMonth, type ChangelogMonth } from './changelog';
 
 export interface BuildOptions {
@@ -159,7 +160,8 @@ function chordTeaser(entries: ChordEntry[]): string {
     .join('\n');
 }
 
-function chordPage(ctx: Ctx, e: ChordEntry, all: ChordEntry[]): void {
+function chordPage(ctx: Ctx, e: ChordEntry, all: ChordEntry[], keys: KeyInfo[]): void {
+  const inKeys = keys.filter((k) => k.chords.some((c) => c.lookup === e.name));
   const sameRoot = all.filter((o) => o.root === e.root && o.name !== e.name);
   const sameQuality = all.filter((o) => o.quality.suffix === e.quality.suffix && o.name !== e.name);
   const chips = (list: ChordEntry[]) =>
@@ -192,8 +194,9 @@ function chordPage(ctx: Ctx, e: ChordEntry, all: ChordEntry[]): void {
           <a class="btn btn-primary" href="${APP_URL}">Abrir AcordesAI</a>
         </div>
 
+        ${inKeys.length ? `<h2 class="h3">Aparece en estas tonalidades</h2><div class="chips">${inKeys.map((k) => `<a class="chip" href="${k.slug}.html">${esc(k.spanish)}</a>`).join('')}</div>` : ''}
         ${sameRoot.length ? `<h2 class="h3">Otros acordes de ${esc(noteToSpanish(e.root))}</h2><div class="chips">${chips(sameRoot)}</div>` : ''}
-        <h2 class="h3">Otros acordes ${esc(e.quality.name === 'mayor' ? 'mayores' : `de ${e.quality.name}`)}</h2>
+        <h2 class="h3">Otros acordes ${esc(e.quality.group.charAt(0).toLowerCase() + e.quality.group.slice(1))}</h2>
         <div class="chips">${chips(sameQuality)}</div>
       </div>
     </section>`;
@@ -206,13 +209,15 @@ function chordPage(ctx: Ctx, e: ChordEntry, all: ChordEntry[]): void {
   }, body);
 }
 
-function chordIndex(ctx: Ctx, entries: ChordEntry[]): void {
+function chordIndex(ctx: Ctx, entries: ChordEntry[], keys: KeyInfo[]): void {
   const groups = QUALITIES.map((q) => ({ q, items: entries.filter((e) => e.quality.suffix === q.suffix) })).filter((g) => g.items.length);
   const body = `    <section class="page">
       <div class="wrap">
         <nav class="crumbs" aria-label="Ruta"><a href="../">Inicio</a> / <span>Acordes</span></nav>
         <h1 class="page-title">Diccionario de acordes</h1>
-        <p class="page-lead">Los ${entries.length} acordes más usados con su diagrama para guitarra, ukelele y piano. Tocá uno para ver las notas y dónde va cada dedo.</p>
+        <p class="page-lead">${entries.length} acordes con su diagrama para guitarra, ukelele y piano. Tocá uno para ver las notas y dónde va cada dedo.</p>
+        <h2 class="h3">Por tonalidad</h2>
+        <div class="chips">${keys.map((k) => `<a class="chip" href="${k.slug}.html">${esc(k.spanish)} (${esc(k.tonic)})</a>`).join('')}</div>
         ${groups.map((g) => `<h2 class="h3">${esc(g.q.group)}</h2>\n        <div class="chord-grid">${g.items.map(chordCard).join('')}</div>`).join('\n        ')}
       </div>
     </section>`;
@@ -220,7 +225,55 @@ function chordIndex(ctx: Ctx, entries: ChordEntry[]): void {
     path: 'acordes/index.html',
     nav: 'acordes',
     title: 'Diccionario de acordes para guitarra, ukelele y piano · AcordesAI',
-    description: `Diagramas de ${entries.length} acordes (mayores, menores, séptimas, sus4) para guitarra, ukelele y piano, con notas y posición de los dedos.`,
+    description: `Diagramas de ${entries.length} acordes (mayores, menores, séptimas, disminuidos, sus, add9) para guitarra, ukelele y piano, con notas, posición de los dedos y acordes por tonalidad.`,
+  }, body);
+}
+
+function keyPage(ctx: Ctx, k: KeyInfo, entries: ChordEntry[], keys: KeyInfo[]): void {
+  const byName = new Map(entries.map((e) => [e.name, e]));
+  const card = (c: KeyChord, caption: string) => {
+    const e = byName.get(c.lookup);
+    const diagram = e ? svg(<ChordDiagram shape={{ ...e.guitar, name: c.label }} width={120} />) : `<strong>${esc(c.label)}</strong>`;
+    const inner = `${diagram}<span><b>${esc(c.roman)}</b> · ${esc(caption)}</span>`;
+    return e ? `<a class="chord-card" href="${chordHref(e)}">${inner}</a>` : `<div class="chord-card">${inner}</div>`;
+  };
+  const chip = (c: KeyChord) => {
+    const e = byName.get(c.lookup);
+    return e ? `<a class="chip" href="${chordHref(e)}">${esc(c.label)}</a>` : `<span class="chip">${esc(c.label)}</span>`;
+  };
+  const names = k.chords.map((c) => c.label).join(', ');
+  const rel = k.relativeMinor;
+
+  const body = `    <section class="page">
+      <div class="wrap">
+        <nav class="crumbs" aria-label="Ruta"><a href="../">Inicio</a> / <a href="./">Acordes</a> / <span>${esc(k.spanish)}</span></nav>
+        <h1 class="page-title">Acordes de ${esc(k.spanish)} <span class="muted">· ${esc(k.tonic)}</span></h1>
+        <p class="page-lead">Los acordes de la escala de ${esc(k.spanish)} son <strong>${esc(names)}</strong>. Con ellos se tocan la mayoría de las canciones en este tono.</p>
+
+        <div class="chord-grid">${k.chords.map((c) => card(c, c.role ?? '')).join('')}${card(k.dominantSeventh, 'Dominante con séptima')}</div>
+
+        <h2 class="h3">Progresiones que vas a encontrar</h2>
+        <ul class="progs">${k.progressions.map((p) => `<li><span class="prog-name">${esc(p.name)} <span class="muted">(${esc(p.romans)})</span></span><span class="chips">${p.chords.map(chip).join('')}</span></li>`).join('')}</ul>
+
+        <div class="cols">
+          <div class="card"><h2 class="h3">Relativa menor: ${esc(rel.label)}</h2><p class="muted">${esc(noteToSpanish(rel.label.replace(/m$/, '')))} menor usa los mismos acordes que ${esc(k.spanish)}, pero la canción gira alrededor de ${esc(rel.label)}: empieza y termina ahí.</p></div>
+          <div class="card"><h2 class="h3">Con capo y formas fáciles</h2>${
+            k.capo.length
+              ? `<ul class="howto">${k.capo.map((c) => `<li>Capo en el traste ${c.capo} y formas de ${esc(c.shapes)} (${esc(noteToSpanish(c.shapes))} mayor)</li>`).join('')}</ul>`
+              : `<p class="muted">Es una tonalidad cómoda: se toca sin capo.</p>`
+          }<p class="muted">En AcordesAI, el control de capo de cada canción hace esta cuenta solo.</p></div>
+        </div>
+
+        <h2 class="h3">Otras tonalidades</h2>
+        <div class="chips">${keys.filter((o) => o !== k).map((o) => `<a class="chip" href="${o.slug}.html">${esc(o.spanish)}</a>`).join('')}</div>
+      </div>
+    </section>`;
+
+  emit(ctx, {
+    path: `acordes/${k.slug}.html`,
+    nav: 'acordes',
+    title: `Acordes de ${k.spanish} (${k.tonic}): escala, progresiones y capo · AcordesAI`,
+    description: `Los acordes de la tonalidad de ${k.spanish}: ${names}. Diagramas para guitarra, progresiones típicas, relativa menor y con qué capo tocarla.`,
   }, body);
 }
 
@@ -296,8 +349,10 @@ export async function buildSite(opts: BuildOptions): Promise<{ pages: string[] }
     emit(ctx, { path: file, title: meta.title, description: meta.description, nav: meta.nav }, html);
   }
 
-  chordIndex(ctx, entries);
-  for (const e of entries) chordPage(ctx, e, entries);
+  chordIndex(ctx, entries, buildKeys());
+  const keys = buildKeys();
+  for (const e of entries) chordPage(ctx, e, entries, keys);
+  for (const k of keys) keyPage(ctx, k, entries, keys);
   changelogPage(ctx, prs ? groupByMonth(prs) : null);
 
   writeFileSync(join(opts.outDir, 'sitemap.xml'), sitemap(ctx));

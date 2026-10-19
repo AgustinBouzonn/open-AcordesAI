@@ -95,3 +95,24 @@ describe('buildSite (offline)', () => {
     expect(readFileSync(join(out, 'sitemap.xml'), 'utf8')).not.toContain('404.html');
   });
 });
+
+describe('key pages', () => {
+  it('spells the diatonic chords of a sharp and a flat key', async () => {
+    const { buildKey } = await import('../../landing/build/keys');
+    expect(buildKey('G').chords.map((c) => c.label)).toEqual(['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#°']);
+    expect(buildKey('Bb').chords.map((c) => c.label)).toEqual(['Bb', 'Cm', 'Dm', 'Eb', 'F', 'Gm', 'A°']);
+    // F# mayor: la sensible es E#, pero el diagrama es el de F°7.
+    const fs = buildKey('F#').chords[6];
+    expect(fs).toMatchObject({ label: 'E#°', lookup: 'Fdim7' });
+  });
+
+  it('links every chord to a dictionary page and suggests capo positions', async () => {
+    const { buildKeys, buildKey } = await import('../../landing/build/keys');
+    const names = new Set(buildChordEntries().map((e) => e.name));
+    for (const k of buildKeys()) {
+      for (const c of [...k.chords, k.dominantSeventh]) expect(names.has(c.lookup), `${k.tonic}: ${c.label}`).toBe(true);
+    }
+    expect(buildKey('G').capo).toEqual([{ capo: 3, shapes: 'E' }, { capo: 5, shapes: 'D' }, { capo: 7, shapes: 'C' }]);
+    expect(buildKey('G').progressions[0].chords.map((c) => c.label)).toEqual(['G', 'D', 'Em', 'C']);
+  });
+});

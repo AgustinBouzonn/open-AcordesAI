@@ -1,51 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { lookupChord } from '../data/chordShapes';
-import { UKULELE_SHAPES } from '../data/ukuleleShapes';
+import { lookupUkulele } from '../data/ukuleleShapes';
 import { ChordDiagram } from './ChordDiagram';
 import { UkuleleChordDiagram } from './UkuleleChordDiagram';
 import { PianoChordDiagram } from './PianoChordDiagram';
+import { extractChords } from '../services/chordExtractor';
 
 type Instrument = 'guitar' | 'ukulele' | 'piano';
-
-const CHORD_TOKEN_RE = /\b([A-G](?:#|b)?(?:m(?!aj)|maj|min|dim|aug|sus)?\d*(?:[#b](?:5|9|11|13))*(?:\/[A-G](?:#|b)?)?)\b/g;
-const FLAT_TO_SHARP: Record<string, string> = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' };
-
-function extractChords(text: string): string[] {
-  if (!text) return [];
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const line of text.split('\n')) {
-    const trimmed = line.trim();
-    const tokens = trimmed.split(/\s+/);
-    if (tokens.length === 0) continue;
-    const looksLikeChordLine = tokens.every((t) => /^[\[(]?[A-G](?:#|b)?[^\s]*[\])]?$/.test(t));
-    if (!looksLikeChordLine) continue;
-    for (const m of trimmed.matchAll(CHORD_TOKEN_RE)) {
-      const name = m[1];
-      const base = name.split('/')[0];
-      if (!seen.has(base)) {
-        seen.add(base);
-        result.push(base);
-      }
-    }
-  }
-  return result;
-}
-
-function lookupUkulele(name: string) {
-  if (!name) return null;
-  const cleaned = name.trim().replace(/\s+/g, '');
-  const base = cleaned.split('/')[0];
-  let normalized = base;
-  for (const [flat, sharp] of Object.entries(FLAT_TO_SHARP)) {
-    if (normalized.startsWith(flat)) {
-      normalized = sharp + normalized.slice(flat.length);
-      break;
-    }
-  }
-  return UKULELE_SHAPES[normalized] || null;
-}
 
 interface Props {
   chords: string;

@@ -1,8 +1,13 @@
+import { isChordToken } from './chordExtractor';
+
 const TRANSPOSITIONS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLAT_TO_SHARP: Record<string, string> = {
   Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#',
 };
 export const CHORD_TOKEN = /^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus|add)?\d*(?:[#b](?:5|9|11|13))*(?:\/[A-G](?:#|b)?)?$/i;
+// CHORD_TOKEN no cubre la notación de Cifra Club ("C7M", "Bm7(b5)", "D°", "A7(9)"): con capo o
+// transposición esos acordes quedaban sin mover. isChordToken sí la entiende.
+const looksLikeChord = (token: string) => CHORD_TOKEN.test(token) || isChordToken(token);
 
 export function transposeRoot(root: string, steps: number): string {
   if (!root) return root;
@@ -34,7 +39,7 @@ export function isChordLine(line: string): boolean {
   if (tokens.length === 0) return false;
   const chordTokens = tokens.filter((token) => {
     const cleaned = token.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
-    return CHORD_TOKEN.test(cleaned);
+    return looksLikeChord(cleaned);
   });
   return chordTokens.length > 0 && chordTokens.length >= Math.ceil(tokens.length * 0.6);
 }
@@ -45,7 +50,7 @@ export function transposeChords(text: string, steps: number): string {
     .split('\n')
     .map((line) => {
       const withInlineChords = line.replace(/\[([^[\]]+)\]/g, (fullMatch, token: string) => {
-        return CHORD_TOKEN.test(token) ? `[${transposeChordToken(token, steps)}]` : fullMatch;
+        return looksLikeChord(token) ? `[${transposeChordToken(token, steps)}]` : fullMatch;
       });
       if (!isChordLine(withInlineChords)) return withInlineChords;
       return withInlineChords.replace(
@@ -53,7 +58,7 @@ export function transposeChords(text: string, steps: number): string {
         (match, leading) => {
           const candidate = match.slice(leading.length);
           const cleaned = candidate.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
-          return CHORD_TOKEN.test(cleaned) ? `${leading}${transposeChordToken(candidate, steps)}` : match;
+          return looksLikeChord(cleaned) ? `${leading}${transposeChordToken(candidate, steps)}` : match;
         },
       );
     })
@@ -67,7 +72,7 @@ export function extractUniqueChords(text: string): string[] {
     if (!isChordLine(line)) continue;
     for (const raw of line.split(/\s+/)) {
       const cleaned = raw.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
-      if (CHORD_TOKEN.test(cleaned)) found.add(cleaned);
+      if (looksLikeChord(cleaned)) found.add(cleaned);
     }
   }
   return Array.from(found);
