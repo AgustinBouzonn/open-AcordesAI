@@ -69,7 +69,7 @@ export const ChordSearchPage: React.FC<Props> = ({ onSelectSong }) => {
           {chips.map((c, i) => (
             <span key={i} className="bg-brand/20 text-brand border border-brand/40 px-2 py-1 rounded-lg text-sm font-mono flex items-center gap-1">
               {c}
-              <button onClick={() => removeChip(i)} className="hover:text-white"><X size={12} /></button>
+              <button onClick={() => removeChip(i)} className="hover:text-white" aria-label={`Quitar acorde ${c}`}><X size={12} /></button>
             </span>
           ))}
           <input
