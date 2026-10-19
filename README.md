@@ -93,7 +93,7 @@ La lista completa, con los valores por defecto y la configuración del modelo, e
 
 ```mermaid
 flowchart LR
-  A[PWA / Android] -->|/api| B[Nginx]
+  A[PWA / Android] -->|/api| B[Vercel o Nginx]
   B --> C[API Express]
   B -.->|estáticos| A
   C --> D[(PostgreSQL)]
@@ -127,8 +127,8 @@ npm run lint && npm run typecheck && npm run test:run && npm run test:backend
 
 ## Despliegue
 
-- **Producción:** `docker compose` levanta PostgreSQL, la API y Nginx, pensado para correr detrás de un reverse proxy con TLS.
-- **Deploy continuo:** cuando la CI pasa en `main`, un workflow ejecuta `scripts/deploy.sh` en el servidor. El script aplica las migraciones, reconstruye los contenedores y vuelve a la versión anterior si falla el health check.
+- **Producción:** Vercel sirve el frontend y la API como función serverless, y la base está en Neon, ambos con plan gratis. Cada push a `main` se despliega solo y aplica las migraciones. Puesta en marcha: [docs/deploy-vercel.md](docs/deploy-vercel.md).
+- **Self-hosting:** `docker compose` levanta PostgreSQL, la API y Nginx, pensado para correr detrás de un reverse proxy con TLS.
 - **Android:** cada release publica el APK y el AAB firmados. Para compilar a mano, seguí [docs/android-release.md](docs/android-release.md).
 - **Sitio y estado:** GitHub Pages publica la landing y una página de estado que mide la disponibilidad cada 15 minutos.
 

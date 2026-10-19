@@ -1,22 +1,16 @@
 # Infraestructura
 
-## VPS personal (Hostinger)
-- **IP pública:** `195.200.1.74`
-- **Panel:** EasyPanel (Traefik como reverse proxy, red Docker `easypanel` / `easypanel-webpage`).
-- **Dominio de producción:** `acordesai.bthings.com.ar`
-- **DNS:** apuntado a Cloudflare en modo proxy (naranja). Cloudflare termina TLS en el edge y reenvía al origen `195.200.1.74`.
+## Producción: Vercel + Neon (plan gratis)
+- **Dominio:** `acordesai.bthings.com.ar` (CNAME a Vercel, DNS only en Cloudflare). Guía completa: `docs/deploy-vercel.md`.
+- **Vercel** sirve `dist/` y la API como una sola función serverless: `api/index.js` exporta la app Express de `backend/dist/app.js`; `vercel.json` reescribe `/api/*` hacia ella. Región `gru1` (São Paulo).
+- **Neon** (Postgres, `aws-sa-east-1`): `DATABASE_URL` es la conexión con pooler (app); `DATABASE_URL_UNPOOLED` la directa (migraciones).
+- `vercel.json`: el `installCommand` compila el backend (la función importa JS ya compilado: Vercel no puede transpilar con TypeScript 7). `ignoreCommand` construye solo producción: un preview usaría la base de producción.
+- `scripts/vercel-build.sh` hace el build del frontend y después `npm --prefix backend run migrate` (solo `VERCEL_ENV=production`). `migrate.js` corre **todas** las migraciones en cada deploy; `schema_migrations` es solo registro.
+- Headers de seguridad: los mismos en `vercel.json` y `nginx.conf` (lo verifica `test/vercelConfig.test.ts`).
+- Serverless: nada de estado en memoria que tenga que sobrevivir entre requests (cada instancia tiene el suyo; los rate limits son aproximados). El pool de pg tiene listener de `'error'`: Neon corta las conexiones al suspender la base.
 
-## Flujo de request
-cliente → Cloudflare (TLS) → VPS `195.200.1.74` → Traefik (EasyPanel) → contenedor `open-acordesai-nginx-1` (puerto 80) → `open-acordesai-backend-1` (puerto 3001) / estáticos del frontend.
-
-## Enrutado (actual)
-- Traefik descubre el routing por **labels Docker** en el servicio `nginx` del `docker-compose.yml` (provider `docker` ya habilitado en Traefik). No se editan archivos en `/etc/easypanel/traefik/config/`: Easypanel regenera `main.yaml` desde su DB y borra entradas externas. Las labels sobreviven a cualquier regeneración.
-- Para que Traefik pueda resolver el container, nginx debe estar en la red `easypanel` y tener la label `traefik.docker.network=easypanel`.
-- nginx.conf: `proxy_pass` al backend por nombre DNS (`open-acordesai-backend-1:3001`). Requiere `resolver 127.0.0.11` (ya configurado) para que nginx refresque el nombre.
-- `update-traefik.sh` fue eliminado (ya no hay IPs hardcodeadas).
-
-## Convención de nombres Docker Compose
-Compose v2 usa guiones (`open-acordesai-nginx-1`), no underscores. Si se ven containers viejos con `_`, son huérfanos: `docker compose up -d --force-recreate --remove-orphans`.
+## Self-hosting (Docker Compose)
+`docker-compose.yml` levanta Postgres, backend y nginx (con labels de Traefik/EasyPanel, como estaba en el VPS anterior). nginx hace `proxy_pass` al backend por nombre DNS (`open-acordesai-backend-1:3001`, con `resolver 127.0.0.11`). Compose v2 usa guiones en los nombres (`open-acordesai-nginx-1`); containers con `_` son huérfanos: `docker compose up -d --force-recreate --remove-orphans`.
 
 ## Import desde URL
 - Endpoint: `POST /api/import/from-url` (requireAuth) con body `{ url }`. Valida hostname contra `ALLOWED_HOSTS` (Cifra Club, Ultimate Guitar, CifraSpot), scrapea el `<pre>` más largo y el `og:title`, inserta en `songs` + `chord_cache (instrument='guitar')` atómicamente. Dedup por `source_url` (devuelve `existed: true`).
@@ -24,9 +18,8 @@ Compose v2 usa guiones (`open-acordesai-nginx-1`), no underscores. Si se ven con
 - El mismo patrón (insert en `songs` + `chord_cache` con mismo contenido) lo usa `scripts/import-bulk.mjs` para imports masivos por CLI.
 
 ## Automatización (CI/CD)
-- **CI** (`.github/workflows/ci.yml`): typecheck, tests frontend (vitest), build, tests backend. Corre en cada push/PR.
-- **Deploy** (`.github/workflows/deploy.yml`): cuando CI pasa en un push a `main`, entra por SSH al VPS y ejecuta `scripts/deploy.sh <sha>` (fast-forward, build, migraciones idempotentes, `docker compose up -d`, health check). Si el health falla, vuelve solo al commit anterior. También se puede lanzar a mano (workflow_dispatch).
-- Secrets en GitHub: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_APP_DIR` (opcionales `VPS_PORT`, `VPS_KNOWN_HOSTS`). Sin ellos el deploy se omite con un warning.
+- **CI** (`.github/workflows/ci.yml`): lint, typecheck, tests frontend (vitest), build, tests backend, migraciones dos veces, integración, e2e. El job `vercel-build` corre `vercel build` con un proyecto ficticio y carga la función empaquetada. Corre en cada push/PR.
+- **Deploy:** la integración de Git de Vercel despliega cada push a `main` (no hay workflow propio). Si el build o una migración fallan, queda la versión anterior.
 - Toda migración nueva en `backend/migrations/` debe ser idempotente (`IF NOT EXISTS` / `IF EXISTS`): el deploy las corre todas en cada release.
 - Sesiones de Claude en la nube: `.claude/hooks/session-start.sh` instala dependencias para poder correr tests.
 - **@claude en GitHub** (`.github/workflows/claude.yml`): mencionar `@claude` en un issue/PR, o poner la etiqueta `claude` a un issue, lanza Claude Code en Actions. Requiere el secret `CLAUDE_CODE_OAUTH_TOKEN` o `ANTHROPIC_API_KEY`.

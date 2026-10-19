@@ -97,3 +97,39 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  # El mismo build que corre Vercel (vercel.json → install, build y la función de /api): si la config
+  # o el empaquetado de la función se rompen, falla acá y no en el deploy de producción.
+  vercel-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      # Proyecto ficticio: `vercel build` no necesita cuenta, solo la config local.
+      - name: vercel build
+        run: |
+          mkdir -p .vercel
+          echo '{"projectId":"prj_ci","orgId":"team_ci","settings":{"framework":"vite","nodeVersion":"22.x"}}' > .vercel/project.json
+          npx --yes vercel@62.0.0 build --yes
+
+      # La función empaquetada tiene que cargar sola, con las dependencias que trazó Vercel.
+      - name: Function bundle loads
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+          JWT_SECRET: test-secret-with-at-least-32-chars
+        run: |
+          node -e "import('./.vercel/output/functions/api/index.func/api/index.js').then((m) => {
+            let h = m; for (let i = 0; i < 5; i++) if (h.default) h = h.default;
+            if (typeof h !== 'function') throw new Error('api/index.js no exporta un handler');
+            console.log('ok: handler', h.name || 'express');
+          })"

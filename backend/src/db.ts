@@ -8,6 +8,13 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
+// Neon suspende la base tras 5 min sin uso y corta las conexiones abiertas: el cliente ocioso emite
+// 'error' y, sin listener, Node lo trata como excepción no capturada y tira la función entera.
+// El pool ya descarta ese cliente; la próxima consulta abre uno nuevo.
+pool.on('error', (err) => {
+  console.error('[db] idle client error', err.message);
+});
+
 export type QueryParam = string | number | boolean | null | Date | number[] | string[];
 
 export const query = (text: string, params?: QueryParam[]): Promise<QueryResult> =>
