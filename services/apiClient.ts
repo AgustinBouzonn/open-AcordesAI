@@ -1,7 +1,7 @@
 import { Comment, Instrument, OAuthProvider, ProfileStats, RatingSummary, Song, User } from '../types';
+import { getAbsoluteApiBase, getApiBase } from './appUrl';
 import { safeStorage } from './safeStorage';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const TOKEN_KEY = 'token';
 
 interface AuthResponse {
@@ -46,13 +46,6 @@ export const onAuthError = (fn: AuthListener) => {
 class ApiClient {
   private token: string | null = null;
 
-  private getAbsoluteApiBase(): string {
-    if (/^https?:\/\//.test(API_BASE)) {
-      return API_BASE.replace(/\/$/, '');
-    }
-    return `${window.location.origin}${API_BASE}`.replace(/\/$/, '');
-  }
-
   setToken(token: string | null) {
     this.token = token;
     if (token) safeStorage.set(TOKEN_KEY, token);
@@ -75,7 +68,7 @@ class ApiClient {
       const token = this.getToken();
       if (token) headers['Authorization'] = `Bearer ${token}`;
     }
-    return fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+    return fetch(`${getApiBase()}${endpoint}`, { ...options, headers });
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -134,9 +127,9 @@ class ApiClient {
         method: 'DELETE',
         body: JSON.stringify({ confirm: 'ELIMINAR' }),
       }),
-    getOAuthStartUrl: (provider: OAuthProvider) => `${this.getAbsoluteApiBase()}/auth/oauth/${provider}/start`,
+    getOAuthStartUrl: (provider: OAuthProvider) => `${getAbsoluteApiBase()}/auth/oauth/${provider}/start`,
     getOAuthRedirect: async (provider: OAuthProvider) => {
-      const response = await fetch(`${this.getAbsoluteApiBase()}/auth/oauth/${provider}/start`, {
+      const response = await fetch(`${getAbsoluteApiBase()}/auth/oauth/${provider}/start`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -160,7 +153,7 @@ class ApiClient {
   };
 
   backup = {
-    export: () => fetch(`${API_BASE}/auth/export`, { headers: { Authorization: `Bearer ${this.getToken()}` } }).then((r) => r.json()),
+    export: () => fetch(`${getApiBase()}/auth/export`, { headers: { Authorization: `Bearer ${this.getToken()}` } }).then((r) => r.json()),
     import: (data: unknown) => this.request<{ message: string; imported: { favorites: number; ratings: number; setlists: number } }>('/auth/import', {
       method: 'POST',
       body: JSON.stringify(data),

@@ -55,3 +55,4 @@ Compose v2 usa guiones (`open-acordesai-nginx-1`), no underscores. Si se ven con
 - Sobre fondos `dark-*` el gris mínimo para texto es `text-gray-400` (`gray-500` da ~3.5:1).
 - Tarjetas clickeables: `CardButton` (un `<button>` real con `::after` estirado sobre la tarjeta `relative`), nunca `<div onClick>`.
 - Cada pantalla tiene un único `h1`; las tarjetas son `h2` (o `h3` debajo de una sección `h2`). Todo input/select lleva `<label htmlFor>` o `aria-label`.
+- La base de la API sale siempre de `getApiBase()` / `getAbsoluteApiBase()` en `services/appUrl.ts` (incluido el inicio del login social): no armar URLs con `window.location.origin + '/api'`, porque en una app nativa empaquetada el origen es `https://localhost`.

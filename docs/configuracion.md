@@ -56,4 +56,4 @@ Al arrancar, el backend informa en el log qué integraciones quedaron habilitada
 |---|---|---|
 | `VITE_API_URL` | `/api` | Base de la API. `/api` funciona cuando frontend y backend comparten host, como detrás de Nginx o con el proxy de Vite. Si la app nativa empaqueta el frontend en lugar de cargar el sitio remoto, usá una URL absoluta, por ejemplo `https://tu-dominio.com/api`. |
 | `VITE_PUBLIC_APP_URL` | vacía | URL pública con la que se arman los enlaces para compartir canciones y setlists, por ejemplo `https://tu-dominio.com`. Si está vacía, o no empieza con `http(s)://`, se usa el origen de la página. Conviene definirla en el build de Android. |
-| `VITE_NATIVE_API_URL` | vacía | Figura en `.env.example`, pero el código no la lee. Para la API usá `VITE_API_URL`. |
+| `VITE_NATIVE_API_URL` | vacía | Base absoluta de la API que usa solo la app nativa (Capacitor), por ejemplo `https://tu-dominio.com/api`. Se ignora en la web y si no empieza con `http(s)://`. Si está vacía, la app nativa usa `VITE_API_URL`. |
