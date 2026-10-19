@@ -26,8 +26,8 @@
       --line: #3a3a3a;
       --text: #f2f2f3;
       --muted: #a1a1aa;
-      --brand: #4f46e5;
-      --brand-soft: #8b85ff;
+      --brand: #ff6b00;
+      --brand-soft: #ff9a4d;
       --radius: 16px;
       --max: 1080px;
     }
@@ -49,7 +49,8 @@
     header { position: sticky; top: 0; z-index: 10; background: rgba(18,18,18,.85); backdrop-filter: blur(10px); border-bottom: 1px solid #ffffff10; }
     .nav { display: flex; align-items: center; justify-content: space-between; height: 60px; }
     .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; text-decoration: none; letter-spacing: -.01em; }
-    .logo img { width: 30px; height: 30px; border-radius: 8px; }
+    .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--brand); color: #fff; display: grid; place-items: center; }
+    .logo-mark svg { width: 18px; height: 18px; }
     .nav-links { display: flex; gap: 20px; align-items: center; font-size: 14px; color: var(--muted); }
     .nav-links a { text-decoration: none; }
     .nav-links a:hover { color: var(--text); }
@@ -58,8 +59,8 @@
     /* Buttons */
     .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-weight: 600; text-decoration: none; font-size: 15px; transition: transform .15s, background .15s, border-color .15s; }
     .btn:hover { transform: translateY(-1px); }
-    .btn-primary { background: var(--brand); color: #fff; box-shadow: 0 8px 30px -8px rgba(79,70,229,.7); }
-    .btn-primary:hover { background: #5b53f0; }
+    .btn-primary { background: var(--brand); color: #fff; box-shadow: 0 8px 30px -8px rgba(255,107,0,.7); }
+    .btn-primary:hover { background: #ff7f24; }
     .btn-ghost { border: 1px solid var(--line); background: var(--surface); }
     .btn-ghost:hover { border-color: #55555f; }
     .btn-sm { padding: 8px 14px; font-size: 14px; }
@@ -69,11 +70,11 @@
     .hero { position: relative; padding: 80px 0 56px; text-align: center; }
     .hero::before {
       content: ""; position: absolute; inset: -120px 0 auto; height: 520px; z-index: -1;
-      background: radial-gradient(600px 300px at 50% 30%, rgba(79,70,229,.35), transparent 70%);
+      background: radial-gradient(600px 300px at 50% 30%, rgba(255,107,0,.35), transparent 70%);
     }
-    .pill { display: inline-block; font-size: 13px; color: var(--brand-soft); background: rgba(79,70,229,.12); border: 1px solid rgba(79,70,229,.35); padding: 4px 12px; border-radius: 999px; margin-bottom: 22px; }
+    .pill { display: inline-block; font-size: 13px; color: var(--brand-soft); background: rgba(255,107,0,.12); border: 1px solid rgba(255,107,0,.35); padding: 4px 12px; border-radius: 999px; margin-bottom: 22px; }
     h1 { font-size: clamp(36px, 7vw, 64px); line-height: 1.05; letter-spacing: -.035em; margin: 0 0 18px; font-weight: 800; }
-    h1 .grad { background: linear-gradient(90deg, #a5a1ff, #6d65ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    h1 .grad { background: linear-gradient(90deg, #ffb070, #ff6b00); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .lead { font-size: clamp(17px, 2.4vw, 20px); color: var(--muted); max-width: 620px; margin: 0 auto 32px; }
     .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .note { margin-top: 14px; font-size: 13px; color: var(--muted); }
@@ -93,7 +94,7 @@
     @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
     .card { background: var(--surface); border: 1px solid #ffffff10; border-radius: var(--radius); padding: 22px; }
-    .card .ico { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: rgba(79,70,229,.15); color: var(--brand-soft); margin-bottom: 14px; }
+    .card .ico { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,107,0,.15); color: var(--brand-soft); margin-bottom: 14px; }
     .card .ico svg { width: 22px; height: 22px; }
     .card h3 { margin: 0 0 6px; font-size: 17px; }
     .card p { margin: 0; color: var(--muted); font-size: 15px; }
@@ -110,12 +111,12 @@
     .screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
     @media (max-width: 760px) { .screens { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; } }
     figure { margin: 0; }
-    .shot img { aspect-ratio: 913 / 931; object-fit: cover; object-position: top; width: 100%; }
+    .shot img { aspect-ratio: 1100 / 1122; object-fit: cover; object-position: top; width: 100%; }
     .shot { border-radius: 14px; overflow: hidden; border: 1px solid #ffffff14; background: var(--surface); box-shadow: 0 20px 50px -20px rgba(0,0,0,.8); }
     figcaption { font-size: 14px; color: var(--muted); text-align: center; margin-top: 10px; }
 
     /* Download band */
-    .band { background: linear-gradient(135deg, rgba(79,70,229,.22), rgba(79,70,229,.05)); border: 1px solid rgba(79,70,229,.35); border-radius: 24px; padding: 40px 24px; text-align: center; }
+    .band { background: linear-gradient(135deg, rgba(255,107,0,.22), rgba(255,107,0,.05)); border: 1px solid rgba(255,107,0,.35); border-radius: 24px; padding: 40px 24px; text-align: center; }
     .band h2 { margin-bottom: 10px; }
     .band p { color: var(--muted); margin: 0 auto 24px; max-width: 520px; }
 
@@ -139,7 +140,7 @@
 <body>
   <header>
     <div class="wrap nav">
-      <a class="logo" href="#"><img src="assets/pwa-192x192.png" alt="">AcordesAI</a>
+      <a class="logo" href="#"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><span>Acordes<span style="color:var(--brand)">AI</span></span></a>
       <nav class="nav-links" aria-label="Secciones">
         <a class="hide-sm" href="#funciones">Funciones</a>
         <a class="hide-sm" href="#capturas">Capturas</a>
@@ -152,7 +153,7 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <span class="pill">Gratis · Código abierto · Sin anuncios</span>
+        <span class="pill">Gratis · Código abierto (MIT) · Sin anuncios</span>
         <h1>Tocá lo que quieras.<br><span class="grad">Los acordes, al instante.</span></h1>
         <p class="lead">Buscá cualquier canción y AcordesAI te da el cifrado para guitarra, ukelele o piano. Transponé, poné el autoscroll y armá tus setlists para tocar en vivo.</p>
         <div class="ctas">
@@ -235,9 +236,9 @@
           <p>Modo oscuro, pensada para el celular y para leer de lejos.</p>
         </div>
         <div class="screens">
-          <figure><div class="shot"><img src="assets/01-home.png" alt="Pantalla de inicio de AcordesAI con buscador y tendencias" loading="lazy" width="913" height="931"></div><figcaption>Inicio</figcaption></figure>
-          <figure><div class="shot"><img src="assets/02-search.png" alt="Resultados de búsqueda de canciones" loading="lazy" width="913" height="931"></div><figcaption>Búsqueda</figcaption></figure>
-          <figure><div class="shot"><img src="assets/03-song-view.png" alt="Canción con acordes sobre la letra" loading="lazy" width="905" height="1459"></div><figcaption>Canción con acordes</figcaption></figure>
+          <figure><div class="shot"><img src="assets/01-home.png" alt="Pantalla de inicio de AcordesAI con buscador y tendencias" loading="lazy" width="1100" height="1122"></div><figcaption>Inicio</figcaption></figure>
+          <figure><div class="shot"><img src="assets/02-search.png" alt="Resultados de búsqueda de canciones" loading="lazy" width="1100" height="1122"></div><figcaption>Búsqueda</figcaption></figure>
+          <figure><div class="shot"><img src="assets/03-song-view.png" alt="Canción con acordes sobre la letra" loading="lazy" width="1100" height="1773"></div><figcaption>Canción con acordes</figcaption></figure>
         </div>
       </div>
     </section>
@@ -261,7 +262,7 @@
           <h2>Hecha en abierto</h2>
           <p style="color: var(--muted); margin: 0 0 18px;">El código está en GitHub. Podés usarla, revisarla, sugerir mejoras o montarla en tu propio servidor.</p>
           <ul>
-            <li>Código abierto: todo está en GitHub</li>
+            <li>Licencia MIT: todo el código está en GitHub</li>
             <li>Sin anuncios</li>
             <li>Funciona offline para tu biblioteca</li>
           </ul>
