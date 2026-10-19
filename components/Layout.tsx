@@ -17,9 +17,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
   useAuth();
 
   return (
-    <div className="min-h-screen bg-dark-900 text-white flex flex-col pb-20 md:pb-0">
+    <div className="min-h-screen bg-dark-900 text-white flex flex-col pb-20 lg:pb-0">
       <header className="sticky top-0 z-50 bg-dark-800 border-b border-dark-700 shadow-lg">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('HOME')}>
             <div className="bg-brand p-1.5 rounded-lg">
               <Music2 size={24} className="text-white" />
@@ -27,7 +27,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
             <span className="text-xl font-bold tracking-tight">Acordes<span className="text-brand">AI</span></span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden lg:flex items-center gap-4">
             <button onClick={() => onNavigate('HOME')} className={`text-sm font-medium hover:text-brand transition ${activeTab === 'HOME' ? 'text-brand' : 'text-gray-400'}`}>
               Inicio
             </button>
@@ -92,7 +92,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onNavigate,
         {children}
       </main>
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-dark-800 border-t border-dark-700 pb-safe z-50">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-dark-800 border-t border-dark-700 pb-safe z-50">
         <div className="flex justify-around items-center h-16">
           <button onClick={() => onNavigate('HOME')} className={`flex flex-col items-center gap-1 w-full h-full justify-center ${activeTab === 'HOME' ? 'text-brand' : 'text-gray-500'}`}>
             <Home size={20} /><span className="text-[10px]">Inicio</span>

@@ -53,6 +53,8 @@ export interface SearchResult {
 export interface RatingSummary {
   average: string | null;
   count: number;
+  /** Calificación del usuario logueado (null si no calificó o no hay sesión). */
+  mine?: number | null;
 }
 
 export interface ProfileStats {
