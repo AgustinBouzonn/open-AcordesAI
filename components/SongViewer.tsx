@@ -295,7 +295,6 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       // jspdf (~130 KB gzip) se baja recién acá, no forma parte de la carga inicial.
       const { jsPDF } = await import('jspdf');
       const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-      const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 36;
       let cursorY = margin;

@@ -25,7 +25,7 @@ export default function createCommentsRouter(): Router {
         content: comment.content,
         createdAt: comment.created_at,
       })));
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Failed to fetch comments' });
     }
   });
@@ -60,7 +60,7 @@ export default function createCommentsRouter(): Router {
         content: comment.content,
         createdAt: comment.created_at,
       });
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Failed to create comment' });
     }
   });
@@ -81,7 +81,7 @@ export default function createCommentsRouter(): Router {
         return res.status(404).json({ error: 'Comment not found' });
       }
       res.json({ message: 'Comment deleted' });
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Failed to delete comment' });
     }
   });

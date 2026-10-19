@@ -38,7 +38,7 @@ export function isChordLine(line: string): boolean {
   const tokens = line.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return false;
   const chordTokens = tokens.filter((token) => {
-    const cleaned = token.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
+    const cleaned = token.replace(/^[[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
     return looksLikeChord(cleaned);
   });
   return chordTokens.length > 0 && chordTokens.length >= Math.ceil(tokens.length * 0.6);
@@ -57,7 +57,7 @@ export function transposeChords(text: string, steps: number): string {
         /(^|\s)(?:\[|\()?([A-G](?:#|b)?[^\s\]]*(?:\/[A-G](?:#|b)?)?)(?:\]|\))?(?=\s|$)/gi,
         (match, leading) => {
           const candidate = match.slice(leading.length);
-          const cleaned = candidate.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
+          const cleaned = candidate.replace(/^[[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
           return looksLikeChord(cleaned) ? `${leading}${transposeChordToken(candidate, steps)}` : match;
         },
       );
@@ -71,7 +71,7 @@ export function extractUniqueChords(text: string): string[] {
   for (const line of text.split('\n')) {
     if (!isChordLine(line)) continue;
     for (const raw of line.split(/\s+/)) {
-      const cleaned = raw.replace(/^[\[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
+      const cleaned = raw.replace(/^[[(]+|[\])]+$/g, '').replace(/[.,;:!?]+$/g, '');
       if (looksLikeChord(cleaned)) found.add(cleaned);
     }
   }

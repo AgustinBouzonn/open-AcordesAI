@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { query } from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { serializeSong } from '../serializers/song';
@@ -20,7 +20,7 @@ export default function createFavoritesRouter(): Router {
         [userId]
       );
       res.json(result.rows.map(serializeSong));
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Failed to fetch favorites' });
     }
   });
@@ -36,7 +36,7 @@ export default function createFavoritesRouter(): Router {
         [userId, songId]
       );
       res.status(201).json({ message: 'Added to favorites' });
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Failed to add favorite' });
     }
   });
@@ -49,7 +49,7 @@ export default function createFavoritesRouter(): Router {
       const { songId } = req.params;
       await query('DELETE FROM favorites WHERE user_id = $1 AND song_id = $2', [userId, songId]);
       res.json({ message: 'Removed from favorites' });
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Failed to remove favorite' });
     }
   });

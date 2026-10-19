@@ -97,7 +97,7 @@ async function bingSearch(title, artist) {
   const q = `${title} ${artist} site:cifraclub.com`;
   const url = `https://www.bing.com/search?q=${encodeURIComponent(q)}`;
   const html = await fetchText(url);
-  const found = [...html.matchAll(/https:\/\/www\.cifraclub\.com(?:\.br)?\/[a-z0-9\-]+\/[a-z0-9\-]+\/?/gi)]
+  const found = [...html.matchAll(/https:\/\/www\.cifraclub\.com(?:\.br)?\/[a-z0-9-]+\/[a-z0-9-]+\/?/gi)]
     .map((m) => m[0].replace(/\/$/, '') + '/');
   // Dedup, prefer .com over .com.br
   const uniq = [...new Set(found)].sort((a, b) => (a.includes('.com.br') ? 1 : 0) - (b.includes('.com.br') ? 1 : 0));

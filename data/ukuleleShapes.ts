@@ -1,7 +1,5 @@
 import { lookupShape, type ChordShape } from './chordShapes';
 
-const x = -1;
-
 const make = (name: string, frets: number[], fingers: number[], barre?: ChordShape['barre']): ChordShape => ({ name, frets, fingers, barre });
 
 export const UKULELE_SHAPES: Record<string, ChordShape> = {
