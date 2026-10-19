@@ -58,12 +58,13 @@ export function AddFromCommunityModal({ isOpen, onClose, onSelect }: Props) {
         </h2>
 
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-3 text-gray-500" size={18} />
+          <Search className="absolute left-3 top-3 text-gray-400" size={18} />
           <input
             type="text"
             value={query}
             onChange={(e) => { setQuery(e.target.value); search(e.target.value); }}
             placeholder="Buscar canción..."
+            aria-label="Buscar canción en iTunes"
             autoFocus
             style={{ ...inputStyle, paddingLeft: '2.5rem' }}
           />
@@ -91,7 +92,7 @@ export function AddFromCommunityModal({ isOpen, onClose, onSelect }: Props) {
             </div>
           ))}
           {!loading && query && results.length === 0 && (
-            <p className="text-center text-gray-500 py-4">No se encontraron resultados</p>
+            <p className="text-center text-gray-400 py-4">No se encontraron resultados</p>
           )}
         </div>
       </div>

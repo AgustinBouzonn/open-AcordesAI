@@ -41,3 +41,17 @@ Compose v2 usa guiones (`open-acordesai-nginx-1`), no underscores. Si se ven con
 - Nunca pushear directo a `main`: siempre PR con CI en verde.
 - Cada bug arreglado trae un test de regresión. Si el bug enseña algo no obvio del proyecto, agregar una línea acá.
 - No poner en `manualChunks` (vite.config.ts) librerías que solo se cargan con `import()` y que a su vez hacen `import()` internos (jspdf): Rollup mete el preload helper de Vite en ese chunk y el entry lo importa estáticamente, sumando cientos de KB a la carga inicial. Verificar los `modulepreload` de `dist/index.html` después de tocar el chunking.
+
+## Tests e2e (Playwright)
+- `e2e/smoke.spec.ts` (humo), `e2e/flows.spec.ts` (favoritos, setlists + link público, controles del visor, import por URL, borrado de cuenta) y `e2e/a11y.spec.ts` (axe). Helpers de setup por API en `e2e/helpers.ts`.
+- El limitador de `/api/auth` es por IP (10 cada 15 min) y el backend confía en `X-Forwarded-For` (`trust proxy = 1`): `apiUser()` registra cada usuario con una IP privada distinta. No registrar usuarios desde la UI salvo en el test que prueba eso.
+- `POST /api/favorites/:id` es idempotente: para alternar un favorito hay que saber el estado actual (`toggleFavorite(id, isFav)`).
+- Favoritos e historial se recargan al entrar a su pestaña (`App.tsx`), no solo al loguearse.
+- En mobile la barra inferior mide `h-16` (z-50): cualquier botón `fixed` abajo tiene que ir por encima (`bottom-20`).
+
+## Accesibilidad
+- `e2e/a11y.spec.ts` corre axe (WCAG 2.1 A/AA + `heading-order` y `page-has-heading-one`) en las pantallas principales y tiene que dar cero violaciones. Única exclusión: el iframe de YouTube (tercero).
+- Blanco sobre `#FF6B00` da 2.8:1 (no pasa AA): los botones rellenos con texto usan `bg-brand-strong` (#C25100, 4.7:1). `text-brand` sobre fondos oscuros sí pasa.
+- Sobre fondos `dark-*` el gris mínimo para texto es `text-gray-400` (`gray-500` da ~3.5:1).
+- Tarjetas clickeables: `CardButton` (un `<button>` real con `::after` estirado sobre la tarjeta `relative`), nunca `<div onClick>`.
+- Cada pantalla tiene un único `h1`; las tarjetas son `h2` (o `h3` debajo de una sección `h2`). Todo input/select lleva `<label htmlFor>` o `aria-label`.

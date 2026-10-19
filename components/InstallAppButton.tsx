@@ -68,7 +68,7 @@ export function InstallAppButton() {
     <div className="relative">
       <button
         onClick={handleInstall}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand hover:bg-brand/90 text-sm text-white transition"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-strong hover:bg-brand-strong/90 text-sm text-white transition"
       >
         <Download size={16} />
         <span className="hidden sm:inline">Instalar app</span>

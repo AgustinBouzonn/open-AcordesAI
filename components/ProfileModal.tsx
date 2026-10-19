@@ -155,7 +155,7 @@ export function ProfileModal({ isOpen, onClose }: Props) {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition"
+            className="w-full flex items-center justify-center gap-2 p-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
           >
             <LogOut size={18} />
             <span>Cerrar sesión</span>
@@ -180,14 +180,14 @@ export function ProfileModal({ isOpen, onClose }: Props) {
                 <button
                   onClick={handleDeleteAccount}
                   disabled={deleteText.trim() !== 'ELIMINAR' || deleting}
-                  className="flex items-center justify-center gap-2 p-2 bg-red-600 hover:bg-red-700 rounded-lg transition disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50"
                 >
                   {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />} Eliminar
                 </button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setConfirmingDelete(true)} className="w-full text-xs text-gray-500 hover:text-red-400 transition pt-1">
+            <button onClick={() => setConfirmingDelete(true)} className="w-full text-xs text-gray-400 hover:text-red-400 transition pt-1">
               Eliminar mi cuenta
             </button>
           )}

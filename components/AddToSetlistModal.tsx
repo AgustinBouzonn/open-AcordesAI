@@ -77,7 +77,7 @@ export const AddToSetlistModal: React.FC<Props> = ({ isOpen, onClose, songId }) 
               >
                 <div>
                   <div className="text-sm font-medium text-white">{sl.name}</div>
-                  <div className="text-xs text-gray-500">{sl.songCount} {sl.songCount === 1 ? 'canción' : 'canciones'}</div>
+                  <div className="text-xs text-gray-400">{sl.songCount} {sl.songCount === 1 ? 'canción' : 'canciones'}</div>
                 </div>
                 {adding === sl.id ? <Loader2 className="animate-spin text-brand" size={16} /> : <Plus size={16} className="text-gray-400" />}
               </button>
@@ -93,9 +93,10 @@ export const AddToSetlistModal: React.FC<Props> = ({ isOpen, onClose, songId }) 
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') void create(); if (e.key === 'Escape') setShowCreate(false); }}
               placeholder="Nombre de la setlist"
+              aria-label="Nombre de la nueva setlist"
               className="flex-1 bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand"
             />
-            <button onClick={create} className="bg-brand hover:bg-brand/90 text-white px-4 rounded-lg">Crear</button>
+            <button onClick={create} className="bg-brand-strong hover:bg-brand-strong/90 text-white px-4 rounded-lg">Crear</button>
           </div>
         ) : (
           <button

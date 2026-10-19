@@ -9,11 +9,11 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/AgustinBouzonn/open-AcordesAI/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/AgustinBouzonn/open-AcordesAI/actions/workflows/ci.yml)
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green?style=flat-square)](LICENSE)
 ![React 19](https://img.shields.io/badge/React-19-20232A?style=flat-square&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-instalable-5A0FC8?style=flat-square&logo=pwa&logoColor=white)
 
-[**Abrir la app**](https://acordesai.bthings.com.ar) · [Sitio del proyecto](https://agustinbouzonn.github.io/open-AcordesAI/) · [Descargar para Android](https://github.com/AgustinBouzonn/open-AcordesAI/releases/latest)
+[**Abrir la app**](https://acordesai.bthings.com.ar) · [Sitio del proyecto](https://agustinbouzonn.github.io/open-AcordesAI/) · [Diccionario de acordes](https://agustinbouzonn.github.io/open-AcordesAI/acordes/) · [Estado](https://agustinbouzonn.github.io/open-AcordesAI/estado.html) · [Descargar para Android](https://github.com/AgustinBouzonn/open-AcordesAI/releases/latest)
 
 </div>
 
@@ -111,16 +111,18 @@ Detalle de carpetas, endpoints, seguridad y estrategia de caché: [docs/arquitec
 | Comando | Qué hace |
 |---|---|
 | `npm run dev` | Servidor de desarrollo del frontend. |
+| `npm run lint` | oxlint sobre frontend, backend, scripts y tests. |
 | `npm run typecheck` | Chequeo de tipos del frontend. |
 | `npm run test:run` | Tests del frontend con Vitest. |
 | `npm run test:backend` | Tests del backend con Vitest y Supertest. |
 | `npm run test:e2e` | Tests end-to-end con Playwright. |
 | `npm run build:all` | Build de producción del frontend y el backend. |
+| `npm run build:landing` | Sitio de GitHub Pages en `_site/` (landing, diccionario, novedades). |
 
 Antes de abrir un PR, corré la misma verificación que la CI:
 
 ```bash
-npm run typecheck && npm run test:run && npm run test:backend
+npm run lint && npm run typecheck && npm run test:run && npm run test:backend
 ```
 
 ## Despliegue

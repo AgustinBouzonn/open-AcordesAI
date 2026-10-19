@@ -211,8 +211,11 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
 
   const handleToggleFav = async () => {
     if (!user) return;
-    const newState = await storage.toggleFavorite(song.id);
-    setIsFav(newState);
+    try {
+      setIsFav(await storage.toggleFavorite(song.id, isFav));
+    } catch {
+      showToast('No se pudo actualizar favoritos', 'error');
+    }
   };
 
   const handleAddComment = async (e: React.FormEvent) => {
@@ -343,19 +346,19 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           )}
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">{song.title}</h1>
-            <h2 className="text-brand text-lg font-medium">{song.artist}</h2>
+            <p className="text-brand text-lg font-medium">{song.artist}</p>
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button key={star} disabled={!user} onClick={() => handleRating(star)} className={`${!user ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition`} aria-label={`Calificar con ${star} estrella${star === 1 ? '' : 's'}`}>
-                    <Star size={16} className={star <= userRating ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-gray-500'} />
+                    <Star size={16} className={star <= userRating ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-gray-400'} />
                   </button>
                 ))}
                 {avgRating?.average && (
                   <span className="text-yellow-400 text-sm ml-1">{avgRating.average}</span>
                 )}
                 {avgRating?.count !== undefined && avgRating.count > 0 && (
-                  <span className="text-gray-500 text-xs">({avgRating.count})</span>
+                  <span className="text-gray-400 text-xs">({avgRating.count})</span>
                 )}
               </div>
               {user && (
@@ -382,12 +385,12 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           <button onClick={handleShare} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition" aria-label="Compartir">
             <Share2 size={20} />
           </button>
-          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`} aria-label={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}>
+          <button onClick={handleToggleFav} disabled={!user} className={`p-3 rounded-full transition ${!user ? 'opacity-50 cursor-not-allowed' : isFav ? 'bg-brand-strong text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`} aria-label={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}>
             <Heart size={20} fill={isFav ? "currentColor" : "none"} />
           </button>
-          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative" aria-label="Ver comentarios">
+          <button onClick={() => setShowComments(!showComments)} className="p-3 rounded-full bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-white transition relative" aria-label="Ver comentarios" aria-expanded={showComments}>
             <MessageSquare size={20} />
-            {comments.length > 0 && <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
+            {comments.length > 0 && <span className="absolute -top-1 -right-1 bg-brand-strong text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{comments.length}</span>}
           </button>
         </div>
       </div>
@@ -406,7 +409,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
               </>
             ) : (
               <>
-                <button onClick={() => setEditMode(true)} disabled={!user} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${!user ? 'opacity-50 cursor-not-allowed bg-dark-700 text-gray-400' : 'bg-brand hover:bg-brand/90 text-white'}`}>
+                <button onClick={() => setEditMode(true)} disabled={!user} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${!user ? 'opacity-50 cursor-not-allowed bg-dark-700 text-gray-400' : 'bg-brand-strong hover:bg-brand-strong/90 text-white'}`}>
                   <Edit2 size={16} /> {user ? 'Editar' : 'Inicia sesión'}
                 </button>
                 <button onClick={() => setShowImport(true)} disabled={!user} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${!user ? 'opacity-50 cursor-not-allowed bg-dark-700 text-gray-400' : 'bg-dark-700 hover:bg-dark-600 text-gray-300'}`}>
@@ -436,8 +439,9 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
           
           <div className="flex items-center gap-2">
             <select 
-              value={instrument} 
-               onChange={(e) => setInstrument(e.target.value as Instrument)}
+              value={instrument}
+              onChange={(e) => setInstrument(e.target.value as Instrument)}
+              aria-label="Instrumento"
               className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white"
             >
               {INSTRUMENTS.map(i => (
@@ -462,7 +466,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
       {editMode && (
         <div className="bg-dark-800 p-4 rounded-xl border border-brand/50">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-300">Editar cifrado</h3>
+            <h2 className="text-sm font-medium text-gray-300">Editar cifrado</h2>
             <div className="flex gap-2">
               <button onClick={async () => { try { const t = await navigator.clipboard.readText(); setEditedChords(t); } catch { /* clipboard unavailable */ } }} className="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 text-xs text-gray-300 transition">
                 <Copy size={14} /> Pegar
@@ -477,6 +481,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
             value={editedChords}
             onChange={(e) => setEditedChords(e.target.value)}
             placeholder="Pega o escribe los acordes aquí..."
+            aria-label="Cifrado"
             className="w-full h-64 bg-dark-900 border border-dark-600 rounded-lg p-4 font-mono text-gray-200 focus:outline-none focus:border-brand resize-none"
             style={{ fontSize: `${fontSize}px`, lineHeight: 1.6 }}
           />
@@ -510,11 +515,11 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
                 </button>
                 {user && (
                   aiConfigured ? (
-                    <button onClick={handleGenerateChords} className="bg-brand hover:bg-brand/90 text-white px-6 py-2 rounded-lg font-medium transition">
+                    <button onClick={handleGenerateChords} className="bg-brand-strong hover:bg-brand-strong/90 text-white px-6 py-2 rounded-lg font-medium transition">
                       Generar con IA
                     </button>
                   ) : (
-                    <button onClick={() => setShowImport(true)} className="bg-brand hover:bg-brand/90 text-white px-6 py-2 rounded-lg font-medium transition">
+                    <button onClick={() => setShowImport(true)} className="bg-brand-strong hover:bg-brand-strong/90 text-white px-6 py-2 rounded-lg font-medium transition">
                       Importar de otra web
                     </button>
                   )
@@ -531,29 +536,29 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         {showComments && (
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-dark-800 p-4 rounded-xl border border-dark-700">
-              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><MessageSquare size={18} className="text-brand" />Opiniones</h3>
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><MessageSquare size={18} className="text-brand" />Opiniones</h2>
               
               {user ? (
                 <form onSubmit={handleAddComment} className="mb-6">
-                  <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="¿Qué te parece este cifrado?" className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none" rows={3} maxLength={500} />
-                  <p className="text-right text-xs text-gray-600 mt-1">{newComment.length}/500</p>
-                  <button type="submit" disabled={!newComment.trim()} className="mt-2 w-full bg-brand hover:bg-brand-dark disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition">
+                  <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="¿Qué te parece este cifrado?" aria-label="Tu opinión" className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand resize-none" rows={3} maxLength={500} />
+                  <p className="text-right text-xs text-gray-400 mt-1">{newComment.length}/500</p>
+                  <button type="submit" disabled={!newComment.trim()} className="mt-2 w-full bg-brand-strong hover:bg-brand-strong/90 disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition">
                     Publicar Opinión
                   </button>
                 </form>
               ) : (
-                <p className="text-gray-500 text-sm mb-4">Inicia sesión para opinar.</p>
+                <p className="text-gray-400 text-sm mb-4">Inicia sesión para opinar.</p>
               )}
 
               <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                 {comments.length === 0 ? (
-                  <p className="text-gray-500 text-center text-sm">Sé el primero en opinar.</p>
+                  <p className="text-gray-400 text-center text-sm">Sé el primero en opinar.</p>
                 ) : (
                   comments.map(c => (
                     <div key={c.id} className="bg-dark-900 p-3 rounded-lg border border-dark-700">
                       <div className="flex justify-between items-center mb-1">
                         <span className="font-bold text-brand text-xs">{c.username}</span>
-                        <span className="text-gray-600 text-[10px]">{new Date(c.createdAt).toLocaleDateString()}</span>
+                        <span className="text-gray-400 text-[10px]">{new Date(c.createdAt).toLocaleDateString()}</span>
                       </div>
                       <p className="text-gray-300 text-sm">{c.content}</p>
                     </div>
@@ -582,14 +587,14 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
         <button
           onClick={() => { setLoopRange({ top: selectionPrompt.top, bottom: selectionPrompt.bottom }); window.getSelection()?.removeAllRanges(); setSelectionPrompt(null); }}
           style={{ position: 'absolute', top: selectionPrompt.y + 6, left: selectionPrompt.x, transform: 'translateX(-50%)', zIndex: 30 }}
-          className="bg-brand hover:bg-brand/90 text-white text-xs px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1"
+          className="bg-brand-strong hover:bg-brand-strong/90 text-white text-xs px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1"
         >
           <Repeat size={12} /> Loop esta sección
         </button>
       )}
 
       {loopRange && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-brand text-white text-sm px-4 py-2 rounded-full shadow-xl flex items-center gap-3">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-brand-strong text-white text-sm px-4 py-2 rounded-full shadow-xl flex items-center gap-3">
           <Repeat size={14} /> Loop activo
           <button onClick={() => setLoopRange(null)} className="hover:opacity-80" aria-label="Cancelar loop"><X size={14} /></button>
         </div>

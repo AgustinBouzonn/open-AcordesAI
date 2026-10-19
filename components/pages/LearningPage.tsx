@@ -3,6 +3,7 @@ import { GraduationCap, CheckCircle2, Loader2, ChevronRight } from 'lucide-react
 import { Song } from '../../types';
 import { api } from '../../services/apiClient';
 import { Artwork } from '../Artwork';
+import { CardButton } from '../CardButton';
 import { useToast } from '../Toast';
 
 interface Props {
@@ -26,10 +27,10 @@ export const LearningPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
 
   if (!user) {
     return (
-      <div className="text-center text-gray-500 mt-20 bg-dark-800 p-8 rounded-xl border border-dashed border-dark-600">
+      <div className="text-center text-gray-400 mt-20 bg-dark-800 p-8 rounded-xl border border-dashed border-dark-600">
         <GraduationCap size={48} className="mx-auto mb-4 opacity-20" />
         <p className="mb-4">Iniciá sesión para llevar el progreso de tus canciones.</p>
-        <button onClick={onLogin} className="bg-brand hover:bg-brand/90 text-white px-4 py-2 rounded-lg">Iniciar sesión</button>
+        <button onClick={onLogin} className="bg-brand-strong hover:bg-brand-strong/90 text-white px-4 py-2 rounded-lg">Iniciar sesión</button>
       </div>
     );
   }
@@ -39,17 +40,17 @@ export const LearningPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
 
   const renderList = (songs: Song[], emptyText: string) => (
     songs.length === 0 ? (
-      <p className="text-sm text-gray-500 text-center py-6">{emptyText}</p>
+      <p className="text-sm text-gray-400 text-center py-6">{emptyText}</p>
     ) : (
       <div className="space-y-2">
         {songs.map((song) => (
-          <div key={song.id} onClick={() => onSelectSong(song.id)} className="bg-dark-800 hover:bg-dark-700 p-3 rounded-xl cursor-pointer border border-dark-700 hover:border-brand/30 transition flex items-center gap-3">
+          <div key={song.id} className="relative bg-dark-800 hover:bg-dark-700 p-3 rounded-xl border border-dark-700 hover:border-brand/30 transition flex items-center gap-3">
             <Artwork size={48} url={song.artworkUrl} />
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-white truncate">{song.title}</h3>
+              <h3 className="font-bold text-white"><CardButton onClick={() => onSelectSong(song.id)}>{song.title}</CardButton></h3>
               <p className="text-sm text-gray-400 truncate">{song.artist}</p>
             </div>
-            <ChevronRight size={16} className="text-gray-500 shrink-0" />
+            <ChevronRight size={16} className="text-gray-400 shrink-0" />
           </div>
         ))}
       </div>
@@ -58,20 +59,20 @@ export const LearningPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
 
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold flex items-center gap-2"><GraduationCap className="text-brand" /> Mi progreso</h2>
+      <h1 className="text-2xl font-bold flex items-center gap-2"><GraduationCap className="text-brand" /> Mi progreso</h1>
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm uppercase tracking-wider text-yellow-300 font-bold flex items-center gap-2">
+          <h2 className="text-sm uppercase tracking-wider text-yellow-300 font-bold flex items-center gap-2">
             <GraduationCap size={14} /> Aprendiendo · {data.learning.length}
-          </h3>
+          </h2>
         </div>
         {renderList(data.learning, 'No tenés canciones marcadas como "aprendiendo".')}
       </section>
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm uppercase tracking-wider text-emerald-300 font-bold flex items-center gap-2">
+          <h2 className="text-sm uppercase tracking-wider text-emerald-300 font-bold flex items-center gap-2">
             <CheckCircle2 size={14} /> Ya las sé · {data.learned.length}
-          </h3>
+          </h2>
         </div>
         {renderList(data.learned, 'Todavía no marcaste ninguna como sabida.')}
       </section>

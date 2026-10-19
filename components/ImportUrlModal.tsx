@@ -90,17 +90,18 @@ export function ImportUrlModal({ isOpen, onClose, onImported, initialUrl }: Prop
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://www.cifraclub.com/..."
+            aria-label="URL de la canción"
             disabled={loading}
             onKeyDown={(e) => { if (e.key === 'Enter') handleImport(); }}
             style={{ ...inputStyle, flex: 1 }}
           />
-          <button onClick={handlePaste} style={iconButtonStyle} title="Pegar" disabled={loading}>
+          <button onClick={handlePaste} style={iconButtonStyle} title="Pegar" aria-label="Pegar desde el portapapeles" disabled={loading}>
             <Copy size={18} />
           </button>
         </div>
 
         {notice && <p style={{ color: '#9ca3af', marginBottom: '0.75rem', fontSize: '0.875rem' }}>{notice}</p>}
-        {error && <p style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
+        {error && <p role="alert" style={{ color: '#f87171', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
 
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button onClick={onClose} style={cancelButtonStyle} disabled={loading}>Cancelar</button>
@@ -117,7 +118,7 @@ export function ImportUrlModal({ isOpen, onClose, onImported, initialUrl }: Prop
         </div>
 
         <div style={{ marginTop: '1.25rem', paddingTop: '0.75rem', borderTop: '1px solid #374151' }}>
-          <p style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+          <p style={{ color: '#9ca3af', fontSize: '0.75rem' }}>
             Fuentes soportadas: <span style={{ color: '#9ca3af' }}>Cifra Club, Ultimate Guitar y CifraSpot</span>.
           </p>
         </div>
@@ -146,5 +147,5 @@ const cancelButtonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem', background: '#374151', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
 };
 const primaryButtonStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', background: '#FF6B00', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', background: 'var(--color-brand-strong)', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
 };

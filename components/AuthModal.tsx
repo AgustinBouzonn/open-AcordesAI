@@ -66,6 +66,8 @@ export function AuthModal({ isOpen, onClose, mode }: Props) {
             <input
               type="text"
               placeholder="Usuario"
+              aria-label="Usuario"
+              autoComplete="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -75,6 +77,8 @@ export function AuthModal({ isOpen, onClose, mode }: Props) {
           <input
             type="email"
             placeholder="Email"
+            aria-label="Email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -83,12 +87,14 @@ export function AuthModal({ isOpen, onClose, mode }: Props) {
           <input
             type="password"
             placeholder="Contraseña"
+            aria-label="Contraseña"
+            autoComplete={currentMode === 'login' ? 'current-password' : 'new-password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             style={inputStyle}
           />
-          {error && <p style={errorStyle}>{error}</p>}
+          {error && <p role="alert" style={errorStyle}>{error}</p>}
           <button type="submit" disabled={loading} style={buttonStyle}>
             {loading ? '...' : currentMode === 'login' ? 'Entrar' : 'Registrarse'}
           </button>
@@ -112,7 +118,7 @@ export function AuthModal({ isOpen, onClose, mode }: Props) {
             {currentMode === 'login' ? 'Regístrate' : 'Entra'}
           </button>
         </p>
-        <button onClick={onClose} style={closeStyle}>✕</button>
+        <button onClick={onClose} style={closeStyle} aria-label="Cerrar">✕</button>
       </div>
     </div>
   );
@@ -150,7 +156,7 @@ const inputStyle: React.CSSProperties = {
 const buttonStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.75rem',
-  background: '#FF6B00',
+  background: 'var(--color-brand-strong)',
   color: '#fff',
   border: 'none',
   borderRadius: '4px',
