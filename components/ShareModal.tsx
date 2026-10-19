@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Copy, Check } from 'lucide-react';
 import { useModalA11y } from './hooks/useModalA11y';
+import { buildShareUrl } from '../services/appUrl';
 
 interface Props {
   isOpen: boolean;
@@ -16,7 +17,7 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
 
   if (!isOpen) return null;
 
-  const shareUrl = `${window.location.origin}/#/song/${songId}`;
+  const shareUrl = buildShareUrl(`/song/${songId}`);
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(shareUrl);
