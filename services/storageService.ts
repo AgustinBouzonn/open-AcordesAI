@@ -9,18 +9,16 @@ export const getFavorites = async (): Promise<Song[]> => {
   }
 };
 
-export const toggleFavorite = async (songId: string): Promise<boolean> => {
-  try {
-    await api.favorites.add(songId);
-    return true;
-  } catch {
-    try {
-      await api.favorites.remove(songId);
-      return false;
-    } catch {
-      return false;
-    }
+// POST /favorites es idempotente (ON CONFLICT DO NOTHING), así que "agregar y si falla quitar"
+// nunca quitaba: el que llama dice el estado actual y se hace la operación contraria.
+// Devuelve el estado nuevo; si la API falla, el error se propaga y el estado no cambia.
+export const toggleFavorite = async (songId: string, isFavorite: boolean): Promise<boolean> => {
+  if (isFavorite) {
+    await api.favorites.remove(songId);
+    return false;
   }
+  await api.favorites.add(songId);
+  return true;
 };
 
 export const isSongFavorite = async (songId: string, favorites: Song[]): Promise<boolean> => {

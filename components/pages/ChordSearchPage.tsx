@@ -4,6 +4,7 @@ import { Song } from '../../types';
 import { api } from '../../services/apiClient';
 import { useToast } from '../Toast';
 import { Artwork } from '../Artwork';
+import { CardButton } from '../CardButton';
 
 interface Props {
   onSelectSong: (id: string) => void;
@@ -60,14 +61,14 @@ export const ChordSearchPage: React.FC<Props> = ({ onSelectSong }) => {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h2 className="text-2xl font-bold flex items-center gap-2"><Search className="text-brand" /> Buscar por acordes</h2>
+        <h1 className="text-2xl font-bold flex items-center gap-2"><Search className="text-brand" /> Buscar por acordes</h1>
         <p className="text-sm text-gray-400 mt-1">Encontrá canciones que tengan los acordes que sabés tocar.</p>
       </div>
 
       <div className="bg-dark-800 border border-dark-700 rounded-xl p-4">
         <div className="flex flex-wrap gap-2 items-center">
           {chips.map((c, i) => (
-            <span key={i} className="bg-brand/20 text-brand border border-brand/40 px-2 py-1 rounded-lg text-sm font-mono flex items-center gap-1">
+            <span key={i} className="bg-brand/10 text-brand border border-brand/40 px-2 py-1 rounded-lg text-sm font-mono flex items-center gap-1">
               {c}
               <button onClick={() => removeChip(i)} className="hover:text-white" aria-label={`Quitar acorde ${c}`}><X size={12} /></button>
             </span>
@@ -77,23 +78,24 @@ export const ChordSearchPage: React.FC<Props> = ({ onSelectSong }) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKey}
             placeholder={chips.length === 0 ? 'C, G, Am, F…' : ''}
+            aria-label="Agregar acorde"
             className="flex-1 min-w-[8rem] bg-transparent outline-none text-white text-sm"
           />
           <button
             onClick={() => search()}
             disabled={chips.length === 0 || loading}
-            className="bg-brand hover:bg-brand/90 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+            className="bg-brand-strong hover:bg-brand-strong/90 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2"
           >
             {loading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
             Buscar
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">Presioná Enter, espacio o coma para agregar un acorde. Hasta 8.</p>
+        <p className="text-xs text-gray-400 mt-2">Presioná Enter, espacio o coma para agregar un acorde. Hasta 8.</p>
       </div>
 
       {!results && !loading && (
         <div>
-          <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Progresiones populares</p>
+          <p className="text-xs uppercase tracking-wider text-gray-400 mb-2">Progresiones populares</p>
           <div className="flex flex-wrap gap-2">
             {SUGGESTIONS.map((s) => (
               <button key={s} onClick={() => applyPreset(s)} className="bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-lg px-3 py-2 text-sm font-mono text-gray-300">
@@ -107,20 +109,20 @@ export const ChordSearchPage: React.FC<Props> = ({ onSelectSong }) => {
       {loading && <div className="flex justify-center py-10"><Loader2 className="animate-spin text-brand" size={32} /></div>}
 
       {results && results.length === 0 && (
-        <div className="text-center text-gray-500 py-10">Ninguna canción matchea esa progresión.</div>
+        <div className="text-center text-gray-400 py-10">Ninguna canción matchea esa progresión.</div>
       )}
 
       {results && results.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-wider text-gray-500">{results.length} resultado{results.length === 1 ? '' : 's'}</p>
+          <p className="text-xs uppercase tracking-wider text-gray-400">{results.length} resultado{results.length === 1 ? '' : 's'}</p>
           {results.map((song) => (
-            <div key={song.id} onClick={() => onSelectSong(song.id)} className="bg-dark-800 hover:bg-dark-700 p-3 rounded-xl cursor-pointer border border-dark-700 hover:border-brand/30 transition flex items-center gap-3">
+            <div key={song.id} className="relative bg-dark-800 hover:bg-dark-700 p-3 rounded-xl border border-dark-700 hover:border-brand/30 transition flex items-center gap-3">
               <Artwork size={48} url={song.artworkUrl} />
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white truncate">{song.title}</h3>
+                <h2 className="font-bold text-white"><CardButton onClick={() => onSelectSong(song.id)}>{song.title}</CardButton></h2>
                 <p className="text-sm text-gray-400 truncate">{song.artist}</p>
               </div>
-              <ChevronRight size={16} className="text-gray-500 shrink-0" />
+              <ChevronRight size={16} className="text-gray-400 shrink-0" />
             </div>
           ))}
         </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, TrendingUp, Music, ChevronRight, Star, Guitar, Sparkles } from 'lucide-react';
 import { Song } from '../../types';
 import { Artwork } from '../Artwork';
+import { CardButton } from '../CardButton';
 import { api } from '../../services/apiClient';
 
 const TRENDING_SEARCHES = [
@@ -46,9 +47,10 @@ export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, on
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
           placeholder="Canción o artista..."
+          aria-label="Buscar canción o artista"
           className="w-full bg-dark-800 border border-dark-600 rounded-full py-3 pl-12 pr-4 text-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition shadow-lg"
         />
-        <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
+        <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
         <button type="submit" className="hidden">Buscar</button>
       </form>
       <Link to="/chord-search" className="inline-flex items-center gap-2 text-brand text-sm hover:underline">
@@ -57,40 +59,40 @@ export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, on
     </div>
 
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
+      <h2 className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
         <TrendingUp size={16} />
         <span>Tendencias</span>
-      </div>
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {TRENDING_SEARCHES.map((term, idx) => (
-          <div key={idx} onClick={() => performSearch(term)} className="group bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition"><Music size={20} /></div>
+          <button type="button" key={idx} onClick={() => performSearch(term)} className="group w-full text-left bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl p-4 cursor-pointer transition flex justify-between items-center">
+            <span className="flex items-center gap-3">
+              <span className="bg-dark-900 p-2 rounded-lg text-brand group-hover:scale-110 transition"><Music size={20} /></span>
               <span className="font-medium text-sm text-gray-200">{term}</span>
-            </div>
-            <ChevronRight size={16} className="text-gray-600 group-hover:text-white transition" />
-          </div>
+            </span>
+            <ChevronRight size={16} className="text-gray-400 group-hover:text-white transition" />
+          </button>
         ))}
       </div>
     </div>
 
     {recs && recs.results.length > 0 && (
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
+        <h2 className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
           <Sparkles size={16} />
           <span>{recs.source === 'collaborative' ? 'Recomendado para vos' : 'Te puede gustar'}</span>
-        </div>
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {recs.results.slice(0, 6).map((song) => (
-            <div key={song.id} onClick={() => onSelectSong(song.id)} className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300">
+            <div key={song.id} className="relative group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl transition-all duration-300">
               <div className="flex items-center gap-4">
                 <Artwork size={52} url={song.artworkUrl} />
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
+                  <h3 className="font-bold text-white text-base"><CardButton onClick={() => onSelectSong(song.id)}>{song.title}</CardButton></h3>
                   <p className="text-gray-400 text-sm truncate">{song.artist}</p>
                 </div>
                 {(song.hasChords || 0) > 0 && (
-                  <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
+                  <span className="bg-brand/10 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
                 )}
               </div>
             </div>
@@ -101,17 +103,17 @@ export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, on
 
     {popularSongs.length > 0 && (
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
+        <h2 className="flex items-center gap-2 text-brand font-bold uppercase tracking-wider text-xs">
           <Star size={16} />
           <span>Más Populares</span>
-        </div>
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {popularSongs.slice(0, 6).map((song) => (
-            <div key={song.id} onClick={() => onSelectSong(song.id)} className="group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl cursor-pointer transition-all duration-300">
+            <div key={song.id} className="relative group bg-dark-800 hover:bg-dark-750 border border-dark-700 hover:border-brand/50 p-4 rounded-xl transition-all duration-300">
               <div className="flex items-center gap-4">
                 <Artwork size={52} url={song.artworkUrl} />
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-base truncate">{song.title}</h3>
+                  <h3 className="font-bold text-white text-base"><CardButton onClick={() => onSelectSong(song.id)}>{song.title}</CardButton></h3>
                   <p className="text-gray-400 text-sm truncate">{song.artist}</p>
                   <div className="flex items-center gap-3 mt-1">
                     {Number(song.rating) > 0 && (
@@ -123,7 +125,7 @@ export const HomePage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, on
                   </div>
                 </div>
                 {(song.hasChords || 0) > 0 && (
-                  <span className="bg-brand/20 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
+                  <span className="bg-brand/10 text-brand text-xs px-2 py-1 rounded">Con cifrado</span>
                 )}
               </div>
             </div>

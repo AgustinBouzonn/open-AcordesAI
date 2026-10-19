@@ -95,16 +95,16 @@ export const Metronome: React.FC = () => {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="text-center">
-        <h2 className="text-3xl font-black tracking-tight flex items-center justify-center gap-2">
+        <h1 className="text-3xl font-black tracking-tight flex items-center justify-center gap-2">
           <Music className="text-brand" size={28} /> Metrónomo
-        </h2>
+        </h1>
         <p className="text-gray-400 text-sm mt-1">Scheduler look-ahead Web Audio · Timing sub-milisegundo</p>
       </div>
 
       <div className="bg-dark-800 border border-dark-700 rounded-2xl p-6 space-y-6">
         <div className="text-center">
           <div className="text-7xl font-black tabular-nums text-brand">{bpm}</div>
-          <div className="text-xs uppercase text-gray-500 tracking-wider mt-1">BPM</div>
+          <div className="text-xs uppercase text-gray-400 tracking-wider mt-1">BPM</div>
         </div>
 
         <input
@@ -113,6 +113,7 @@ export const Metronome: React.FC = () => {
           max={240}
           value={bpm}
           onChange={(e) => setBpm(parseInt(e.target.value, 10))}
+          aria-label="Tempo (BPM)"
           className="w-full accent-brand"
         />
 
@@ -121,8 +122,9 @@ export const Metronome: React.FC = () => {
             <button
               key={p.bpm}
               onClick={() => setBpm(p.bpm)}
+              aria-pressed={bpm === p.bpm}
               className={`py-2 rounded-lg text-xs font-medium border transition ${
-                bpm === p.bpm ? 'bg-brand text-white border-brand' : 'bg-dark-900 text-gray-300 border-dark-700 hover:bg-dark-700'
+                bpm === p.bpm ? 'bg-brand-strong text-white border-brand' : 'bg-dark-900 text-gray-300 border-dark-700 hover:bg-dark-700'
               }`}
             >
               {p.bpm} · {p.label}
@@ -149,7 +151,7 @@ export const Metronome: React.FC = () => {
           <button
             onClick={toggle}
             className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold text-white shadow-lg transition ${
-              running ? 'bg-red-600 hover:bg-red-700' : 'bg-brand hover:bg-brand/90'
+              running ? 'bg-red-600 hover:bg-red-700' : 'bg-brand-strong hover:bg-brand-strong/90'
             }`}
           >
             {running ? <Pause size={20} /> : <Play size={20} />}
@@ -173,7 +175,8 @@ export const Metronome: React.FC = () => {
               <button
                 key={t.id}
                 onClick={() => setTsId(t.id)}
-                className={`px-3 py-1 rounded text-sm font-mono ${tsId === t.id ? 'bg-brand text-white' : 'bg-dark-900 text-gray-400 hover:bg-dark-700'}`}
+                aria-pressed={tsId === t.id}
+                className={`px-3 py-1 rounded text-sm font-mono ${tsId === t.id ? 'bg-brand-strong text-white' : 'bg-dark-900 text-gray-400 hover:bg-dark-700'}`}
               >{t.id}</button>
             ))}
           </div>
@@ -187,8 +190,9 @@ export const Metronome: React.FC = () => {
                 key={s.id}
                 onClick={() => setSubId(s.id)}
                 title={s.name}
-                className={`px-3 py-1 rounded text-base ${subId === s.id ? 'bg-brand text-white' : 'bg-dark-900 text-gray-400 hover:bg-dark-700'}`}
-              >{s.label}</button>
+                aria-pressed={subId === s.id}
+                className={`px-3 py-1 rounded text-base ${subId === s.id ? 'bg-brand-strong text-white' : 'bg-dark-900 text-gray-400 hover:bg-dark-700'}`}
+              ><span aria-hidden="true">{s.label}</span><span className="sr-only">{s.name}</span></button>
             ))}
           </div>
         </div>
@@ -201,6 +205,7 @@ export const Metronome: React.FC = () => {
             max={100}
             value={Math.round(volume * 100)}
             onChange={(e) => setVolume(parseInt(e.target.value, 10) / 100)}
+            aria-label="Volumen"
             className="w-32 accent-brand"
           />
         </div>

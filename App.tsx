@@ -71,7 +71,7 @@ function SongDetailRoute() {
 
   if (error || !song) {
     return (
-      <div className="text-center text-gray-500 mt-20">
+      <div className="text-center text-gray-400 mt-20">
         <p>{error || 'Canción no encontrada'}</p>
         <button onClick={() => navigate('/')} className="mt-4 text-brand">Volver al inicio</button>
       </div>
@@ -161,15 +161,20 @@ function AppContent() {
     location.pathname === '/stats' ? 'STATS' :
     location.pathname.startsWith('/song/') ? 'SONG_DETAIL' : 'HOME';
 
+  // Se recargan al entrar a cada pestaña: si se cargaran solo al loguearse, un favorito agregado
+  // (o una canción vista) desde el visor no aparecería en Favoritos/Historial hasta recargar la página.
   useEffect(() => {
-    if (user) {
-      storage.getFavorites().then(setFavorites).catch(() => showToast('No se pudieron cargar favoritos', 'error'));
-      storage.getHistory().then(setHistory).catch(() => showToast('No se pudo cargar el historial', 'error'));
-    } else {
+    if (!user) {
       setFavorites([]);
       setHistory([]);
+      return;
     }
-  }, [user, showToast]);
+    if (activeTab === 'FAVORITES') {
+      storage.getFavorites().then(setFavorites).catch(() => showToast('No se pudieron cargar favoritos', 'error'));
+    } else if (activeTab === 'HISTORY') {
+      storage.getHistory().then(setHistory).catch(() => showToast('No se pudo cargar el historial', 'error'));
+    }
+  }, [user, activeTab, showToast]);
 
   useEffect(() => {
     const w = window as unknown as { __acordesaiSharedUrl?: string };
@@ -270,8 +275,9 @@ function AppContent() {
 
   return (
     <>
+      {/* En mobile la barra de navegación inferior (h-16, z-50) tapaba los botones flotantes: van por encima de ella. */}
       {user && (
-        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+        <div className="fixed bottom-20 lg:bottom-6 right-6 z-40 flex flex-col items-end gap-2">
           <button
             onClick={() => setShowImportUrlModal(true)}
             className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -290,7 +296,7 @@ function AppContent() {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-brand hover:bg-brand/90 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 min-w-[56px] min-h-[56px] flex items-center justify-center"
+            className="bg-brand-strong hover:bg-brand-strong/90 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 min-w-[56px] min-h-[56px] flex items-center justify-center"
             title="Crear canción"
             aria-label="Crear canción"
           >

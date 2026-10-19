@@ -34,11 +34,11 @@ export const TransportBar: React.FC<Props> = ({
       </button>
     </div>
 
-    <div className="flex items-center gap-2" aria-label="Transposición">
+    <div className="flex items-center gap-2" role="group" aria-label="Transposición">
       <button
         onClick={() => onTranspose(transpose - 1)}
         className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600 min-h-[44px]"
-        aria-label="Bajar un semitono"
+        aria-label="−1: bajar un semitono"
       >
         −1
       </button>
@@ -48,7 +48,7 @@ export const TransportBar: React.FC<Props> = ({
       <button
         onClick={() => onTranspose(transpose + 1)}
         className="px-3 py-1 bg-dark-700 rounded-lg text-gray-300 hover:bg-dark-600 min-h-[44px]"
-        aria-label="Subir un semitono"
+        aria-label="+1: subir un semitono"
       >
         +1
       </button>
@@ -56,6 +56,8 @@ export const TransportBar: React.FC<Props> = ({
 
     <div
       className="flex items-center gap-2"
+      role="group"
+      aria-label="Capo"
       title="Capo (cejilla virtual): bajá el cifrado para tocarlo con formas más cómodas"
     >
       <Guitar size={16} className="text-brand" />
@@ -101,7 +103,7 @@ export const TransportBar: React.FC<Props> = ({
       <button
         onClick={() => onAutoScrollSpeed(autoScrollSpeed === 0 ? 1 : 0)}
         className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition min-h-[44px] ${
-          autoScrollSpeed > 0 ? 'bg-brand text-white' : 'bg-dark-700 text-gray-300'
+          autoScrollSpeed > 0 ? 'bg-brand-strong text-white' : 'bg-dark-700 text-gray-300'
         }`}
         aria-pressed={autoScrollSpeed > 0}
       >

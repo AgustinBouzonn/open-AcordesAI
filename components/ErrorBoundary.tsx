@@ -58,7 +58,7 @@ export class ErrorBoundary extends (Base as new (p: Props) => ErrorBoundaryThis)
           <button onClick={this.reset} className="bg-dark-700 hover:bg-dark-600 text-white px-5 py-2 rounded-lg text-sm font-medium">
             Reintentar
           </button>
-          <button onClick={() => window.location.reload()} className="bg-brand hover:bg-brand/90 text-white px-5 py-2 rounded-lg text-sm font-medium">
+          <button onClick={() => window.location.reload()} className="bg-brand-strong hover:bg-brand-strong/90 text-white px-5 py-2 rounded-lg text-sm font-medium">
             Recargar
           </button>
         </div>

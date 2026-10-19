@@ -82,22 +82,22 @@ export function ShareModal({ isOpen, onClose, songId }: Props) {
           </button>
 
           <div className="grid grid-cols-3 gap-2">
-            <button onClick={shareWhatsApp} className="flex flex-col items-center gap-1 p-3 bg-[#25D366] hover:bg-[#20BD5A] rounded-lg transition">
-              <span style={{ fontSize: '24px' }}>💬</span>
+            <button onClick={shareWhatsApp} className="flex flex-col items-center gap-1 p-3 bg-[#25D366] hover:bg-[#20BD5A] text-dark-900 font-medium rounded-lg transition">
+              <span style={{ fontSize: '24px' }} aria-hidden="true">💬</span>
               <span className="text-xs">WhatsApp</span>
             </button>
-            <button onClick={shareTwitter} className="flex flex-col items-center gap-1 p-3 bg-[#1DA1F2] hover:bg-[#1A91DA] rounded-lg transition">
-              <span style={{ fontSize: '24px' }}>🐦</span>
+            <button onClick={shareTwitter} className="flex flex-col items-center gap-1 p-3 bg-[#1DA1F2] hover:bg-[#1A91DA] text-dark-900 font-medium rounded-lg transition">
+              <span style={{ fontSize: '24px' }} aria-hidden="true">🐦</span>
               <span className="text-xs">Twitter</span>
             </button>
-            <button onClick={shareFacebook} className="flex flex-col items-center gap-1 p-3 bg-[#4267B2] hover:bg-[#365899] rounded-lg transition">
-              <span style={{ fontSize: '24px' }}>📘</span>
+            <button onClick={shareFacebook} className="flex flex-col items-center gap-1 p-3 bg-[#4267B2] hover:bg-[#365899] text-white font-medium rounded-lg transition">
+              <span style={{ fontSize: '24px' }} aria-hidden="true">📘</span>
               <span className="text-xs">Facebook</span>
             </button>
           </div>
 
           <div className="mt-4 p-3 bg-dark-800 rounded-lg">
-            <p className="text-xs text-gray-500 mb-1">Enlace directo</p>
+            <p className="text-xs text-gray-400 mb-1">Enlace directo</p>
             <p className="text-sm text-brand truncate">{shareUrl}</p>
           </div>
         </div>

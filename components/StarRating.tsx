@@ -18,6 +18,7 @@ export function StarRating({ value, onChange, readonly = false }: Props) {
           type="button"
           disabled={readonly}
           onClick={() => onChange?.(star)}
+          aria-label={`Calificar con ${star} estrella${star === 1 ? '' : 's'}`}
           onMouseEnter={() => !readonly && setHover(star)}
           onMouseLeave={() => !readonly && setHover(0)}
           className={`transition ${readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'}`}
@@ -27,7 +28,7 @@ export function StarRating({ value, onChange, readonly = false }: Props) {
             className={`${
               star <= (hover || value)
                 ? 'fill-yellow-400 text-yellow-400'
-                : 'fill-transparent text-gray-500'
+                : 'fill-transparent text-gray-400'
             } transition`}
           />
         </button>

@@ -96,9 +96,9 @@ export const Tuner: React.FC = () => {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="text-center">
-        <h2 className="text-3xl font-black tracking-tight flex items-center justify-center gap-2">
+        <h1 className="text-3xl font-black tracking-tight flex items-center justify-center gap-2">
           <AudioWaveform className="text-brand" size={28} /> Afinador
-        </h2>
+        </h1>
         <p className="text-gray-400 text-sm mt-1">Profesional · McLeod Pitch · Guitarra · Ukelele</p>
       </div>
 
@@ -111,9 +111,10 @@ export const Tuner: React.FC = () => {
           <button
             key={id}
             onClick={() => handleInstrument(id as InstrumentUI)}
+            aria-pressed={instrument === id}
             className={`py-2 rounded-lg text-sm font-medium border transition ${
               instrument === id
-                ? 'bg-brand text-white border-brand shadow'
+                ? 'bg-brand-strong text-white border-brand shadow'
                 : 'bg-dark-800 text-gray-300 border-dark-700 hover:bg-dark-700'
             }`}
           >
@@ -126,6 +127,7 @@ export const Tuner: React.FC = () => {
         <select
           value={tuningId}
           onChange={(e) => { setTuningId(e.target.value); setManualStringIdx(0); }}
+          aria-label="Afinación"
           className="flex-1 bg-dark-800 border border-dark-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-brand"
         >
           {availableTunings.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>))}
@@ -134,6 +136,8 @@ export const Tuner: React.FC = () => {
           onClick={() => setShowSettings((s) => !s)}
           className="px-3 py-2 rounded-lg bg-dark-800 border border-dark-700 text-gray-300 hover:bg-dark-700"
           title="Ajustes"
+          aria-label="Ajustes del afinador"
+          aria-expanded={showSettings}
         >
           <Settings2 size={16} />
         </button>
@@ -146,11 +150,13 @@ export const Tuner: React.FC = () => {
             <div className="flex bg-dark-900 rounded-lg p-1 border border-dark-700">
               <button
                 onClick={() => setAutoDetect(true)}
-                className={`px-3 py-1 text-xs rounded ${autoDetect ? 'bg-brand text-white' : 'text-gray-400'}`}
+                aria-pressed={autoDetect}
+                className={`px-3 py-1 text-xs rounded ${autoDetect ? 'bg-brand-strong text-white' : 'text-gray-400'}`}
               >Auto</button>
               <button
                 onClick={() => setAutoDetect(false)}
-                className={`px-3 py-1 text-xs rounded ${!autoDetect ? 'bg-brand text-white' : 'text-gray-400'}`}
+                aria-pressed={!autoDetect}
+                className={`px-3 py-1 text-xs rounded ${!autoDetect ? 'bg-brand-strong text-white' : 'text-gray-400'}`}
               >Manual</button>
             </div>
           </div>
@@ -164,6 +170,7 @@ export const Tuner: React.FC = () => {
                 step={1}
                 value={a4}
                 onChange={(e) => setA4(parseInt(e.target.value, 10))}
+                aria-label="Calibración A4"
                 className="w-32 accent-brand"
               />
               <span className="text-sm font-mono text-brand w-16 text-right">{a4} Hz</span>
@@ -175,17 +182,17 @@ export const Tuner: React.FC = () => {
       <div className={`bg-dark-800 border rounded-2xl p-6 transition-colors ${inTune ? 'border-emerald-500 shadow-emerald-500/20 shadow-lg' : 'border-dark-700'}`}>
         <div className="flex items-baseline justify-center gap-3">
           <div className={`text-7xl font-black tracking-tight tabular-nums ${
-            !sample.hasSignal ? 'text-gray-600'
+            !sample.hasSignal ? 'text-gray-500'
               : inTune ? 'text-emerald-400'
               : Math.abs(cents) < 20 ? 'text-yellow-400'
               : 'text-red-400'
           }`}>
             {note ? note.name : '—'}
           </div>
-          {note && (<span className="text-2xl text-gray-500 font-mono">{note.octave}</span>)}
+          {note && (<span className="text-2xl text-gray-400 font-mono">{note.octave}</span>)}
         </div>
 
-        <div className="text-center text-xs text-gray-500 -mt-1 mb-4 font-mono">
+        <div className="text-center text-xs text-gray-400 -mt-1 mb-4 font-mono">
           {sample.hasSignal
             ? `${sample.freq.toFixed(2)} Hz · ${cents > 0 ? '+' : ''}${cents}¢`
             : 'Tocá una cuerda…'}
@@ -207,7 +214,7 @@ export const Tuner: React.FC = () => {
             <MicOff size={18} /> Detener
           </button>
         ) : (
-          <button onClick={start} className="flex items-center gap-2 bg-brand hover:bg-brand/90 text-white px-6 py-3 rounded-full font-semibold shadow-lg">
+          <button onClick={start} className="flex items-center gap-2 bg-brand-strong hover:bg-brand-strong/90 text-white px-6 py-3 rounded-full font-semibold shadow-lg">
             <Mic size={18} /> Activar micrófono
           </button>
         )}
@@ -220,7 +227,7 @@ export const Tuner: React.FC = () => {
       )}
 
       <div>
-        <div className="text-xs uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-2">
+        <div className="text-xs uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2">
           <Volume2 size={14} /> Cuerdas — tocá una para escuchar el tono
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -233,12 +240,12 @@ export const Tuner: React.FC = () => {
                 onClick={() => { playReferenceTone(s.freq); if (!autoDetect) setManualStringIdx(i); }}
                 className={`relative py-3 rounded-lg text-center font-semibold border transition ${
                   tunedThis ? 'bg-emerald-600/20 border-emerald-500 text-emerald-200'
-                    : active ? 'bg-brand/20 border-brand text-brand'
+                    : active ? 'bg-brand/10 border-brand text-brand'
                     : 'bg-dark-800 border-dark-700 text-gray-300 hover:bg-dark-700'
                 }`}
               >
-                <div className="text-lg leading-none">{s.note}<span className="text-xs text-gray-500 font-mono">{s.octave}</span></div>
-                <div className="text-[10px] text-gray-500 font-mono mt-1">{s.freq.toFixed(1)} Hz</div>
+                <div className="text-lg leading-none">{s.note}<span className="text-xs text-gray-400 font-mono">{s.octave}</span></div>
+                <div className="text-[10px] text-gray-400 font-mono mt-1">{s.freq.toFixed(1)} Hz</div>
                 {tunedThis && <Check size={14} className="absolute top-1 right-1 text-emerald-400" />}
               </button>
             );
@@ -277,7 +284,7 @@ const Needle: React.FC<{ cents: number; active: boolean }> = ({ cents, active })
           return (
             <g key={tick}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#9ca3af" strokeWidth="1.5" />
-              <text x={100 + 60 * Math.cos(rad)} y={100 + 60 * Math.sin(rad) + 3} fontSize="7" fill="#6b7280" textAnchor="middle">{tick}</text>
+              <text x={100 + 60 * Math.cos(rad)} y={100 + 60 * Math.sin(rad) + 3} fontSize="7" fill="#9ca3af" textAnchor="middle">{tick}</text>
             </g>
           );
         })}

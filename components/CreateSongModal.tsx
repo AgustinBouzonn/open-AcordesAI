@@ -73,13 +73,14 @@ export function CreateSongModal({ isOpen, onClose, onSubmit }: Props) {
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#9ca3af' }}>
+            <label htmlFor="create-song-title-input" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#9ca3af' }}>
               Título *
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              id="create-song-title-input"
               placeholder="Nombre de la canción"
               required
               style={inputStyle}
@@ -87,13 +88,14 @@ export function CreateSongModal({ isOpen, onClose, onSubmit }: Props) {
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#9ca3af' }}>
+            <label htmlFor="create-song-artist-input" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#9ca3af' }}>
               Artista *
             </label>
             <input
               type="text"
               value={artist}
               onChange={(e) => setArtist(e.target.value)}
+              id="create-song-artist-input"
               placeholder="Nombre del artista"
               required
               style={inputStyle}
@@ -101,12 +103,13 @@ export function CreateSongModal({ isOpen, onClose, onSubmit }: Props) {
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#9ca3af' }}>
+            <label htmlFor="create-song-lyrics-input" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#9ca3af' }}>
               Letra (opcional)
             </label>
             <textarea
               value={lyrics}
               onChange={(e) => setLyrics(e.target.value)}
+              id="create-song-lyrics-input"
               placeholder="Pega la letra aquí..."
               rows={6}
               style={{ ...inputStyle, resize: 'vertical', minHeight: '120px' }}
@@ -115,7 +118,7 @@ export function CreateSongModal({ isOpen, onClose, onSubmit }: Props) {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', gap: '0.75rem' }}>
-              <label style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
+              <label htmlFor="create-song-chords-input" style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
                 Cifrado propio (opcional)
               </label>
               <button type="button" onClick={handlePaste} style={secondaryButtonStyle}>
@@ -126,13 +129,14 @@ export function CreateSongModal({ isOpen, onClose, onSubmit }: Props) {
             <textarea
               value={chords}
               onChange={(e) => setChords(e.target.value)}
+              id="create-song-chords-input"
               placeholder="Pega aquí acordes, tabs o estructura de la canción..."
               rows={8}
               style={{ ...inputStyle, resize: 'vertical', minHeight: '180px', fontFamily: 'monospace', lineHeight: 1.5 }}
             />
           </div>
 
-          {error && <p style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
+          {error && <p role="alert" style={{ color: '#f87171', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
 
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
             <button type="button" onClick={onClose} style={cancelButtonStyle}>
@@ -179,5 +183,5 @@ const secondaryButtonStyle: React.CSSProperties = {
 };
 
 const primaryButtonStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', background: '#FF6B00', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', background: 'var(--color-brand-strong)', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
 };

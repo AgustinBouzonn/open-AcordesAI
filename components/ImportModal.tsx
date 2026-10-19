@@ -73,9 +73,10 @@ export function ImportModal({ isOpen, onClose, onImport }: Props) {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://..."
+            aria-label="URL de la página con el cifrado"
             style={{ ...inputStyle, flex: 1 }}
           />
-          <button onClick={handlePaste} style={{ ...iconButtonStyle }} title="Pegar">
+          <button onClick={handlePaste} style={{ ...iconButtonStyle }} title="Pegar" aria-label="Pegar desde el portapapeles">
             <Copy size={18} />
           </button>
         </div>
@@ -97,7 +98,7 @@ export function ImportModal({ isOpen, onClose, onImport }: Props) {
         </div>
 
         <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #374151' }}>
-          <p style={{ color: '#6b7280', fontSize: '0.75rem', marginBottom: '0.5rem' }}>Fuentes soportadas:</p>
+          <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginBottom: '0.5rem' }}>Fuentes soportadas:</p>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {['Ultimate Guitar', 'Cifra Club', 'CifraSpot', 'GuitarTabs', 'GoChords'].map(s => (
               <span key={s} style={{ background: '#374151', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', color: '#9ca3af' }}>
@@ -137,5 +138,5 @@ const cancelButtonStyle: React.CSSProperties = {
 };
 
 const primaryButtonStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', background: '#FF6B00', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', background: 'var(--color-brand-strong)', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer',
 };

@@ -48,7 +48,7 @@ export const StatsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) => {
       <div className="text-center py-20">
         <Activity size={48} className="mx-auto text-brand mb-4" />
         <p className="text-gray-400 mb-4">Iniciá sesión para ver tus estadísticas de práctica.</p>
-        <button onClick={onLogin} className="bg-brand hover:bg-brand/90 text-white px-6 py-2 rounded-lg font-medium">
+        <button onClick={onLogin} className="bg-brand-strong hover:bg-brand-strong/90 text-white px-6 py-2 rounded-lg font-medium">
           Iniciar sesión
         </button>
       </div>
@@ -78,24 +78,24 @@ export const StatsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) => {
         <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
           <Clock className="text-brand mb-2" size={24} />
           <p className="text-3xl font-bold text-white">{formatHM(data.totalSec)}</p>
-          <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Tiempo total</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide mt-1">Tiempo total</p>
         </div>
         <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
           <Flame className="text-brand mb-2" size={24} />
           <p className="text-3xl font-bold text-white">{data.sessions}</p>
-          <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Sesiones</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide mt-1">Sesiones</p>
         </div>
         <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
           <Music2 className="text-brand mb-2" size={24} />
           <p className="text-3xl font-bold text-white">{data.uniqueSongs}</p>
-          <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Canciones distintas</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide mt-1">Canciones distintas</p>
         </div>
       </div>
 
       <section className="bg-dark-800 rounded-xl p-6 border border-dark-700">
         <h2 className="text-lg font-semibold text-white mb-4">Últimos 30 días</h2>
         {data.byDay.length === 0 ? (
-          <p className="text-gray-500 text-sm">Sin actividad reciente. Abrí una canción y empezá a practicar.</p>
+          <p className="text-gray-400 text-sm">Sin actividad reciente. Abrí una canción y empezá a practicar.</p>
         ) : (
           <div className="flex items-end gap-1 h-40">
             {data.byDay.map((d) => (
@@ -105,7 +105,7 @@ export const StatsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) => {
                   style={{ height: `${Math.max(2, (d.sec / maxDay) * 100)}%` }}
                   title={`${dayLabel(d.day)}: ${formatHM(d.sec)}`}
                 />
-                <span className="text-[10px] text-gray-500 transform -rotate-45 origin-left whitespace-nowrap mt-1">
+                <span className="text-[10px] text-gray-400 transform -rotate-45 origin-left whitespace-nowrap mt-1">
                   {dayLabel(d.day)}
                 </span>
               </div>
@@ -117,7 +117,7 @@ export const StatsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) => {
       <section className="bg-dark-800 rounded-xl p-6 border border-dark-700">
         <h2 className="text-lg font-semibold text-white mb-4">Más practicadas</h2>
         {data.topSongs.length === 0 ? (
-          <p className="text-gray-500 text-sm">Aún no hay datos. Abrí una canción y dejala en pantalla mientras practicás.</p>
+          <p className="text-gray-400 text-sm">Aún no hay datos. Abrí una canción y dejala en pantalla mientras practicás.</p>
         ) : (
           <ul className="divide-y divide-dark-700">
             {data.topSongs.map((s) => (
@@ -132,7 +132,7 @@ export const StatsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) => {
                   </div>
                   <div className="text-right shrink-0 ml-3">
                     <p className="text-sm text-white font-medium">{formatHM(s.practicedSec)}</p>
-                    <p className="text-xs text-gray-500">{s.sessions} {s.sessions === 1 ? 'sesión' : 'sesiones'}</p>
+                    <p className="text-xs text-gray-400">{s.sessions} {s.sessions === 1 ? 'sesión' : 'sesiones'}</p>
                   </div>
                 </button>
               </li>

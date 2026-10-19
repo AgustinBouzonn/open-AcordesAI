@@ -63,11 +63,11 @@ export const OnboardingModal: React.FC = () => {
         <div className="flex items-center justify-between mt-6">
           <button onClick={close} className="text-sm text-gray-400 hover:text-white">Saltar</button>
           {isLast ? (
-            <button onClick={close} className="bg-brand hover:bg-brand/90 text-white px-5 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
+            <button onClick={close} className="bg-brand-strong hover:bg-brand-strong/90 text-white px-5 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
               Empezar <ArrowRight size={14} />
             </button>
           ) : (
-            <button onClick={() => setStep(step + 1)} className="bg-brand hover:bg-brand/90 text-white px-5 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
+            <button onClick={() => setStep(step + 1)} className="bg-brand-strong hover:bg-brand-strong/90 text-white px-5 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
               Siguiente <ArrowRight size={14} />
             </button>
           )}

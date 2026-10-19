@@ -7,6 +7,9 @@
   --font-mono: 'JetBrains Mono', monospace;
   --color-brand: #FF6B00;
   --color-brand-dark: #CC5500;
+  /* Naranja de los botones rellenos con texto blanco: #FF6B00 da 2.8:1 con blanco y WCAG AA pide 4.5:1.
+     Mismo tono, más profundo (4.7:1). El naranja de marca sigue para textos, bordes e íconos sobre fondo oscuro. */
+  --color-brand-strong: #C25100;
   --color-dark-900: #121212;
   --color-dark-800: #1E1E1E;
   --color-dark-700: #2C2C2C;

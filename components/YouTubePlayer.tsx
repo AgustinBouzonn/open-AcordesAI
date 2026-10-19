@@ -96,9 +96,10 @@ export const YouTubePlayer: React.FC<Props> = ({ songId, initialUrl, canEdit, on
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') void save(); if (e.key === 'Escape') { setEditing(false); setDraft(''); } }}
             placeholder="https://www.youtube.com/watch?v=..."
+            aria-label="URL del video de YouTube"
             className="flex-1 bg-dark-900 border border-dark-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-brand"
           />
-          <button onClick={save} disabled={saving || !draft.trim()} className="bg-brand hover:bg-brand/90 text-white px-3 rounded disabled:opacity-50" aria-label="Guardar URL de YouTube"><Check size={16} /></button>
+          <button onClick={save} disabled={saving || !draft.trim()} className="bg-brand-strong hover:bg-brand-strong/90 text-white px-3 rounded disabled:opacity-50" aria-label="Guardar URL de YouTube"><Check size={16} /></button>
           {videoId && <button onClick={() => { setEditing(false); setDraft(''); }} className="bg-dark-700 hover:bg-dark-600 text-gray-300 px-3 rounded" aria-label="Cancelar edición"><X size={16} /></button>}
         </div>
       )}
