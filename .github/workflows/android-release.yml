@@ -1,0 +1,96 @@
+name: Android release
+
+# Build firmado del AAB/APK al pushear un tag vX.Y.Z (o a mano). La app carga el sitio remoto
+# (capacitor.config.ts → server.url), así que solo hace falta release para cambios nativos.
+# Secrets: ANDROID_KEYSTORE_BASE64 (base64 del .jks), ANDROID_KEYSTORE_PASSWORD,
+#          ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD.
+# Opcional: PLAY_SERVICE_ACCOUNT_JSON para subir el AAB al track interno de Google Play.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    steps:
+      - name: Check secrets
+        id: cfg
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::warning::Falta ANDROID_KEYSTORE_BASE64; no se genera release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.cfg.outputs.skip != 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.cfg.outputs.skip != 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        if: steps.cfg.outputs.skip != 'true'
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Build web y sync Capacitor
+        if: steps.cfg.outputs.skip != 'true'
+        run: |
+          npm ci
+          npm run build
+          npx cap sync android
+
+      - name: Build AAB y APK firmados
+        if: steps.cfg.outputs.skip != 'true'
+        env:
+          ACORDESAI_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ACORDESAI_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ACORDESAI_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          export ACORDESAI_UPLOAD_STORE_FILE="$RUNNER_TEMP/upload.jks"
+          export ACORDESAI_VERSION_CODE=$((100 + ${{ github.run_number }}))
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then export ACORDESAI_VERSION_NAME="${GITHUB_REF_NAME#v}"; fi
+          cd android
+          chmod +x gradlew
+          ./gradlew --no-daemon bundleRelease assembleRelease
+          rm -f "$RUNNER_TEMP/upload.jks"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.cfg.outputs.skip != 'true'
+        with:
+          name: android-release
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/apk/release/*.apk
+
+      - name: GitHub Release con el APK
+        if: steps.cfg.outputs.skip != 'true' && github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --generate-notes \
+            android/app/build/outputs/apk/release/*.apk \
+            android/app/build/outputs/bundle/release/*.aab
+
+      - name: Subir a Google Play (track interno)
+        if: steps.cfg.outputs.skip != 'true' && env.PLAY_JSON != ''
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.acordesai.app
+          releaseFiles: android/app/build/outputs/bundle/release/*.aab
+          track: internal
+          status: completed
