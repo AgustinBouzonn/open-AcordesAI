@@ -43,3 +43,6 @@ test-results/
 playwright-report/
 _site/
 .claude/worktrees/
+
+# Vercel CLI (vercel build / vercel link)
+.vercel/

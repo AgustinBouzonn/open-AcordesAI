@@ -42,9 +42,10 @@ app.get('/api/health', async (_, res) => {
     process.env.AI_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY,
   );
   try {
+    // 5 s como connectionTimeoutMillis del pool: Neon tarda en despertar la base si estaba suspendida.
     await Promise.race([
       query('SELECT 1'),
-      new Promise((_r, reject) => setTimeout(() => reject(new Error('db timeout')), 2000)),
+      new Promise((_r, reject) => setTimeout(() => reject(new Error('db timeout')), 5000)),
     ]);
   } catch (e) {
     console.error('[health] db check failed', e);

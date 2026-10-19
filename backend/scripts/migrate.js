@@ -26,11 +26,6 @@ async function ensureMigrationsTable(client) {
   `)
 }
 
-async function getAppliedMigrations(client) {
-  const result = await client.query('SELECT filename FROM schema_migrations')
-  return new Set(result.rows.map((row) => row.filename))
-}
-
 async function applyMigration(client, filename) {
   const filePath = path.join(migrationsDir, filename)
   const sql = fs.readFileSync(filePath, 'utf8')
@@ -38,7 +33,7 @@ async function applyMigration(client, filename) {
   await client.query('BEGIN')
   try {
     await client.query(sql)
-    await client.query('INSERT INTO schema_migrations (filename) VALUES ($1)', [filename])
+    await client.query('INSERT INTO schema_migrations (filename) VALUES ($1) ON CONFLICT DO NOTHING', [filename])
     await client.query('COMMIT')
     process.stdout.write(`Applied ${filename}\n`)
   } catch (error) {
@@ -52,15 +47,15 @@ async function main() {
 
   try {
     await ensureMigrationsTable(client)
-    const appliedMigrations = await getAppliedMigrations(client)
     const filenames = fs.readdirSync(migrationsDir)
       .filter((filename) => filename.endsWith('.sql'))
       .sort()
 
+    // Se corren todas en cada deploy (son idempotentes, el CI lo prueba): schema_migrations queda solo
+    // como registro. Así una base restaurada desde un dump viejo, sin esa tabla o con una que no
+    // coincide con el esquema real, queda al día en el próximo deploy.
     for (const filename of filenames) {
-      if (!appliedMigrations.has(filename)) {
-        await applyMigration(client, filename)
-      }
+      await applyMigration(client, filename)
     }
 
     process.stdout.write('Migrations up to date\n')
