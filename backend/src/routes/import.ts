@@ -7,6 +7,7 @@ import { serializeSong } from '../serializers/song';
 const router = Router();
 
 const ALLOWED_HOST_PATTERNS: RegExp[] = [
+  /^(?:www|tabs)\.ultimate-guitar\.com$/i,
   /^www\.ultimateguitar\.com$/i,
   /^www\.cifraclub\.com$/i,
   /^www\.cifraclub\.com\.br$/i,
@@ -50,6 +51,10 @@ function normalizeImportUrl(rawUrl: string): NormalizedUrl | null {
   if (host === 'cifraclub.com' || host === 'cifraclub.com.br' || host === 'cifraclub.com.ar') {
     host = `www.${host}`;
   }
+  // El dominio real es ultimate-guitar.com; ultimateguitar.com solo redirige ahí.
+  if (host === 'ultimateguitar.com' || host === 'www.ultimateguitar.com' || host === 'ultimate-guitar.com') {
+    host = 'www.ultimate-guitar.com';
+  }
   u.hostname = host;
 
   for (const p of TRACKING_PARAMS) u.searchParams.delete(p);
@@ -69,7 +74,7 @@ function normalizeImportUrl(rawUrl: string): NormalizedUrl | null {
 }
 
 const SOURCES = [
-  { id: 'ultimateguitar', name: 'Ultimate Guitar', baseUrl: 'https://www.ultimateguitar.com', searchUrl: 'https://www.ultimateguitar.com/search.php?search_type=title&value=' },
+  { id: 'ultimateguitar', name: 'Ultimate Guitar', baseUrl: 'https://www.ultimate-guitar.com', searchUrl: 'https://www.ultimate-guitar.com/search.php?search_type=title&value=' },
   { id: 'cifraclub', name: 'Cifra Club', baseUrl: 'https://www.cifraclub.com', searchUrl: 'https://www.cifraclub.com/?q=' },
   { id: 'cifraspot', name: 'CifraSpot', baseUrl: 'https://cifraspot.com', searchUrl: 'https://cifraspot.com/search?q=' },
 ];
@@ -80,27 +85,72 @@ router.get('/sources', (_, res) => {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const MAX_HTML_BYTES = 3 * 1024 * 1024;
+const MAX_REDIRECTS = 3;
+
+type FetchResponse = Awaited<ReturnType<typeof fetch>>;
+
+const isAllowedHost = (host: string) => ALLOWED_HOST_PATTERNS.some((re) => re.test(host));
+
+// Lee el body con tope de tamaño para no cargar páginas arbitrariamente grandes en memoria.
+async function readLimited(res: FetchResponse): Promise<string> {
+  const declared = Number(res.headers?.get?.('content-length') || 0);
+  if (declared > MAX_HTML_BYTES) throw new Error('página demasiado grande');
+  const reader = res.body?.getReader?.();
+  if (!reader) {
+    const text = await res.text();
+    if (text.length > MAX_HTML_BYTES) throw new Error('página demasiado grande');
+    return text;
+  }
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_HTML_BYTES) {
+      await reader.cancel();
+      throw new Error('página demasiado grande');
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
 async function fetchHtml(url: string, attempts = 2): Promise<string> {
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
     const ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 15000);
     try {
-      const res = await fetch(url, {
-        signal: ctrl.signal,
-        redirect: 'follow',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'es-ES,es;q=0.9,pt-BR;q=0.8,en;q=0.7',
-          'Cache-Control': 'no-cache',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Upgrade-Insecure-Requests': '1',
-        },
-      });
-      if (res.ok) return await res.text();
+      let current = url;
+      let res: FetchResponse;
+      // Redirects manuales: cada salto tiene que seguir dentro de la allowlist.
+      for (let hop = 0; ; hop++) {
+        res = await fetch(current, {
+          signal: ctrl.signal,
+          redirect: 'manual',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'es-ES,es;q=0.9,pt-BR;q=0.8,en;q=0.7',
+            'Cache-Control': 'no-cache',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Upgrade-Insecure-Requests': '1',
+          },
+        });
+        if (!(res.status >= 300 && res.status < 400)) break;
+        const location = res.headers.get('location');
+        if (!location || hop >= MAX_REDIRECTS) throw new Error('demasiadas redirecciones');
+        const next = new URL(location, current);
+        if (next.protocol !== 'https:' || !isAllowedHost(next.hostname)) {
+          throw new Error(`redirección a host no permitido: ${next.hostname}`);
+        }
+        current = next.toString();
+      }
+      if (res.ok) return await readLimited(res);
       if (res.status >= 500 && res.status < 600 && i < attempts - 1) {
         lastErr = new Error(`HTTP ${res.status}`);
         await sleep(500 * Math.pow(2, i));
@@ -109,6 +159,9 @@ async function fetchHtml(url: string, attempts = 2): Promise<string> {
       throw new Error(`HTTP ${res.status}`);
     } catch (e) {
       lastErr = e;
+      // Errores definitivos (allowlist, tamaño, 4xx): no tiene sentido reintentar.
+      const msg = e instanceof Error ? e.message : '';
+      if (/^HTTP 4|no permitido|demasiad/.test(msg)) break;
       if (i < attempts - 1) await sleep(500 * Math.pow(2, i));
     } finally {
       clearTimeout(timeout);
@@ -175,7 +228,46 @@ function findInObject(obj: unknown, keys: string[], depth = 0): string | null {
   return null;
 }
 
+interface UltimateGuitarTab { content: string; title: string; artist: string }
+
+// Ultimate Guitar no usa <pre>: el tab viene como JSON (HTML-escapado) en <div class="js-store" data-content="...">,
+// con marcas [ch]Am[/ch] y [tab]...[/tab] en wiki_tab.content.
+function extractUltimateGuitar(html: string): UltimateGuitarTab | null {
+  const m = html.match(/class="js-store"[^>]*data-content="([^"]*)"/);
+  if (!m) return null;
+  try {
+    const json = m[1]
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
+    const data = JSON.parse(json) as {
+      store?: { page?: { data?: { tab?: { song_name?: string; artist_name?: string }; tab_view?: { wiki_tab?: { content?: string } } } } };
+    };
+    const pageData = data.store?.page?.data;
+    const raw = pageData?.tab_view?.wiki_tab?.content;
+    if (typeof raw !== 'string') return null;
+    const content = raw
+      .replace(/\[\/?(?:ch|tab)\]/g, '')
+      .replace(/\r\n/g, '\n')
+      .trim();
+    if (content.length < 100) return null;
+    return {
+      content,
+      title: cleanTitlePart(pageData?.tab?.song_name || ''),
+      artist: cleanTitlePart(pageData?.tab?.artist_name || ''),
+    };
+  } catch {
+    return null;
+  }
+}
+
 function extractContent(html: string): string | null {
+  const ug = extractUltimateGuitar(html);
+  if (ug) return ug.content;
+
   const cifraPre = html.match(/<pre[^>]*class="[^"]*(?:cifra|chord|tab|sheet)[^"]*"[^>]*>([\s\S]*?)<\/pre>/i);
   if (cifraPre) {
     const cleaned = stripTags(cifraPre[1]).trim();
@@ -216,6 +308,10 @@ function extractContent(html: string): string | null {
 }
 
 function extractMetadata(html: string, fallbackUrl: string): { title: string; artist: string } {
+  // En UG el og:title es "Artista - Canción (Chords)", al revés que el resto: se usa el JSON.
+  const ug = extractUltimateGuitar(html);
+  if (ug?.title) return { title: ug.title, artist: ug.artist };
+
   const ogTitle = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i);
   if (ogTitle) {
     const parsed = parseTitleString(ogTitle[1]);
@@ -377,7 +473,7 @@ router.post('/from-url', requireAuth, importLimiter, async (req: AuthRequest, re
   const meta = extractMetadata(html, norm.fetchUrl);
   const title = meta.title || 'Sin título';
   const artist = meta.artist || 'Desconocido';
-  const source = norm.host.includes('ultimateguitar') ? 'ultimateguitar'
+  const source = /ultimate-?guitar/.test(norm.host) ? 'ultimateguitar'
     : norm.host.includes('cifraspot') ? 'cifraspot'
     : 'cifraclub';
 
