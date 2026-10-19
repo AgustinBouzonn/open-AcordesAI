@@ -50,6 +50,10 @@ jobs:
           PUPPETEER_SKIP_DOWNLOAD: '1'
         run: npm --prefix backend ci
 
+      # oxlint cubre frontend, backend, scripts y tests (.oxlintrc.json). Errores cortan; avisos no.
+      - name: Lint
+        run: npm run lint
+
       - name: Frontend typecheck
         run: npm run typecheck
 

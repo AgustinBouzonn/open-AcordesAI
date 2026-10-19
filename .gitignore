@@ -42,3 +42,4 @@ backups/
 test-results/
 playwright-report/
 _site/
+.claude/worktrees/

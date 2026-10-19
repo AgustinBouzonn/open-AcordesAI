@@ -14,7 +14,7 @@ interface Props {
   onCreateClick: () => void;
 }
 
-export const SearchPage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, onSearch, isSearching, searchResults, hasUser, onResultClick, onCreateClick }) => (
+export const SearchPage: React.FC<Props> = ({ searchQuery, onSearchQueryChange, onSearch, isSearching, searchResults, onResultClick, onCreateClick }) => (
   <div className="space-y-6">
     <div className="sticky top-0 bg-dark-900 z-10 py-2">
       <form onSubmit={onSearch} className="relative">

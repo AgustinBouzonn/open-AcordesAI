@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ListMusic, Plus, Trash2, Pencil, Check, X, Loader2, ChevronUp, ChevronDown, Music, Share2, Link as LinkIcon } from 'lucide-react';
+import { ListMusic, Plus, Trash2, Pencil, Check, X, Loader2, ChevronUp, ChevronDown, Share2, Link as LinkIcon } from 'lucide-react';
 import { Song } from '../../types';
 import { api } from '../../services/apiClient';
 import { buildShareUrl } from '../../services/appUrl';

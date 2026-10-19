@@ -34,7 +34,7 @@ export default function createRatingsRouter(): Router {
         count: parseInt(result.rows[0]?.count) || 0,
         mine,
       });
-    } catch (e) {
+    } catch {
       res.status(500).json({ error: 'Error fetching ratings' });
     }
   });
@@ -61,7 +61,7 @@ export default function createRatingsRouter(): Router {
         [userId, songId, score]
       );
       res.json({ message: 'Rating saved' });
-    } catch (e) {
+    } catch {
       res.status(500).json({ error: 'Error saving rating' });
     }
   });

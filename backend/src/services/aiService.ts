@@ -44,6 +44,7 @@ const extractJson = (raw: string): string => {
 // se quitan saltos de línea, comillas y caracteres de control, y se acota el largo.
 export const sanitizePromptField = (value: string, max = 150): string =>
   value
+    // oxlint-disable-next-line no-control-regex -- quitar caracteres de control es justamente la idea
     .replace(/[\u0000-\u001f\u007f"`\\]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()

@@ -67,7 +67,7 @@ export default function createSongsRouter(): Router {
         [limit]
       );
       res.json(result.rows.map(serializeSong));
-    } catch (e) {
+    } catch {
       res.status(500).json({ message: 'Error fetching popular songs' });
     }
   });
@@ -122,7 +122,7 @@ export default function createSongsRouter(): Router {
         [q, limit, offset]
       );
       res.json(result.rows.map(serializeSong));
-    } catch (e) {
+    } catch {
       res.status(500).json({ message: 'Error fetching songs' });
     }
   });
@@ -144,7 +144,7 @@ export default function createSongsRouter(): Router {
       }
       
       res.json(serializeSong(result.rows[0]));
-    } catch (e) {
+    } catch {
       res.status(500).json({ message: 'Error fetching song' });
     }
   });

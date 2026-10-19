@@ -114,6 +114,8 @@ footer a { text-decoration: none; }
 footer a:hover { color: var(--text); }
 
 .foot-links { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.langs { flex-basis: 100%; font-size: 13px; }
+.langs a[aria-current] { color: var(--text); }
 .nav-links a[aria-current="page"] { color: var(--text); }
 
 /* Páginas internas */
@@ -149,6 +151,13 @@ footer a:hover { color: var(--text); }
 .chord-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; background: var(--surface); border: 1px solid #ffffff10; border-radius: 14px; text-decoration: none; font-size: 13px; color: var(--muted); transition: border-color .15s; }
 .chord-card:hover { border-color: var(--brand); color: var(--text); }
 .chord-card svg { max-width: 100%; height: auto; }
+
+/* Tonalidades */
+.progs { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.progs li { display: grid; gap: 6px; }
+.prog-name { font-weight: 600; }
+.chord-card b { color: var(--brand-soft); }
+span.chip { cursor: default; }
 
 /* Novedades */
 .changes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
