@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, User, Music, Heart, Clock, LogOut, Loader2, Download, Upload } from 'lucide-react';
+import { X, User, Music, Heart, Clock, LogOut, Loader2, Download, Upload, Trash2 } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { api } from '../services/apiClient';
 import { ProfileStats } from '../types';
@@ -18,6 +18,9 @@ export function ProfileModal({ isOpen, onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +76,20 @@ export function ProfileModal({ isOpen, onClose }: Props) {
     } finally {
       setImporting(false);
       if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await api.auth.deleteAccount();
+      logout();
+      onClose();
+      showToast('Tu cuenta y tus datos se eliminaron', 'success');
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'No se pudo eliminar la cuenta', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -143,6 +160,37 @@ export function ProfileModal({ isOpen, onClose }: Props) {
             <LogOut size={18} />
             <span>Cerrar sesión</span>
           </button>
+          {confirmingDelete ? (
+            <div className="p-3 border border-red-600/60 rounded-lg text-sm space-y-2">
+              <p className="text-gray-300">
+                Se borran tu cuenta, favoritos, historial, setlists, puntajes y comentarios. Las canciones que creaste quedan en la comunidad sin tu nombre. No se puede deshacer.
+              </p>
+              <label className="block text-gray-400" htmlFor="delete-confirm">Escribí ELIMINAR para confirmar</label>
+              <input
+                id="delete-confirm"
+                value={deleteText}
+                onChange={(e) => setDeleteText(e.target.value)}
+                autoComplete="off"
+                className="w-full p-2 bg-dark-800 border border-dark-700 rounded-lg"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => { setConfirmingDelete(false); setDeleteText(''); }} className="p-2 bg-dark-800 hover:bg-dark-700 rounded-lg transition">
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteText.trim() !== 'ELIMINAR' || deleting}
+                  className="flex items-center justify-center gap-2 p-2 bg-red-600 hover:bg-red-700 rounded-lg transition disabled:opacity-50"
+                >
+                  {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />} Eliminar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setConfirmingDelete(true)} className="w-full text-xs text-gray-500 hover:text-red-400 transition pt-1">
+              Eliminar mi cuenta
+            </button>
+          )}
         </div>
       </div>
     </div>

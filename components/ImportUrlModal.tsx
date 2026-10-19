@@ -81,7 +81,7 @@ export function ImportUrlModal({ isOpen, onClose, onImported, initialUrl }: Prop
           Importar desde URL
         </h2>
         <p style={{ color: '#9ca3af', marginBottom: '1rem', fontSize: '0.875rem' }}>
-          Pegá una URL de Cifra Club y se crea la canción con letra y acordes.
+          Pegá una URL de Cifra Club, Ultimate Guitar o CifraSpot y se crea la canción con letra y acordes.
         </p>
 
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -118,7 +118,7 @@ export function ImportUrlModal({ isOpen, onClose, onImported, initialUrl }: Prop
 
         <div style={{ marginTop: '1.25rem', paddingTop: '0.75rem', borderTop: '1px solid #374151' }}>
           <p style={{ color: '#6b7280', fontSize: '0.75rem' }}>
-            Fuente soportada: <span style={{ color: '#9ca3af' }}>Cifra Club</span>.
+            Fuentes soportadas: <span style={{ color: '#9ca3af' }}>Cifra Club, Ultimate Guitar y CifraSpot</span>.
           </p>
         </div>
       </div>
