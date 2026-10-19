@@ -7,6 +7,21 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      # Misma versión que producción (docker-compose.yml). Coincide con DATABASE_URL de abajo.
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DATABASE_URL: postgres://test:test@localhost:5432/test
       JWT_SECRET: test-secret-with-at-least-32-chars
@@ -38,3 +53,18 @@ jobs:
 
       - name: Backend tests
         run: npm --prefix backend test
+
+      # El deploy corre todas las migraciones en cada release: dos pasadas prueban que son idempotentes.
+      - name: Migrations (twice, must be idempotent)
+        env:
+          PGPASSWORD: test
+          PGOPTIONS: --client-min-messages=warning
+        run: |
+          for pass in 1 2; do
+            for m in backend/migrations/*.sql; do
+              psql -h localhost -U test -d test -v ON_ERROR_STOP=1 -q -f "$m"
+            done
+          done
+
+      - name: Backend integration tests (Postgres)
+        run: npm --prefix backend run test:integration
