@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
+import { recordSignal } from '../services/signals';
 
 const router = Router();
 
@@ -36,6 +37,9 @@ router.get('/local', async (req: Request, res: Response) => {
       [like, `${q}%`, limit]
     );
 
+    if (!result.rows.length) {
+      void recordSignal('search_empty', { source: 'local', q: q.toLowerCase().slice(0, 40) });
+    }
     res.json({ results: result.rows });
   } catch (e) {
     console.error('[search/local]', e);

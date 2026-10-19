@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import pool from '../../src/db';
 
 const TABLES = [
-  'setlist_songs', 'setlists', 'user_song_progress', 'practice_sessions', 'comments',
+  'product_events', 'setlist_songs', 'setlists', 'user_song_progress', 'practice_sessions', 'comments',
   'favorites', 'history', 'ratings', 'chord_cache', 'songs', 'users',
 ];
 

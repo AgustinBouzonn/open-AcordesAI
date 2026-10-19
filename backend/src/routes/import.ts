@@ -3,6 +3,7 @@ import { importLimiter } from '../middleware/rateLimit';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { query, withTransaction } from '../db';
 import { serializeSong } from '../serializers/song';
+import { hostAndPath, recordSignal } from '../services/signals';
 
 const router = Router();
 
@@ -363,6 +364,11 @@ function extractMetadata(html: string, fallbackUrl: string): { title: string; ar
   return { title: 'Sin título', artist: 'Desconocido' };
 }
 
+const importFailed = (endpoint: string, url: string, reason: string, extra: Record<string, string | number> = {}) => {
+  const { host, path } = hostAndPath(url);
+  void recordSignal('import_failed', { endpoint, reason, host, path: reason === 'host_not_allowed' ? '' : path, ...extra });
+};
+
 router.post('/fetch', importLimiter, async (req: Request, res: Response) => {
   const { url } = req.body ?? {};
   if (typeof url !== 'string' || !url.trim()) {
@@ -372,6 +378,7 @@ router.post('/fetch', importLimiter, async (req: Request, res: Response) => {
 
   const norm = normalizeImportUrl(url);
   if (!norm) {
+    importFailed('fetch', url, 'host_not_allowed');
     res.status(400).json({ message: 'URL no permitida. Fuentes: Cifra Club, Ultimate Guitar, CifraSpot.' });
     return;
   }
@@ -380,6 +387,7 @@ router.post('/fetch', importLimiter, async (req: Request, res: Response) => {
     const html = await fetchHtml(norm.fetchUrl);
     const content = extractContent(html);
     if (!content) {
+      importFailed('fetch', norm.fetchUrl, 'no_content');
       res.status(422).json({ message: 'No se encontró cifrado en la página' });
       return;
     }
@@ -387,6 +395,7 @@ router.post('/fetch', importLimiter, async (req: Request, res: Response) => {
   } catch (e) {
     console.error('[import/fetch]', e);
     const msg = e instanceof Error ? e.message : '';
+    importFailed('fetch', norm.fetchUrl, 'fetch_error', { error: msg.slice(0, 80) });
     if (msg.startsWith('HTTP ')) {
       res.status(502).json({ message: `La fuente respondió ${msg.slice(5)}` });
     } else {
@@ -437,6 +446,7 @@ router.post('/from-url', requireAuth, importLimiter, async (req: AuthRequest, re
 
   const norm = normalizeImportUrl(url);
   if (!norm) {
+    importFailed('from-url', url, 'host_not_allowed');
     res.status(400).json({ message: 'URL no permitida. Fuentes: Cifra Club, Ultimate Guitar, CifraSpot.' });
     return;
   }
@@ -456,6 +466,7 @@ router.post('/from-url', requireAuth, importLimiter, async (req: AuthRequest, re
   } catch (e) {
     console.error('[import/from-url] fetch', e);
     const msg = e instanceof Error ? e.message : '';
+    importFailed('from-url', norm.fetchUrl, 'fetch_error', { error: msg.slice(0, 80) });
     if (msg.startsWith('HTTP ')) {
       res.status(502).json({ message: `La fuente respondió ${msg.slice(5)}` });
     } else {
@@ -466,6 +477,7 @@ router.post('/from-url', requireAuth, importLimiter, async (req: AuthRequest, re
 
   const content = extractContent(html);
   if (!content) {
+    importFailed('from-url', norm.fetchUrl, 'no_content');
     res.status(422).json({ message: 'No se encontró cifrado en la página' });
     return;
   }
@@ -487,9 +499,9 @@ router.post('/from-url', requireAuth, importLimiter, async (req: AuthRequest, re
       );
       const row = inserted.rows[0];
       await client.query(
-        `INSERT INTO chord_cache (song_id, instrument, title, artist, content)
-         VALUES ($1, 'guitar', $2, $3, $4)
-         ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content`,
+        `INSERT INTO chord_cache (song_id, instrument, title, artist, content, origin)
+         VALUES ($1, 'guitar', $2, $3, $4, 'import')
+         ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content, origin = 'import'`,
         [row.id, title, artist, content],
       );
       return row;
