@@ -6,7 +6,9 @@ on:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    # Fijado: ubuntu-latest pasó a 26.04 y Playwright 1.56 no instala Chromium ahí.
+    # Subir junto con @playwright/test cuando lo soporte.
+    runs-on: ubuntu-24.04
     services:
       # Misma versión que producción (docker-compose.yml). Coincide con DATABASE_URL de abajo.
       postgres:
