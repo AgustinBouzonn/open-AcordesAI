@@ -52,6 +52,16 @@ describe('OAuth linking to a pre-registered password account', () => {
     // La contraseña del atacante ya no sirve.
     const login = await request(app).post('/api/auth/login').send({ email: 'victim@test.com', password: 'attacker-pass' });
     expect(login.status).toBe(401);
+
+    // Y la sesión que ya tenía abierta tampoco.
+    const attackerSession = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${reg.body.token}`);
+    expect(attackerSession.status).toBe(401);
+    expect(attackerSession.body.code).toBe('TOKEN_REVOKED');
+
+    // La víctima sí entra con el token que le dio el callback.
+    const victimToken = new URLSearchParams(oauth.headers.location.split('?')[1]).get('token');
+    const victimSession = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${victimToken}`);
+    expect(victimSession.status).toBe(200);
   });
 
   it('keeps the password of an account that was already linked to a provider', async () => {
