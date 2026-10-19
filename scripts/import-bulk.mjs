@@ -183,9 +183,9 @@ function insertSong({ title, artist, lyrics, source, sourceUrl }) {
   const id = Number(out);
   // Replicar el contenido a chord_cache (guitar) para que el frontend lo muestre.
   psql(
-    `INSERT INTO chord_cache (song_id, instrument, title, artist, content)
-     VALUES ($1, 'guitar', $2, $3, $4)
-     ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content`,
+    `INSERT INTO chord_cache (song_id, instrument, title, artist, content, origin)
+     VALUES ($1, 'guitar', $2, $3, $4, 'import')
+     ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content, origin = 'import'`,
     [id, title, artist, lyrics]
   );
   return id;

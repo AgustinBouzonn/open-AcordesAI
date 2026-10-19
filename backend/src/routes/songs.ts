@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
-import { generateChords } from '../services/aiService';
+import { AI_MODEL, generateChords } from '../services/aiService';
+import { recordSignal } from '../services/signals';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { chordGenerationLimiter, chordSaveLimiter } from '../middleware/rateLimit';
 import { serializeSong } from '../serializers/song';
@@ -198,16 +199,18 @@ export default function createSongsRouter(): Router {
       const result = await generateChords(song.title, song.artist, instrument);
 
       await query(
-        `INSERT INTO chord_cache (song_id, instrument, title, artist, key, content)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content, key = EXCLUDED.key`,
-        [id, instrument, result.title, result.artist, result.key, result.content]
+        `INSERT INTO chord_cache (song_id, instrument, title, artist, key, content, origin, model)
+         VALUES ($1, $2, $3, $4, $5, $6, 'ai', $7)
+         ON CONFLICT (song_id, instrument) DO UPDATE
+           SET content = EXCLUDED.content, key = EXCLUDED.key, origin = 'ai', model = EXCLUDED.model`,
+        [id, instrument, result.title, result.artist, result.key, result.content, AI_MODEL]
       );
 
       res.json({ chords: result.content });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Error generating chords';
       console.error('[songs/chords]', e);
+      void recordSignal('ai_failed', { model: AI_MODEL, instrument, reason: message.slice(0, 200) });
       res.status(500).json({ message });
     }
   });
@@ -261,10 +264,25 @@ export default function createSongsRouter(): Router {
         return;
       }
 
+      // Si el autor corrige un cifrado generado por IA o importado, es la mejor señal de calidad que hay.
+      const previous = await query(
+        'SELECT origin, model FROM chord_cache WHERE song_id = $1 AND instrument = $2',
+        [id, instrument]
+      );
+      const prevOrigin = previous?.rows?.[0]?.origin as string | null | undefined;
+      if (prevOrigin === 'ai' || prevOrigin === 'import') {
+        void recordSignal('chords_edited', {
+          from: prevOrigin,
+          model: (previous.rows[0].model as string | null) ?? null,
+          instrument,
+          source: (songResult.rows[0].source as string | null) ?? null,
+        });
+      }
+
       await query(
-        `INSERT INTO chord_cache (song_id, instrument, title, artist, content)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content`,
+        `INSERT INTO chord_cache (song_id, instrument, title, artist, content, origin)
+         VALUES ($1, $2, $3, $4, $5, 'user')
+         ON CONFLICT (song_id, instrument) DO UPDATE SET content = EXCLUDED.content, origin = 'user', model = NULL`,
         [id, instrument, songResult.rows[0].title, songResult.rows[0].artist, chords]
       );
 

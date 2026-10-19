@@ -7,6 +7,7 @@ export default defineConfig({
     setupFiles: ['./test/setup.ts'],
     include: ['test/integration/**/*.test.ts'],
     fileParallelism: false,
+    env: { SIGNALS_ENABLED: '1' },
     clearMocks: true,
     restoreMocks: true,
   },

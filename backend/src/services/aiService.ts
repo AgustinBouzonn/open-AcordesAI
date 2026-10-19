@@ -7,7 +7,7 @@ const AI_API_KEY =
   process.env.GEMINI_API_KEY ||
   process.env.OPENAI_API_KEY ||
   '';
-const AI_MODEL =
+export const AI_MODEL =
   process.env.AI_MODEL ||
   (AI_PROVIDER === 'gemini' ? 'gemini-2.0-flash' : 'gpt-4o-mini');
 const AI_BASE_URL = process.env.AI_BASE_URL || 'https://api.openai.com/v1';
