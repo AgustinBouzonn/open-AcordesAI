@@ -77,34 +77,47 @@ export default function createSongsRouter(): Router {
       const offset = parseInt(req.query.offset as string) || 0;
       const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
       const result = await query(
-        `SELECT s.*, u.username as author, 
-         (SELECT AVG(score) FROM ratings WHERE song_id = s.id) as rating,
-         (SELECT COUNT(*) FROM ratings WHERE song_id = s.id) as rating_count,
-         (SELECT COUNT(*) FROM chord_cache WHERE song_id = s.id) as has_chords
-         FROM songs s 
-         LEFT JOIN users u ON s.user_id = u.id
-         WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
-         ORDER BY
-           CASE
-             WHEN $1 = '' THEN 0
-             WHEN LOWER(s.title) = LOWER($1) THEN 0
-             WHEN LOWER(s.title) LIKE LOWER($1) || '%' THEN 1
-             WHEN LOWER(s.artist) = LOWER($1) THEN 2
-             WHEN LOWER(s.artist) LIKE LOWER($1) || '%' THEN 3
-             WHEN s.title ILIKE '%' || $1 || '%' THEN 4
-             WHEN s.artist ILIKE '%' || $1 || '%' THEN 5
-             ELSE 6
-           END,
-           CASE
-             WHEN s.title ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.title))
-             ELSE 999999
-           END,
-           CASE
-             WHEN s.artist ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.artist))
-             ELSE 999999
-           END,
-           s.created_at DESC
-         LIMIT $2 OFFSET $3`,
+        `WITH paginated_songs AS (
+           SELECT s.*, u.username as author,
+             CASE
+               WHEN $1 = '' THEN 0
+               WHEN LOWER(s.title) = LOWER($1) THEN 0
+               WHEN LOWER(s.title) LIKE LOWER($1) || '%' THEN 1
+               WHEN LOWER(s.artist) = LOWER($1) THEN 2
+               WHEN LOWER(s.artist) LIKE LOWER($1) || '%' THEN 3
+               WHEN s.title ILIKE '%' || $1 || '%' THEN 4
+               WHEN s.artist ILIKE '%' || $1 || '%' THEN 5
+               ELSE 6
+             END as sort_exact,
+             CASE
+               WHEN s.title ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.title))
+               ELSE 999999
+             END as sort_title_pos,
+             CASE
+               WHEN s.artist ILIKE '%' || $1 || '%' THEN POSITION(LOWER($1) IN LOWER(s.artist))
+               ELSE 999999
+             END as sort_artist_pos
+           FROM songs s
+           LEFT JOIN users u ON s.user_id = u.id
+           WHERE ($1 = '' OR s.title ILIKE '%' || $1 || '%' OR s.artist ILIKE '%' || $1 || '%')
+           ORDER BY sort_exact, sort_title_pos, sort_artist_pos, s.created_at DESC
+           LIMIT $2 OFFSET $3
+         )
+         -- Ratings y acordes se agregan solo para la página ya recortada (no para cada fila saltada por OFFSET).
+         SELECT ps.*,
+                r.rating,
+                r.rating_count,
+                cc.has_chords
+         FROM paginated_songs ps
+         LEFT JOIN LATERAL (
+           SELECT AVG(score) as rating, COUNT(*) as rating_count
+           FROM ratings WHERE song_id = ps.id
+         ) r ON true
+         LEFT JOIN LATERAL (
+           SELECT COUNT(*) as has_chords
+           FROM chord_cache WHERE song_id = ps.id
+         ) cc ON true
+         ORDER BY ps.sort_exact, ps.sort_title_pos, ps.sort_artist_pos, ps.created_at DESC`,
         [q, limit, offset]
       );
       res.json(result.rows.map(serializeSong));
