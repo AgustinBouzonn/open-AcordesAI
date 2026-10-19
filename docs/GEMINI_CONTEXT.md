@@ -1,70 +1,43 @@
-# Contexto de Desarrollo y Guías de Gemini API
+# Integración con IA
 
-Este proyecto sigue las guías estrictas del SDK `@google/genai` para garantizar compatibilidad y rendimiento. A continuación se detalla el contexto técnico utilizado por el asistente de IA.
+Cómo genera cifrados el backend. El código está en `backend/src/services/aiService.ts` y lo usa la ruta de canciones (`backend/src/routes/songs.ts`) cuando una canción no tiene cifrado en caché para el instrumento pedido.
 
-## SDK y Nomenclatura
+## Sin SDK
 
-- **Librería**: `@google/genai`
-- **Clase Principal**: `GoogleGenAI`
-- **Importación**: `import { GoogleGenAI } from "@google/genai";`
+El backend no usa ningún SDK de IA. Hace llamadas HTTP con `fetch` a una de dos APIs:
 
-## Inicialización
+| Proveedor | Endpoint | Autenticación |
+|---|---|---|
+| Gemini | `https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent` | Header `x-goog-api-key` |
+| OpenAI o compatible | `{AI_BASE_URL}/chat/completions` | Header `Authorization: Bearer` |
 
-```typescript
-// Correcta inicialización
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-```
+La clave va siempre en un header, nunca en la URL, para que no quede en logs de proxies ni en mensajes de error. Los errores se registran con la clave redactada.
 
-## Modelos Utilizados
+## Configuración
 
-El proyecto selecciona el modelo adecuado según la tarea:
+Todo se resuelve al arrancar el backend, a partir de variables de entorno:
 
-1.  **Tareas de Texto Básicas**: `gemini-3-flash-preview`
-    - Usado para: Búsqueda de canciones, generación rápida de listas.
-2.  **Tareas Complejas (Razonamiento)**: `gemini-3-pro-preview`
-    - Usado para: Análisis profundo (si fuera necesario).
-3.  **Generación de Cifrados**: Actualmente usamos `gemini-3-flash-preview` por su velocidad y eficiencia para estructurar texto y acordes.
+| Variable | Valor por defecto |
+|---|---|
+| `AI_PROVIDER` | `gemini` si hay `GEMINI_API_KEY`, `openai` si solo hay `OPENAI_API_KEY`, y `gemini` si no hay ninguna |
+| `AI_API_KEY` | La clave del proveedor elegido, o la que esté definida |
+| `AI_MODEL` | `gemini-2.0-flash` con Gemini, `gpt-4o-mini` con OpenAI |
+| `AI_BASE_URL` | `https://api.openai.com/v1`, solo para el proveedor OpenAI |
 
-## Generación de Contenido (Texto y JSON)
+Sin ninguna clave, generar un cifrado devuelve un error explicando que falta configurar la IA. La referencia completa de variables está en [configuracion.md](configuracion.md).
 
-Para obtener los cifrados y resultados de búsqueda estructurados, utilizamos `responseSchema`.
+## Prompt
 
-### Ejemplo de Configuración para JSON (Búsqueda)
+`buildPrompt` arma un único prompt por canción e instrumento:
 
-```typescript
-const response = await ai.models.generateContent({
-  model: "gemini-3-flash-preview",
-  contents: "Query...",
-  config: {
-    responseMimeType: "application/json",
-    responseSchema: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-            // Propiedades definidas
-        }
-      }
-    },
-  },
-});
-```
+- **Datos del usuario acotados:** título y artista pasan por `sanitizePromptField`, que quita saltos de línea, comillas y caracteres de control, y corta a 150 caracteres. El resultado se cachea para todos los usuarios, así que esto evita inyección de instrucciones.
+- **Delimitadores:** la canción va entre etiquetas `<song>`, con la indicación de tratarla solo como título y artista.
+- **Instrumento:** se agrega una instrucción específica para guitarra, ukelele o piano. Cualquier otro valor usa la de guitarra.
+- **Formato de salida:** se pide JSON con `title`, `artist`, `key` y `content`, con los acordes sobre la letra.
 
-### Extracción de Texto
+## Respuesta
 
-Se accede directamente a la propiedad `.text` de la respuesta:
-```typescript
-const text = response.text; // String con el contenido
-```
-
-## Reglas de Implementación en AcordesAI
-
-1.  **No gestionar API Keys en UI**: La key viene de `process.env.API_KEY`.
-2.  **Statelessness**: Las llamadas a la API son independientes.
-3.  **Instrumentos**:
-    - Para **Guitarra**, **Ukelele** y **Piano**, se inyectan instrucciones específicas en el `systemInstruction` o en el prompt del usuario para adaptar la respuesta del modelo (ej. "Provide chords for Ukulele standard tuning").
-
-## Funcionalidades de IA Implementadas
-
-1.  **Search Grounding**: (Simulado vía prompt actualmente) El sistema pide "canciones populares" que coincidan con la query.
-2.  **Extraction**: El sistema extrae Título, Artista, Tono y Cuerpo del cifrado de la respuesta no estructurada o semi-estructurada de la IA.
+- **Modo JSON:** con Gemini se pide `responseMimeType: application/json`. Con OpenAI se pide `response_format: json_object` y un mensaje de sistema que exige solo JSON.
+- **Parámetros:** temperatura de 0.3 y timeout de 20 segundos en ambos casos.
+- **Extracción tolerante:** `extractJson` acepta JSON puro, JSON dentro de un bloque de código o el primer objeto que encuentre en el texto.
+- **Valores de respaldo:** si falta algún campo, se usan el título y artista pedidos, la tonalidad `C` y un mensaje de error en el contenido. Si la respuesta no es JSON válido, se devuelve un error para reintentar.
