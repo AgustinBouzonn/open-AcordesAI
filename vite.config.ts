@@ -79,6 +79,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Chunks de la exportación a PDF (jspdf y sus dependencias): ~780 KB que solo se usan al exportar.
+        // Se descargan bajo demanda en vez de precargarse en cada instalación/actualización de la PWA.
+        globIgnores: ['**/assets/pdf-*.js', '**/assets/html2canvas*.js', '**/assets/index.es-*.js', '**/assets/purify*.js'],
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
