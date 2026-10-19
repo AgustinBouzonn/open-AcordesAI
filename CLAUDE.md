@@ -32,6 +32,7 @@
 - Antes de pushear: `npm run lint && npm run typecheck && npm run test:run && npm run test:backend`.
 - Linter: oxlint (`.oxlintrc.json`), no ESLint: typescript-eslint no soporta TypeScript 7 (pide `<6.1`).
 - Nunca pushear directo a `main`: siempre PR con CI en verde.
+- Login social en la app nativa: se abre en el navegador del sistema (Google bloquea OAuth en WebViews) y vuelve por el deep link `com.acordesai.app://auth/callback` con un código de un solo uso, nunca con el JWT. El esquema está repetido en `NATIVE_APP_SCHEME` (backend), `services/nativeAuth.ts` y `AndroidManifest.xml`: si cambia uno, cambian los tres.
 - Cada bug arreglado trae un test de regresión. Si el bug enseña algo no obvio del proyecto, agregar una línea acá.
 - No poner en `manualChunks` (vite.config.ts) librerías que solo se cargan con `import()` y que a su vez hacen `import()` internos (jspdf): Rollup mete el preload helper de Vite en ese chunk y el entry lo importa estáticamente, sumando cientos de KB a la carga inicial. Verificar los `modulepreload` de `dist/index.html` después de tocar el chunking.
 

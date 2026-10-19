@@ -1,13 +1,20 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { authLimiter } from '../../middleware/rateLimit';
+import { query } from '../../db';
 import {
+  NATIVE_CODE_TTL_SECONDS,
   OAUTH_COOKIE,
+  OAUTH_COOKIE_OPTIONS,
+  OAUTH_NATIVE_COOKIE,
   OAuthProvider,
   buildJwt,
   getOAuthConfig,
+  hashNativeCode,
+  isNativeOAuthFlow,
   parseCookies,
   redirectWithAuthResult,
+  toUserDto,
   upsertOAuthUser,
 } from './utils';
 
@@ -43,7 +50,11 @@ router.get('/oauth/:provider/start', authLimiter, async (req: Request, res: Resp
     authorizeUrl.searchParams.set('prompt', 'consent');
   }
 
-  res.cookie(OAUTH_COOKIE, state, { httpOnly: true, sameSite: 'none', secure: true, maxAge: 10 * 60 * 1000 });
+  const cookieOptions = { ...OAUTH_COOKIE_OPTIONS, maxAge: 10 * 60 * 1000 };
+  res.cookie(OAUTH_COOKIE, state, cookieOptions);
+  // Solo marca el flujo como nativo: a dónde se vuelve lo decide NATIVE_APP_SCHEME, no el cliente.
+  if (req.query.platform === 'native') res.cookie(OAUTH_NATIVE_COOKIE, '1', cookieOptions);
+  else res.clearCookie(OAUTH_NATIVE_COOKIE, OAUTH_COOKIE_OPTIONS);
   res.redirect(302, authorizeUrl.toString());
 });
 
@@ -113,12 +124,56 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
     if (!email || !providerId) throw new Error('oauth profile incomplete');
 
     const user = await upsertOAuthUser({ email, username, provider, providerId });
+    if (isNativeOAuthFlow(req)) {
+      redirectWithAuthResult(req, res, { code: await issueNativeCode(user.id) });
+      return;
+    }
     redirectWithAuthResult(req, res, { token: buildJwt(user) });
   } catch (e) {
     console.error(`[auth/oauth/${provider}]`, e);
     redirectWithAuthResult(req, res, { error: `No se pudo completar la autenticación con ${provider}` });
   }
 }
+
+/** Crea un código de un solo uso para la app nativa. Se guarda solo su hash; de paso purga los vencidos. */
+async function issueNativeCode(userId: number): Promise<string> {
+  const code = crypto.randomBytes(32).toString('base64url');
+  await query(
+    `WITH purge AS (DELETE FROM oauth_native_codes WHERE expires_at < NOW())
+     INSERT INTO oauth_native_codes (code_hash, user_id, expires_at)
+     VALUES ($1, $2, NOW() + make_interval(secs => $3))`,
+    [hashNativeCode(code), userId, NATIVE_CODE_TTL_SECONDS]
+  );
+  return code;
+}
+
+// La app nativa canjea el código del deep link por la sesión. El UPDATE marca el código como usado
+// y comprueba que no esté usado ni vencido en una sola sentencia, así no se puede canjear dos veces.
+router.post('/oauth/native/exchange', authLimiter, async (req: Request, res: Response): Promise<void> => {
+  const code = typeof req.body?.code === 'string' ? req.body.code : '';
+  if (!code || code.length > 200) { res.status(400).json({ message: 'Código de autenticación inválido' }); return; }
+
+  try {
+    const used = await query(
+      `UPDATE oauth_native_codes SET used_at = NOW()
+       WHERE code_hash = $1 AND used_at IS NULL AND expires_at > NOW()
+       RETURNING user_id`,
+      [hashNativeCode(code)]
+    );
+    if (!used.rows.length) { res.status(400).json({ message: 'El código de autenticación expiró o ya se usó. Intentá de nuevo.' }); return; }
+
+    const result = await query(
+      'SELECT id, email, username, auth_provider, token_version FROM users WHERE id = $1',
+      [used.rows[0].user_id]
+    );
+    const user = result.rows[0];
+    if (!user) { res.status(400).json({ message: 'El código de autenticación expiró o ya se usó. Intentá de nuevo.' }); return; }
+    res.json({ user: toUserDto(user), token: buildJwt(user) });
+  } catch (e) {
+    console.error('[auth/oauth/native/exchange]', e);
+    res.status(500).json({ message: 'No se pudo completar el inicio de sesión' });
+  }
+});
 
 router.get('/oauth/:provider/callback', async (req: Request, res: Response): Promise<void> => {
   const provider = req.params.provider;

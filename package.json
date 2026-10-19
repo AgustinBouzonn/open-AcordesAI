@@ -21,6 +21,8 @@
     "build:landing": "node scripts/build-landing.mjs"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.563.0",
     "pitchy": "^4.1.0",

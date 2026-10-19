@@ -25,19 +25,23 @@ VITE_PUBLIC_APP_URL=https://tu-dominio.com
 
 ## Login social en la app nativa
 
-El login con Google y GitHub navega dentro de la misma WebView: la app abre `/api/auth/oauth/<proveedor>/start`, el proveedor redirige al callback del backend y el backend vuelve a `FRONTEND_URL/#/auth/callback` con el token.
+Google bloquea OAuth dentro de WebViews de Android (`403 disallowed_useragent`), así que en la app nativa el login social no usa la WebView:
 
-- **Con `server.url` (configuración actual):** todo el flujo ocurre sobre el dominio de producción, así que el token llega a la app. GitHub funciona así. **Google bloquea el login dentro de WebViews de Android** y responde con el error `403 disallowed_useragent`, por política del proveedor.
-- **Sin `server.url` (frontend empaquetado):** el inicio del login ya usa la base de la API configurada, pero el backend vuelve a `FRONTEND_URL`, que es el sitio web. La WebView sale de la app empaquetada y el token queda en el sitio web, no en la app.
+1. La app abre `/api/auth/oauth/<proveedor>/start?platform=native` en el navegador del sistema (Custom Tabs) con `@capacitor/browser`.
+2. `/start` guarda en una cookie que el flujo es nativo. El proveedor vuelve al callback del backend en ese mismo navegador.
+3. El backend no manda el JWT a la app. Genera un código aleatorio de un solo uso que vence en 2 minutos, guarda solo su hash en `oauth_native_codes` y redirige a `com.acordesai.app://auth/callback?code=...`. Si algo falla, redirige ahí mismo con `?error=...`.
+4. Android abre la app por el `intent-filter` de `AndroidManifest.xml`. `AuthContext` escucha `appUrlOpen` con `@capacitor/app`, cierra el navegador y canjea el código con `POST /api/auth/oauth/native/exchange`. El backend lo marca como usado en la misma sentencia que lo valida, así que no se puede canjear dos veces.
 
-Para que el login social funcione en la app nativa en los dos casos hace falta un cambio que no se resuelve solo con código del frontend:
+El destino del deep link es fijo: sale de `NATIVE_APP_SCHEME` del backend, nunca de un parámetro del cliente, así que el callback no es un open redirect. El JWT nunca viaja en la URL del deep link: otra app podría registrar el mismo esquema y leerla, pero el código solo sirve una vez y por poco tiempo.
 
-1. Abrir el login en el navegador del sistema, por ejemplo con el plugin `@capacitor/browser`, en lugar de la WebView.
-2. Registrar un deep link para volver a la app, ya sea un esquema propio o un App Link verificado del dominio, con su `intent-filter` en `AndroidManifest.xml`.
-3. Hacer que el backend redirija a ese deep link cuando el login empezó desde la app, y escuchar `appUrlOpen` del plugin `@capacitor/app` para completar la sesión.
-4. Si usás un esquema propio, agregar la URL de retorno donde corresponda en las consolas de Google y GitHub.
+En la web el flujo no cambia: el backend vuelve a `FRONTEND_URL/#/auth/callback` con el token.
 
-Hasta entonces, en la app nativa conviene usar el login con email y contraseña.
+### Pasos manuales para habilitarlo
+
+1. **Consolas de Google y GitHub:** no hace falta registrar el deep link. La URL de retorno que ven los proveedores sigue siendo la del backend, `https://<tu-dominio>/api/auth/oauth/google/callback` y `https://<tu-dominio>/api/auth/oauth/github/callback`. Verificá que esas dos estén registradas y que `FRONTEND_URL` apunte a ese dominio.
+2. **Variables:** `NATIVE_APP_SCHEME` es opcional. Si cambiás el `appId` de `capacitor.config.ts`, cambiá también esa variable, el esquema del `intent-filter` y `NATIVE_AUTH_CALLBACK` en `services/nativeAuth.ts`.
+3. **Base de datos:** la migración `009_oauth_native_codes.sql` crea la tabla de códigos. El deploy la aplica solo.
+4. **App Android:** hay que volver a compilarla y publicarla, porque suma dos plugins nativos y el `intent-filter`: `npm run build`, `npx cap sync android` y el build de release de la sección siguiente.
 
 ## Compilar y sincronizar
 

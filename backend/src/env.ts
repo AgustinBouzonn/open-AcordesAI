@@ -26,6 +26,15 @@ export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET?.trim() || 
 export const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID?.trim() || '';
 export const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET?.trim() || '';
 
+// Esquema del deep link de la app nativa (el appId de capacitor.config.ts). El callback de OAuth
+// iniciado desde la app vuelve a `<esquema>://auth/callback`. Es fijo por configuración, nunca viene
+// del cliente, para que el callback no sea un open redirect. Un valor inválido cae en el default.
+const DEFAULT_NATIVE_APP_SCHEME = 'com.acordesai.app';
+const nativeScheme = process.env.NATIVE_APP_SCHEME?.trim().toLowerCase() || DEFAULT_NATIVE_APP_SCHEME;
+export const NATIVE_APP_SCHEME = /^[a-z][a-z0-9+.-]*$/.test(nativeScheme) && !/^(https?|javascript|data|file)$/.test(nativeScheme)
+  ? nativeScheme
+  : DEFAULT_NATIVE_APP_SCHEME;
+
 if (process.env.NODE_ENV !== 'test') {
   const groups: Array<{ name: string; vars: Record<string, string>; mode?: 'all' | 'any' }> = [
     { name: 'Google OAuth', vars: { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } },

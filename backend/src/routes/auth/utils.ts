@@ -3,11 +3,20 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { query } from '../../db';
-import { FRONTEND_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET } from '../../env';
+import { FRONTEND_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, NATIVE_APP_SCHEME } from '../../env';
 
 export type OAuthProvider = 'google' | 'github';
 
 export const OAUTH_COOKIE = 'oauth_state';
+// Marca que el login empezó desde la app nativa. La setea /start con ?platform=native en el mismo
+// navegador (Custom Tabs) que después recibe el callback.
+export const OAUTH_NATIVE_COOKIE = 'oauth_native';
+export const OAUTH_COOKIE_OPTIONS = { httpOnly: true, sameSite: 'none' as const, secure: true };
+
+export const NATIVE_CALLBACK_URL = `${NATIVE_APP_SCHEME}://auth/callback`;
+export const NATIVE_CODE_TTL_SECONDS = 120;
+
+export const hashNativeCode = (code: string): string => crypto.createHash('sha256').update(code).digest('hex');
 
 export const parseCookies = (cookieHeader?: string): Record<string, string> => {
   if (!cookieHeader) return {};
@@ -125,9 +134,25 @@ export const upsertOAuthUser = async (params: { email: string; username: string;
   return inserted.rows[0];
 };
 
+export const isNativeOAuthFlow = (req: Request): boolean => parseCookies(req.headers.cookie)[OAUTH_NATIVE_COOKIE] === '1';
+
+/**
+ * Cierra el flujo de OAuth. En la web vuelve al frontend con el JWT en el hash, como siempre.
+ * En la app nativa vuelve al deep link fijo: nunca con el JWT, solo con `code` (de un solo uso)
+ * o con `error`.
+ */
 export const redirectWithAuthResult = (req: Request, res: Response, params: Record<string, string>) => {
+  const native = isNativeOAuthFlow(req);
+  res.clearCookie(OAUTH_COOKIE, OAUTH_COOKIE_OPTIONS);
+  res.clearCookie(OAUTH_NATIVE_COOKIE, OAUTH_COOKIE_OPTIONS);
+  if (native) {
+    const nativeParams: Record<string, string> = params.code
+      ? { code: params.code }
+      : { error: params.error || 'No se pudo completar la autenticación social' };
+    res.redirect(`${NATIVE_CALLBACK_URL}?${new URLSearchParams(nativeParams).toString()}`);
+    return;
+  }
   const frontendUrl = getFrontendUrl(req);
   const queryString = new URLSearchParams(params).toString();
-  res.clearCookie(OAUTH_COOKIE, { httpOnly: true, sameSite: 'none', secure: true });
   res.redirect(`${frontendUrl}/#/auth/callback?${queryString}`);
 };
