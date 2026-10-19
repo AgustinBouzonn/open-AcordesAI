@@ -8,13 +8,18 @@ La app Android es el mismo frontend empaquetado con Capacitor. El workflow `andr
 - JDK 21
 - Android Studio, o el SDK de Android con Gradle
 
-## API para la app nativa
+## Cómo carga la app nativa
 
-Dentro de Capacitor la ruta relativa `/api` no existe, así que el build necesita la URL absoluta del backend. Definila en el `.env` de la raíz antes de compilar:
+`capacitor.config.ts` define `server.url`, así que la app Android abre el sitio publicado en lugar del frontend empaquetado. Por eso, hoy `/api` y el origen de la página ya apuntan al dominio de producción.
+
+Si en algún momento quitás `server.url` para empaquetar el frontend, el origen pasa a ser local y hay que definir en el `.env` de la raíz, antes de compilar:
 
 ```bash
 VITE_API_URL=https://tu-dominio.com/api
+VITE_PUBLIC_APP_URL=https://tu-dominio.com
 ```
+
+`VITE_PUBLIC_APP_URL` asegura que los enlaces para compartir apunten al dominio público. Conviene definirla siempre en el build de Android.
 
 ## Compilar y sincronizar
 

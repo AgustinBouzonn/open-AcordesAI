@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ListMusic, Plus, Trash2, Pencil, Check, X, Loader2, ChevronUp, ChevronDown, Music, Share2, Link as LinkIcon } from 'lucide-react';
 import { Song } from '../../types';
 import { api } from '../../services/apiClient';
+import { buildShareUrl } from '../../services/appUrl';
 import { useToast } from '../Toast';
 import { Artwork } from '../Artwork';
 
@@ -181,7 +182,7 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
                       <>
                         <button
                           onClick={async () => {
-                            const url = `${window.location.origin}/#/shared/setlist/${detail.shareToken}`;
+                            const url = buildShareUrl(`/shared/setlist/${detail.shareToken}`);
                             try { await navigator.clipboard.writeText(url); showToast('Link copiado', 'success'); } catch { showToast(url, 'info', 8000); }
                           }}
                           className="text-xs flex items-center gap-1 bg-emerald-900/40 border border-emerald-700 text-emerald-200 px-2 py-1 rounded hover:bg-emerald-900/60"
@@ -199,7 +200,7 @@ export const SetlistsPage: React.FC<Props> = ({ user, onLogin, onSelectSong }) =
                           try {
                             const { token } = await api.setlists.share(sl.id);
                             await loadDetail(sl.id);
-                            const url = `${window.location.origin}/#/shared/setlist/${token}`;
+                            const url = buildShareUrl(`/shared/setlist/${token}`);
                             try { await navigator.clipboard.writeText(url); showToast('Link copiado al portapapeles', 'success'); } catch { showToast(url, 'info', 8000); }
                           } catch { showToast('Error al generar link', 'error'); }
                         }}
