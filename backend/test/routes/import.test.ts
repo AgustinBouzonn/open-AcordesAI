@@ -55,7 +55,7 @@ describe('import routes', () => {
       results: [{
         title: 'Song 1',
         artist: 'Unknown',
-        url: 'https://www.ultimateguitar.com/tabs/song-1',
+        url: 'https://www.ultimate-guitar.com/tabs/song-1',
       }],
     });
   });

@@ -11,7 +11,7 @@ interface Props {
   initialUrl?: string;
 }
 
-const SUPPORTED_HOST_RE = /(cifraclub\.com|ultimateguitar\.com|cifraspot\.com)/i;
+const SUPPORTED_HOST_RE = /(cifraclub\.com|ultimate-?guitar\.com|cifraspot\.com)/i;
 
 export function ImportUrlModal({ isOpen, onClose, onImported, initialUrl }: Props) {
   const [url, setUrl] = useState('');
