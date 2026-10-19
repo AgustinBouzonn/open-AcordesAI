@@ -22,3 +22,15 @@ Compose v2 usa guiones (`open-acordesai-nginx-1`), no underscores. Si se ven con
 - Endpoint: `POST /api/import/from-url` (requireAuth) con body `{ url }`. Valida hostname contra `ALLOWED_HOSTS` (Cifra Club, Ultimate Guitar, CifraSpot), scrapea el `<pre>` más largo y el `og:title`, inserta en `songs` + `chord_cache (instrument='guitar')` atómicamente. Dedup por `source_url` (devuelve `existed: true`).
 - Frontend: botón flotante ⬇ en `App.tsx` → `ImportUrlModal` → llama `api.imports.fromUrl(url)` → navega a `/song/:id`.
 - El mismo patrón (insert en `songs` + `chord_cache` con mismo contenido) lo usa `scripts/import-bulk.mjs` para imports masivos por CLI.
+
+## Automatización (CI/CD)
+- **CI** (`.github/workflows/ci.yml`): typecheck, tests frontend (vitest), build, tests backend. Corre en cada push/PR.
+- **Deploy** (`.github/workflows/deploy.yml`): cuando CI pasa en un push a `main`, entra por SSH al VPS y ejecuta `scripts/deploy.sh <sha>` (fast-forward, build, migraciones idempotentes, `docker compose up -d`, health check). Si el health falla, vuelve solo al commit anterior. También se puede lanzar a mano (workflow_dispatch).
+- Secrets en GitHub: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_APP_DIR` (opcionales `VPS_PORT`, `VPS_KNOWN_HOSTS`). Sin ellos el deploy se omite con un warning.
+- Toda migración nueva en `backend/migrations/` debe ser idempotente (`IF NOT EXISTS` / `IF EXISTS`): el deploy las corre todas en cada release.
+- Sesiones de Claude en la nube: `.claude/hooks/session-start.sh` instala dependencias para poder correr tests.
+
+## Reglas para agentes
+- Antes de pushear: `npm run typecheck && npm run test:run && npm run test:backend`.
+- Nunca pushear directo a `main`: siempre PR con CI en verde.
+- Cada bug arreglado trae un test de regresión. Si el bug enseña algo no obvio del proyecto, agregar una línea acá.
