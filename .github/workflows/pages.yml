@@ -38,7 +38,7 @@ jobs:
         run: npm ci
 
       - id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       # Con dominio propio configurado en Pages, base_url pasa a ser ese dominio (canonical y sitemap).
       - name: Armar sitio
