@@ -6,6 +6,7 @@ import {
   OAuthProvider,
   buildJwt,
   getOAuthConfig,
+  parseCookies,
   redirectWithAuthResult,
   upsertOAuthUser,
 } from './utils';
@@ -13,6 +14,12 @@ import {
 const router = Router();
 
 const isValidProvider = (value: string): value is OAuthProvider => value === 'google' || value === 'github';
+
+const safeEqual = (a: string, b: string): boolean => {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ba.length === bb.length && crypto.timingSafeEqual(ba, bb);
+};
 
 router.get('/oauth/:provider/start', authLimiter, async (req: Request, res: Response): Promise<void> => {
   const provider = req.params.provider;
@@ -49,6 +56,13 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
   }
 
   try {
+    // El state tiene que coincidir con la cookie seteada en /start (protección CSRF).
+    const expectedState = parseCookies(req.headers.cookie)[OAUTH_COOKIE] || '';
+    if (!expectedState || !safeEqual(state, expectedState)) {
+      redirectWithAuthResult(req, res, { error: 'La sesión de autenticación expiró o no es válida. Intentá de nuevo.' });
+      return;
+    }
+
     const config = getOAuthConfig(provider, req);
     if (!config.clientId || !config.clientSecret) {
       redirectWithAuthResult(req, res, { error: `OAuth de ${provider} no está configurado` });
@@ -74,8 +88,9 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
 
     if (provider === 'google') {
       const r = await fetch(config.userUrl, { headers: { Authorization: `Bearer ${tokenData.access_token}` } });
-      const u = await r.json() as { sub?: string; email?: string; name?: string; given_name?: string };
-      email = u.email || '';
+      const u = await r.json() as { sub?: string; email?: string; email_verified?: boolean; name?: string; given_name?: string };
+      // Solo emails verificados: upsertOAuthUser vincula cuentas existentes por email.
+      email = u.email_verified === true ? u.email || '' : '';
       username = u.name || u.given_name || u.email?.split('@')[0] || 'google-user';
       providerId = u.sub || '';
     } else {
@@ -85,16 +100,14 @@ async function handleOAuthCallback(provider: OAuthProvider, req: Request, res: R
       const u = await r.json() as { id?: number; login?: string; name?: string; email?: string };
       providerId = u.id?.toString() || '';
       username = u.name || u.login || 'github-user';
-      email = u.email || '';
-      if (!email) {
-        const er = await fetch('https://api.github.com/user/emails', {
-          headers: { Authorization: `Bearer ${tokenData.access_token}`, 'User-Agent': 'AcordesAI', Accept: 'application/vnd.github+json' },
-        });
-        const list = await er.json() as Array<{ email?: string; primary?: boolean; verified?: boolean }>;
-        email = list.find((i) => i.primary && i.verified)?.email
-          || list.find((i) => i.verified)?.email
-          || list[0]?.email || '';
-      }
+      // /user devuelve el email público sin indicar si está verificado; se toma de /user/emails.
+      const er = await fetch('https://api.github.com/user/emails', {
+        headers: { Authorization: `Bearer ${tokenData.access_token}`, 'User-Agent': 'AcordesAI', Accept: 'application/vnd.github+json' },
+      });
+      const list = er.ok ? await er.json() as Array<{ email?: string; primary?: boolean; verified?: boolean }> : [];
+      email = list.find((i) => i.primary && i.verified)?.email
+        || list.find((i) => i.verified)?.email
+        || '';
     }
 
     if (!email || !providerId) throw new Error('oauth profile incomplete');
