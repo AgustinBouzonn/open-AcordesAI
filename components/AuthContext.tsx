@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { api, onAuthError } from '../services/apiClient';
+import { isNativeApp, parseNativeAuthCallback } from '../services/nativeAuth';
 import { OAuthProvider, User } from '../types';
 
 interface AuthContextType {
@@ -33,6 +36,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { off(); };
   }, []);
 
+  // App nativa: el login social vuelve por deep link con un código de un solo uso, que se canjea
+  // por la sesión. Los errores se muestran en la misma pantalla que usa la web.
+  useEffect(() => {
+    if (!isNativeApp()) return undefined;
+    let active = true;
+    const showError = (message: string) => {
+      window.location.hash = `#/auth/callback?${new URLSearchParams({ error: message }).toString()}`;
+    };
+    const listener = CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+      const result = parseNativeAuthCallback(url);
+      if (!result) return;
+      Browser.close().catch(() => { /* en Android puede no estar abierto */ });
+      if ('error' in result) { showError(result.error); return; }
+      api.auth.exchangeNativeCode(result.code)
+        .then((data) => {
+          if (!active) return;
+          api.setToken(data.token);
+          setUser(data.user);
+          window.location.hash = '#/';
+        })
+        .catch(() => { if (active) showError('No se pudo completar el inicio de sesión social'); });
+    });
+    return () => {
+      active = false;
+      listener.then((handle) => handle.remove()).catch(() => { /* noop */ });
+    };
+  }, []);
+
   const login = async (email: string, password: string) => {
     const data = await api.auth.login(email, password);
     api.setToken(data.token);
@@ -46,6 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithOAuth = (provider: OAuthProvider) => {
+    // Google bloquea OAuth dentro de WebViews: en la app nativa se abre el navegador del sistema.
+    if (isNativeApp()) {
+      Browser.open({ url: api.auth.getOAuthStartUrl(provider, { native: true }) }).catch(() => { /* noop */ });
+      return;
+    }
     window.location.replace(api.auth.getOAuthStartUrl(provider));
   };
 

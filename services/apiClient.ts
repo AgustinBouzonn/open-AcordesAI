@@ -127,7 +127,13 @@ class ApiClient {
         method: 'DELETE',
         body: JSON.stringify({ confirm: 'ELIMINAR' }),
       }),
-    getOAuthStartUrl: (provider: OAuthProvider) => `${getAbsoluteApiBase()}/auth/oauth/${provider}/start`,
+    getOAuthStartUrl: (provider: OAuthProvider, options: { native?: boolean } = {}) =>
+      `${getAbsoluteApiBase()}/auth/oauth/${provider}/start${options.native ? '?platform=native' : ''}`,
+    exchangeNativeCode: (code: string) =>
+      this.request<AuthResponse>('/auth/oauth/native/exchange', {
+        method: 'POST',
+        body: JSON.stringify({ code }),
+      }),
     getOAuthRedirect: async (provider: OAuthProvider) => {
       const response = await fetch(`${getAbsoluteApiBase()}/auth/oauth/${provider}/start`, {
         method: 'GET',

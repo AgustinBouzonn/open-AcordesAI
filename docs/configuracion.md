@@ -46,6 +46,7 @@ Sin ninguna clave, la app funciona igual, pero solo con cifrados importados o cr
 | `CORS_ORIGIN` | | Orígenes permitidos, separados por comas. Solo hace falta si el frontend se sirve desde otro origen. |
 | `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` | | Habilitan el login con Google. Hacen falta las dos. |
 | `GITHUB_CLIENT_ID` y `GITHUB_CLIENT_SECRET` | | Habilitan el login con GitHub. Hacen falta las dos. |
+| `NATIVE_APP_SCHEME` | `com.acordesai.app` | Esquema del deep link al que vuelve el login social iniciado desde la app nativa (`<esquema>://auth/callback`). Tiene que coincidir con el `appId` de `capacitor.config.ts` y con el `intent-filter` de `AndroidManifest.xml`. Un valor inválido o `http(s)` se ignora. |
 | `SIGNALS_ENABLED` | | Solo para tests: con `1`, registra señales de producto también cuando `NODE_ENV=test`. Fuera de los tests se registran siempre. |
 
 Al arrancar, el backend informa en el log qué integraciones quedaron habilitadas.
