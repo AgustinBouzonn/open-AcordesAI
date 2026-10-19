@@ -48,7 +48,7 @@ export default function createSongsRouter(): Router {
 
   router.get('/popular', async (req: Request, res: Response) => {
     try {
-      const limit = parseInt(req.query.limit as string) || 20;
+      const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 50);
       const result = await query(
         `SELECT s.*, u.username AS author,
                 COALESCE(r.avg_score, 0) AS rating,
@@ -74,8 +74,8 @@ export default function createSongsRouter(): Router {
 
   router.get('/', async (req: Request, res: Response) => {
     try {
-      const limit = parseInt(req.query.limit as string) || 50;
-      const offset = parseInt(req.query.offset as string) || 0;
+      const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 50, 1), 100);
+      const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
       const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
       const result = await query(
         `WITH paginated_songs AS (
@@ -158,6 +158,11 @@ export default function createSongsRouter(): Router {
       
       if (!title || !artist) {
         res.status(400).json({ message: 'Title and artist are required' });
+        return;
+      }
+      if (typeof title !== 'string' || typeof artist !== 'string' || title.length > 200 || artist.length > 200
+        || (lyrics != null && (typeof lyrics !== 'string' || lyrics.length > 100_000))) {
+        res.status(400).json({ message: 'Título y artista: texto de hasta 200 caracteres; letra hasta 100.000' });
         return;
       }
 

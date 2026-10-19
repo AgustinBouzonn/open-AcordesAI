@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
+import { commentLimiter } from '../middleware/rateLimit';
 
 export default function createCommentsRouter(): Router {
   const router = Router();
@@ -29,7 +30,7 @@ export default function createCommentsRouter(): Router {
     }
   });
 
-  router.post('/:songId', requireAuth, async (req: AuthRequest, res: Response) => {
+  router.post('/:songId', requireAuth, commentLimiter, async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
@@ -37,8 +38,11 @@ export default function createCommentsRouter(): Router {
       const { songId } = req.params;
       const { content } = req.body;
       
-      if (!content?.trim()) {
+      if (typeof content !== 'string' || !content.trim()) {
         return res.status(400).json({ error: 'Content is required' });
+      }
+      if (content.length > 2000) {
+        return res.status(400).json({ error: 'El comentario puede tener hasta 2000 caracteres' });
       }
 
       const result = await query(

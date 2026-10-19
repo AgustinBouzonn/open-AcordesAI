@@ -43,3 +43,12 @@ export const chordSaveLimiter = rateLimit({
   keyGenerator: userOrIpKey,
   message: jsonMessage('Demasiados guardados de cifrados. Intenta de nuevo más tarde.'),
 });
+
+export const commentLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userOrIpKey,
+  message: jsonMessage('Demasiados comentarios. Intenta de nuevo más tarde.'),
+});
