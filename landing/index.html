@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AcordesAI · Acordes de cualquier canción</title>
+  <meta name="description" content="Buscá cualquier canción y obtené los acordes al instante. Guitarra, ukelele y piano, transposición, autoscroll, setlists y afinador. Gratis y de código abierto.">
+  <meta name="theme-color" content="#121212">
+  <link rel="canonical" href="https://agustinbouzonn.github.io/open-AcordesAI/">
+  <link rel="icon" href="assets/pwa-192x192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AcordesAI · Acordes de cualquier canción">
+  <meta property="og:description" content="Buscá cualquier canción y obtené los acordes al instante. Gratis y de código abierto.">
+  <meta property="og:image" content="https://agustinbouzonn.github.io/open-AcordesAI/assets/01-home.png">
+  <meta property="og:url" content="https://agustinbouzonn.github.io/open-AcordesAI/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --surface: #1e1e1e;
+      --surface-2: #2c2c2c;
+      --line: #3a3a3a;
+      --text: #f2f2f3;
+      --muted: #a1a1aa;
+      --brand: #4f46e5;
+      --brand-soft: #8b85ff;
+      --radius: 16px;
+      --max: 1080px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.6 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: inherit; }
+    img { max-width: 100%; height: auto; display: block; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
+
+    /* Header */
+    header { position: sticky; top: 0; z-index: 10; background: rgba(18,18,18,.85); backdrop-filter: blur(10px); border-bottom: 1px solid #ffffff10; }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; text-decoration: none; letter-spacing: -.01em; }
+    .logo img { width: 30px; height: 30px; border-radius: 8px; }
+    .nav-links { display: flex; gap: 20px; align-items: center; font-size: 14px; color: var(--muted); }
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { color: var(--text); }
+    @media (max-width: 640px) { .nav-links .hide-sm { display: none; } }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-weight: 600; text-decoration: none; font-size: 15px; transition: transform .15s, background .15s, border-color .15s; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--brand); color: #fff; box-shadow: 0 8px 30px -8px rgba(79,70,229,.7); }
+    .btn-primary:hover { background: #5b53f0; }
+    .btn-ghost { border: 1px solid var(--line); background: var(--surface); }
+    .btn-ghost:hover { border-color: #55555f; }
+    .btn-sm { padding: 8px 14px; font-size: 14px; }
+    .btn svg { width: 18px; height: 18px; flex: none; }
+
+    /* Hero */
+    .hero { position: relative; padding: 80px 0 56px; text-align: center; }
+    .hero::before {
+      content: ""; position: absolute; inset: -120px 0 auto; height: 520px; z-index: -1;
+      background: radial-gradient(600px 300px at 50% 30%, rgba(79,70,229,.35), transparent 70%);
+    }
+    .pill { display: inline-block; font-size: 13px; color: var(--brand-soft); background: rgba(79,70,229,.12); border: 1px solid rgba(79,70,229,.35); padding: 4px 12px; border-radius: 999px; margin-bottom: 22px; }
+    h1 { font-size: clamp(36px, 7vw, 64px); line-height: 1.05; letter-spacing: -.035em; margin: 0 0 18px; font-weight: 800; }
+    h1 .grad { background: linear-gradient(90deg, #a5a1ff, #6d65ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lead { font-size: clamp(17px, 2.4vw, 20px); color: var(--muted); max-width: 620px; margin: 0 auto 32px; }
+    .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .note { margin-top: 14px; font-size: 13px; color: var(--muted); }
+
+    /* Chord strip */
+    .chords { white-space: pre; margin: 48px auto 0 !important; max-width: 560px; background: var(--surface); border: 1px solid #ffffff12; border-radius: var(--radius); padding: 20px 22px; text-align: left; font: 500 15px/1.7 "JetBrains Mono", ui-monospace, monospace; overflow-x: auto; }
+    .chords .c { color: var(--brand-soft); font-weight: 700; }
+    .chords .l { color: #d4d4d8; }
+
+    /* Sections */
+    section { padding: 72px 0; }
+    .section-head { text-align: center; max-width: 640px; margin: 0 auto 40px; }
+    h2 { font-size: clamp(28px, 4.5vw, 40px); letter-spacing: -.025em; line-height: 1.15; margin: 0 0 12px; }
+    .section-head p { color: var(--muted); margin: 0; }
+
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: var(--surface); border: 1px solid #ffffff10; border-radius: var(--radius); padding: 22px; }
+    .card .ico { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: rgba(79,70,229,.15); color: var(--brand-soft); margin-bottom: 14px; }
+    .card .ico svg { width: 22px; height: 22px; }
+    .card h3 { margin: 0 0 6px; font-size: 17px; }
+    .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+    /* Steps */
+    .steps { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); counter-reset: s; }
+    @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+    .step { position: relative; padding: 22px 22px 22px 70px; background: var(--surface); border: 1px solid #ffffff10; border-radius: var(--radius); }
+    .step::before { counter-increment: s; content: counter(s); position: absolute; left: 22px; top: 22px; width: 32px; height: 32px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; display: grid; place-items: center; font-size: 15px; }
+    .step h3 { margin: 0 0 4px; font-size: 17px; }
+    .step p { margin: 0; color: var(--muted); font-size: 15px; }
+
+    /* Screens */
+    .screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 760px) { .screens { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; } }
+    figure { margin: 0; }
+    .shot img { aspect-ratio: 913 / 931; object-fit: cover; object-position: top; width: 100%; }
+    .shot { border-radius: 14px; overflow: hidden; border: 1px solid #ffffff14; background: var(--surface); box-shadow: 0 20px 50px -20px rgba(0,0,0,.8); }
+    figcaption { font-size: 14px; color: var(--muted); text-align: center; margin-top: 10px; }
+
+    /* Download band */
+    .band { background: linear-gradient(135deg, rgba(79,70,229,.22), rgba(79,70,229,.05)); border: 1px solid rgba(79,70,229,.35); border-radius: 24px; padding: 40px 24px; text-align: center; }
+    .band h2 { margin-bottom: 10px; }
+    .band p { color: var(--muted); margin: 0 auto 24px; max-width: 520px; }
+
+    /* Open source */
+    .oss { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: center; }
+    @media (max-width: 760px) { .oss { grid-template-columns: 1fr; } }
+    .oss ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+    .oss li { display: flex; gap: 10px; color: #d4d4d8; }
+    .oss li::before { content: "✓"; color: var(--brand-soft); font-weight: 700; }
+    .stack { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .tag { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: #d4d4d8; }
+
+    footer { border-top: 1px solid #ffffff10; padding: 28px 0 40px; color: var(--muted); font-size: 14px; }
+    footer .row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    footer a { text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } .btn:hover { transform: none; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="logo" href="#"><img src="assets/pwa-192x192.png" alt="">AcordesAI</a>
+      <nav class="nav-links" aria-label="Secciones">
+        <a class="hide-sm" href="#funciones">Funciones</a>
+        <a class="hide-sm" href="#capturas">Capturas</a>
+        <a class="hide-sm" href="https://github.com/AgustinBouzonn/open-AcordesAI">GitHub</a>
+        <a class="btn btn-primary btn-sm" href="https://acordesai.bthings.com.ar">Abrir app</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <span class="pill">Gratis · Código abierto · Sin anuncios</span>
+        <h1>Tocá lo que quieras.<br><span class="grad">Los acordes, al instante.</span></h1>
+        <p class="lead">Buscá cualquier canción y AcordesAI te da el cifrado para guitarra, ukelele o piano. Transponé, poné el autoscroll y armá tus setlists para tocar en vivo.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="https://acordesai.bthings.com.ar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            Abrir AcordesAI
+          </a>
+          <a class="btn btn-ghost" href="https://acordesai.bthings.com.ar/downloads/acordesai.apk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            Descargar para Android
+          </a>
+        </div>
+        <p class="note">Funciona en el navegador y se instala como app (PWA). Sin registrarte para buscar.</p>
+
+        <pre class="chords" aria-label="Ejemplo de cifrado"><span class="c">Am</span>              <span class="c">F</span>
+<span class="l">Tengo un cifrado para cada canción</span>
+<span class="c">C</span>                  <span class="c">G</span>
+<span class="l">y si no está, lo genero con IA</span></pre>
+      </div>
+    </section>
+
+    <section id="funciones">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Todo lo que necesitás para tocar</h2>
+          <p>Pensada para practicar en casa y para el escenario.</p>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+            <h3>Cualquier canción</h3>
+            <p>Si la canción no está en la base, la IA genera el cifrado con letra y tonalidad en segundos.</p>
+          </div>
+          <div class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+            <h3>Guitarra, ukelele y piano</h3>
+            <p>Diagramas de acordes para cada instrumento y cifrados adaptados a cómo se toca.</p>
+          </div>
+          <div class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></div>
+            <h3>Transposición y capo</h3>
+            <p>Cambiá el tono con un toque o poné el capo virtual. Los bemoles se normalizan solos.</p>
+          </div>
+          <div class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></div>
+            <h3>Autoscroll con loop</h3>
+            <p>Velocidad ajustable y bucle de una sección para practicar ese pasaje difícil. La pantalla no se apaga.</p>
+          </div>
+          <div class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg></div>
+            <h3>Setlists para tocar en vivo</h3>
+            <p>Ordená las canciones del show, entrá en modo presentación y compartí la lista con un link.</p>
+          </div>
+          <div class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h3l3-8 4 16 3-8h7"/></svg></div>
+            <h3>Afinador y metrónomo</h3>
+            <p>Afiná con el micrófono y llevá el tiempo sin salir de la app. Tus horas de práctica quedan registradas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Así de simple</h2>
+        </div>
+        <div class="steps">
+          <div class="step"><h3>Buscá</h3><p>Escribí el nombre de la canción o del artista, o buscá por los acordes que ya sabés.</p></div>
+          <div class="step"><h3>Ajustá</h3><p>Elegí instrumento, tono y tamaño de letra. Importá desde Cifra Club o Ultimate Guitar si preferís.</p></div>
+          <div class="step"><h3>Tocá</h3><p>Activá el autoscroll y dejá las manos en el instrumento.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="capturas">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Mirala por dentro</h2>
+          <p>Modo oscuro, pensada para el celular y para leer de lejos.</p>
+        </div>
+        <div class="screens">
+          <figure><div class="shot"><img src="assets/01-home.png" alt="Pantalla de inicio de AcordesAI con buscador y tendencias" loading="lazy" width="913" height="931"></div><figcaption>Inicio</figcaption></figure>
+          <figure><div class="shot"><img src="assets/02-search.png" alt="Resultados de búsqueda de canciones" loading="lazy" width="913" height="931"></div><figcaption>Búsqueda</figcaption></figure>
+          <figure><div class="shot"><img src="assets/03-song-view.png" alt="Canción con acordes sobre la letra" loading="lazy" width="905" height="1459"></div><figcaption>Canción con acordes</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="band">
+          <h2>Empezá a tocar ahora</h2>
+          <p>Abrila en el navegador o instalala en tu Android. Es gratis.</p>
+          <div class="ctas">
+            <a class="btn btn-primary" href="https://acordesai.bthings.com.ar">Abrir AcordesAI</a>
+            <a class="btn btn-ghost" href="https://acordesai.bthings.com.ar/downloads/acordesai.apk">Descargar APK</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap oss">
+        <div>
+          <h2>Hecha en abierto</h2>
+          <p style="color: var(--muted); margin: 0 0 18px;">El código está en GitHub. Podés usarla, revisarla, sugerir mejoras o montarla en tu propio servidor.</p>
+          <ul>
+            <li>Código abierto: todo está en GitHub</li>
+            <li>Sin anuncios</li>
+            <li>Funciona offline para tu biblioteca</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">open-AcordesAI</h3>
+          <p>React, Express y PostgreSQL, con app de Android vía Capacitor.</p>
+          <div class="stack"><span class="tag">React</span><span class="tag">TypeScript</span><span class="tag">Express</span><span class="tag">PostgreSQL</span><span class="tag">PWA</span><span class="tag">Capacitor</span></div>
+          <p style="margin-top:20px"><a class="btn btn-ghost btn-sm" href="https://github.com/AgustinBouzonn/open-AcordesAI">Ver en GitHub</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap row">
+      <span>© AcordesAI</span>
+      <span><a href="https://acordesai.bthings.com.ar">App</a> · <a href="https://github.com/AgustinBouzonn/open-AcordesAI">GitHub</a></span>
+    </div>
+  </footer>
+</body>
+</html>
