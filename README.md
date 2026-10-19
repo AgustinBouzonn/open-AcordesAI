@@ -16,6 +16,17 @@
   </p>
 </div>
 
+<div align="center">
+  <p>
+    <a href="https://acordesai.bthings.com.ar"><b>Abrir la app</b></a> ·
+    <a href="https://agustinbouzonn.github.io/open-AcordesAI/">Sitio</a> ·
+    <a href="https://agustinbouzonn.github.io/open-AcordesAI/acordes/">Diccionario de acordes</a> ·
+    <a href="https://agustinbouzonn.github.io/open-AcordesAI/estado.html">Estado</a> ·
+    <a href="https://agustinbouzonn.github.io/open-AcordesAI/novedades.html">Novedades</a> ·
+    <a href="https://agustinbouzonn.github.io/open-AcordesAI/privacidad.html">Privacidad</a>
+  </p>
+</div>
+
 ---
 
 ## 🤖 Disclaimer de Responsabilidad
@@ -204,6 +215,8 @@ npm run test:run     # Vitest run (CI)
 
 # Full build
 npm run build:all    # Frontend + backend
+npm run build:landing  # Sitio de GitHub Pages → _site/ (landing/, diccionario, novedades)
+npm run test:e2e     # Playwright contra el build real (requiere Postgres con migraciones)
 
 # Backend
 npm --prefix backend run dev
