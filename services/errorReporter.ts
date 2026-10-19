@@ -1,7 +1,8 @@
 // Reporta errores del navegador al backend (señal `client_error`), que el reporte semanal agrega.
 // Nunca debe romper la app ni mandar datos personales: solo mensaje recortado, origen y ruta normalizada.
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import { getApiBase } from './appUrl';
+
 const MAX_REPORTS_PER_SESSION = 5;
 const sent = new Set<string>();
 
@@ -29,7 +30,7 @@ export function reportClientError(error: unknown, source: ClientErrorSource): vo
     if (sent.has(key) || sent.size >= MAX_REPORTS_PER_SESSION) return;
     sent.add(key);
 
-    void fetch(`${API_BASE}/signals/client-error`, {
+    void fetch(`${getApiBase()}/signals/client-error`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, source, route }),
