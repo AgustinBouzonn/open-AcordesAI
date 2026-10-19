@@ -1,0 +1,89 @@
+name: Estado (uptime)
+
+# Cada 15 minutos abre /api/health de producción y guarda el resultado en la rama `status-data`
+# (history.json, 30 días). La página https://agustinbouzonn.github.io/open-AcordesAI/estado.html lo lee.
+# Dos fallas seguidas abren un issue con la etiqueta `incident`; cuando vuelve, se comenta y se cierra.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: status
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HEALTH_URL: https://acordesai.bthings.com.ar/api/health
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+
+      # Hasta 3 intentos: un corte de red puntual del runner no cuenta como caída.
+      - name: Health check
+        id: check
+        run: |
+          ok=false; code=000; ms=0
+          for attempt in 1 2 3; do
+            out=$(curl -sS -o /dev/null -m 20 -A 'AcordesAI-status/1.0 (+https://github.com/${{ github.repository }})' \
+              -w '%{http_code} %{time_total}' "$HEALTH_URL" 2>/dev/null) || out="000 0"
+            code=${out%% *}
+            ms=$(awk -v t="${out##* }" 'BEGIN { printf "%d", t * 1000 }')
+            if [ "$code" = 200 ]; then ok=true; break; fi
+            [ "$attempt" = 3 ] || sleep 15
+          done
+          echo "ok=$ok code=$code ms=$ms"
+          { echo "ok=$ok"; echo "code=$code"; echo "ms=$ms"; } >> "$GITHUB_OUTPUT"
+
+      # Rama huérfana de un solo commit (se reescribe cada vez) para no llenar el historial del repo.
+      - name: Guardar historial
+        id: record
+        run: |
+          data="$RUNNER_TEMP/status-data"
+          git clone -q --depth 1 --branch status-data \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$data" 2>/dev/null || mkdir -p "$data"
+          cp "$data/history.json" "$RUNNER_TEMP/history.json" 2>/dev/null || true
+          failing=$(node scripts/status-record.mjs "$RUNNER_TEMP/history.json" \
+            "${{ steps.check.outputs.ok }}" "${{ steps.check.outputs.code }}" "${{ steps.check.outputs.ms }}")
+          echo "failing=$failing" >> "$GITHUB_OUTPUT"
+
+          rm -rf "$data" && mkdir -p "$data" && cd "$data"
+          git init -q -b status-data
+          cp "$RUNNER_TEMP/history.json" .
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add history.json
+          git commit -q -m "status: $(date -u +%FT%TZ)"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:status-data
+
+      - name: Abrir o cerrar incidente
+        env:
+          OK: ${{ steps.check.outputs.ok }}
+          CODE: ${{ steps.check.outputs.code }}
+          FAILING: ${{ steps.record.outputs.failing }}
+        run: |
+          open=$(gh issue list -R "${{ github.repository }}" --label incident --state open --json number -q '.[0].number')
+          if [ "$OK" = true ] && [ -n "$open" ]; then
+            gh issue close "$open" -R "${{ github.repository }}" \
+              -c "Volvió a responder $(date -u '+%Y-%m-%d %H:%M') UTC."
+          elif [ "$OK" != true ] && [ "$FAILING" -ge 2 ] && [ -z "$open" ]; then
+            gh label create incident -R "${{ github.repository }}" --color B60205 \
+              --description 'Producción no responde (abierto por status.yml)' 2>/dev/null || true
+            gh issue create -R "${{ github.repository }}" --label incident \
+              --title "Producción no responde (/api/health → $CODE)" \
+              --body "El monitor de estado falló $FAILING veces seguidas (cada 15 min) contra \`$HEALTH_URL\`, último código HTTP \`$CODE\` (\`000\` = sin conexión o timeout).
+
+          - Historial: https://agustinbouzonn.github.io/open-AcordesAI/estado.html
+          - Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Se cierra solo cuando vuelve a responder."
+          fi

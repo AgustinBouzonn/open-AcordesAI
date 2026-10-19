@@ -1,14 +1,14 @@
 name: Landing (GitHub Pages)
 
-# Publica landing/ en https://agustinbouzonn.github.io/open-AcordesAI/ (gratis en repos públicos).
+# Publica la landing en https://agustinbouzonn.github.io/open-AcordesAI/ (gratis en repos públicos).
 # Requiere una vez: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Se rearma en cada push a main (Novedades sale de los PRs mergeados) y en cada release
+# (el botón del APK apunta al último GitHub Release). Ver scripts/build-landing.mjs.
 on:
   push:
     branches: [main]
-    paths:
-      - 'landing/**'
-      - 'docs/screenshots/**'
-      - '.github/workflows/pages.yml'
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -29,15 +29,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Las capturas e íconos se copian desde donde ya viven para no duplicarlos en el repo.
-      - name: Armar sitio
-        run: |
-          mkdir -p _site/assets
-          cp -r landing/. _site/
-          cp docs/screenshots/*.png _site/assets/
-          cp public/pwa-192x192.png public/apple-touch-icon.png _site/assets/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
 
-      - uses: actions/configure-pages@v5
+      - name: Install deps
+        run: npm ci
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      # Con dominio propio configurado en Pages, base_url pasa a ser ese dominio (canonical y sitemap).
+      - name: Armar sitio
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}/
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/build-landing.mjs _site
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

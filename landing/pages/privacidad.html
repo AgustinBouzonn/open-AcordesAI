@@ -1,0 +1,85 @@
+<!--
+title: Política de privacidad · AcordesAI
+description: Qué datos guarda AcordesAI, para qué, con quién se comparten y cómo exportarlos o borrar tu cuenta.
+-->
+    <section class="page">
+      <div class="wrap narrow prose">
+        <h1 class="page-title">Política de privacidad</h1>
+        <p class="muted">Última actualización: 19 de octubre de 2026</p>
+
+        <p>AcordesAI es una app gratuita y de código abierto para buscar y tocar acordes. Esta política aplica a la app web (<a href="{{APP_URL}}">acordesai.bthings.com.ar</a>), a la app de Android y a este sitio. Guardamos lo mínimo para que la app funcione. No mostramos publicidad, no usamos herramientas de analítica y no vendemos ni compartimos tus datos con fines comerciales.</p>
+        <p>El código es público: cualquiera puede verificar lo que dice esta página en <a href="{{REPO_URL}}">GitHub</a>.</p>
+
+        <h2>Responsable</h2>
+        <p>Agustín Bouzon, desarrollador de AcordesAI, en Argentina. Contacto: <a href="mailto:abouzon@linksolution.com.ar">abouzon@linksolution.com.ar</a>.</p>
+
+        <h2>Si no tenés cuenta</h2>
+        <p>Podés buscar y ver canciones sin registrarte. En ese caso no guardamos nada que te identifique. Solo se registran las señales anónimas que se describen más abajo.</p>
+
+        <h2>Datos de tu cuenta</h2>
+        <ul>
+          <li><strong>Con email y contraseña:</strong> guardamos tu email, tu nombre de usuario y la contraseña cifrada con bcrypt. Nunca guardamos la contraseña en texto plano.</li>
+          <li><strong>Con Google o GitHub:</strong> guardamos tu email verificado, tu nombre o usuario y el identificador que nos da ese servicio. No guardamos tu foto ni los permisos de acceso a tu cuenta de Google o GitHub.</li>
+        </ul>
+
+        <h2>Lo que hacés en la app</h2>
+        <ul>
+          <li>Favoritos, historial de canciones abiertas, puntajes (1 a 5 estrellas) y progreso (aprendiendo o aprendida).</li>
+          <li>Tiempo de práctica por canción, para tus estadísticas.</li>
+          <li>Setlists. Si compartís uno, cualquiera con el enlace lo puede ver hasta que el enlace venza.</li>
+          <li><strong>Contenido público:</strong> las canciones que creás o importás y los cifrados que editás quedan disponibles para toda la comunidad. Los comentarios también son públicos y muestran tu nombre de usuario. Lo mismo vale para los enlaces de YouTube que agregues a una canción.</li>
+        </ul>
+        <p>Usamos estos datos para mostrarte tu biblioteca y tus estadísticas, y para los rankings de la comunidad. No los usamos para nada más.</p>
+
+        <h2>Señales anónimas para mejorar la app</h2>
+        <p>Para saber qué falla registramos algunos eventos. Ninguno guarda tu usuario ni tu dirección IP:</p>
+        <ul>
+          <li>Búsquedas sin resultados: el texto buscado, en minúsculas y cortado a 40 caracteres.</li>
+          <li>Importaciones que fallaron: el sitio y la ruta de la URL, sin los parámetros.</li>
+          <li>Errores de la IA al generar un cifrado, y cuándo alguien corrige un cifrado generado. Solo se registra el tipo de evento, no el contenido.</li>
+          <li>Errores de la app: un mensaje de hasta 200 caracteres y la sección donde ocurrió. Antes de enviarlo se borran los emails y los números largos. Se envían como máximo 5 por visita.</li>
+        </ul>
+        <p>Estos eventos se borran a los 180 días. Cada semana se publica en GitHub un resumen con totales, sin textos individuales.</p>
+
+        <h2>Dirección IP</h2>
+        <p>Usamos tu IP en memoria y por poco tiempo para limitar abusos, como demasiados intentos de inicio de sesión. No se guarda en nuestra base de datos. Nuestros proveedores de red y servidor pueden registrarla en sus logs de seguridad.</p>
+
+        <h2>En tu dispositivo</h2>
+        <ul>
+          <li>Tu sesión se guarda en el almacenamiento local del navegador y vence a los 7 días.</li>
+          <li>Guardamos una marca para no repetirte la bienvenida.</li>
+          <li>La app guarda en caché canciones, favoritos, historial y setlists para funcionar sin conexión. Se borran al limpiar los datos del sitio o al desinstalar la app.</li>
+          <li>Solo usamos una cookie, durante 10 minutos, para proteger el inicio de sesión con Google o GitHub. No usamos cookies de seguimiento.</li>
+          <li>El afinador usa el micrófono solo mientras está abierto. El audio se analiza en tu dispositivo y no se graba ni se envía.</li>
+        </ul>
+
+        <h2>Servicios de terceros</h2>
+        <ul>
+          <li><strong>Cloudflare y Hostinger:</strong> red, seguridad y servidor donde corre la app.</li>
+          <li><strong>Google y GitHub:</strong> solo si elegís iniciar sesión con ellos.</li>
+          <li><strong>Google Gemini u otro proveedor de IA compatible:</strong> cuando una canción no está en la base, le enviamos solo el título, el artista y el instrumento para generar el cifrado. No le enviamos ningún dato tuyo.</li>
+          <li><strong>Apple (iTunes Search):</strong> nuestro servidor le envía lo que buscás para encontrar canciones. Las portadas las carga tu navegador desde los servidores de Apple.</li>
+          <li><strong>YouTube:</strong> si una canción tiene un video, el reproductor se carga desde YouTube y rige la <a href="https://policies.google.com/privacy?hl=es">política de privacidad de Google</a>.</li>
+          <li><strong>Google Fonts:</strong> las tipografías se descargan desde los servidores de Google.</li>
+          <li><strong>Sitios de cifrados:</strong> al importar desde Cifra Club, Ultimate Guitar o CifraSpot, nuestro servidor descarga la página que pegaste.</li>
+          <li><strong>WhatsApp, X y Facebook:</strong> solo se abren si tocás el botón para compartir.</li>
+        </ul>
+
+        <h2>Cuánto tiempo guardamos los datos</h2>
+        <p>Los datos de tu cuenta se guardan hasta que la elimines. Las copias de seguridad del servidor se renuevan solas y se borran a los 14 días como máximo. Las señales anónimas se borran a los 180 días.</p>
+
+        <h2>Tus derechos</h2>
+        <ul>
+          <li><strong>Ver y llevarte tus datos:</strong> en la app, abrí tu perfil y tocá <em>Exportar datos</em>. Se descarga un archivo JSON con tu cuenta, favoritos, historial, puntajes y setlists.</li>
+          <li><strong>Eliminar tu cuenta:</strong> en tu perfil, tocá <em>Eliminar mi cuenta</em> y confirmá. Se borran tu cuenta, favoritos, historial, puntajes, comentarios, setlists y progreso. Las canciones que creaste siguen en la comunidad, pero sin tu nombre.</li>
+          <li>Si no podés entrar a la app, escribinos al email de arriba desde la dirección de tu cuenta y la borramos a mano.</li>
+        </ul>
+        <p>Tenés derecho a acceder, rectificar y suprimir tus datos según la Ley 25.326 de Protección de Datos Personales de Argentina. La Agencia de Acceso a la Información Pública es el órgano de control y recibe denuncias si creés que no cumplimos.</p>
+
+        <h2>Menores</h2>
+        <p>AcordesAI no está dirigida a menores de 13 años. Si sos madre, padre o tutor y creés que un menor creó una cuenta, escribinos y la eliminamos.</p>
+
+        <h2>Cambios</h2>
+        <p>Si cambiamos esta política, actualizamos la fecha de arriba. El historial completo de cambios está en <a href="{{REPO_URL}}/commits/main/landing/pages/privacidad.html">GitHub</a>.</p>
+      </div>
+    </section>

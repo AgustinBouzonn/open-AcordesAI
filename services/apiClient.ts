@@ -129,6 +129,11 @@ class ApiClient {
       }),
     me: () => this.request<MeResponse>('/auth/me'),
     stats: () => this.request<ProfileStats>('/auth/stats'),
+    deleteAccount: () =>
+      this.request<MessageResponse>('/auth/me', {
+        method: 'DELETE',
+        body: JSON.stringify({ confirm: 'ELIMINAR' }),
+      }),
     getOAuthStartUrl: (provider: OAuthProvider) => `${this.getAbsoluteApiBase()}/auth/oauth/${provider}/start`,
     getOAuthRedirect: async (provider: OAuthProvider) => {
       const response = await fetch(`${this.getAbsoluteApiBase()}/auth/oauth/${provider}/start`, {

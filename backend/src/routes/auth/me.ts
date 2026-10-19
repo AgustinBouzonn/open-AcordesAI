@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { query } from '../../db';
+import { query, withTransaction } from '../../db';
 import { requireAuth, AuthRequest } from '../../middleware/auth';
 import { toUserDto } from './utils';
 
@@ -17,6 +17,25 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<
     console.error('[auth/me]', e);
     res.status(500).json({ message: 'Error' });
   }
+});
+
+// Borrado de cuenta (lo exige Google Play). Las canciones creadas quedan en la comunidad sin autor;
+// favoritos, historial, comentarios, puntajes, setlists y progreso se borran por ON DELETE CASCADE.
+router.delete('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  if (req.body?.confirm !== 'ELIMINAR') {
+    res.status(400).json({ message: 'Falta la confirmación' });
+    return;
+  }
+  const deleted = await withTransaction(async (client) => {
+    await client.query('UPDATE songs SET user_id = NULL WHERE user_id = $1', [req.userId!]);
+    const r = await client.query('DELETE FROM users WHERE id = $1', [req.userId!]);
+    return r.rowCount ?? 0;
+  });
+  if (!deleted) {
+    res.status(404).json({ message: 'Usuario no encontrado' });
+    return;
+  }
+  res.json({ message: 'Cuenta eliminada' });
 });
 
 router.get('/stats', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {

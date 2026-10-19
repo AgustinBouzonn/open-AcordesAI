@@ -41,3 +41,4 @@ backups/
 # Playwright
 test-results/
 playwright-report/
+_site/

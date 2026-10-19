@@ -264,7 +264,7 @@ function AppContent() {
           <button
             onClick={() => setShowImportUrlModal(true)}
             className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-full shadow-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
-            title="Importar desde URL de Cifra Club"
+            title="Importar desde URL (Cifra Club, Ultimate Guitar, CifraSpot)"
             aria-label="Importar desde URL"
           >
             <Download size={20} />

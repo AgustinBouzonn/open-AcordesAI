@@ -1,0 +1,115 @@
+<!--
+title: Estado del servicio · AcordesAI
+description: Si AcordesAI está funcionando ahora, disponibilidad de los últimos 30 días e incidentes recientes.
+-->
+    <section class="page">
+      <div class="wrap narrow">
+        <h1 class="page-title">Estado del servicio</h1>
+        <p class="page-lead">Cada 15 minutos un monitor en GitHub Actions abre <code>/api/health</code> de la app, que confirma que el servidor y la base de datos responden.</p>
+
+        <div class="card status-now" aria-live="polite">
+          <span class="status-dot" id="st-dot"></span>
+          <div><strong id="st-title">Cargando…</strong><span class="muted" id="st-sub"></span></div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><b id="st-24h">–</b><span>Últimas 24 h</span></div>
+          <div class="stat"><b id="st-7d">–</b><span>Últimos 7 días</span></div>
+          <div class="stat"><b id="st-30d">–</b><span>Últimos 30 días</span></div>
+          <div class="stat"><b id="st-ms">–</b><span>Respuesta promedio (24 h)</span></div>
+        </div>
+
+        <h2 class="h3">Últimos 30 días</h2>
+        <div class="bars" id="st-bars" role="img" aria-label="Disponibilidad por día"></div>
+        <div class="bars-legend"><span>Hace 30 días</span><span>Hoy</span></div>
+
+        <h2 class="h3">Incidentes recientes</h2>
+        <ul class="changes" id="st-incidents"><li class="muted">Cargando…</li></ul>
+      </div>
+    </section>
+    <script>
+      (function () {
+        var URL_HISTORY = '{{STATUS_URL}}';
+        var $ = function (id) { return document.getElementById(id); };
+        var DAY = 86400;
+        var fmtDate = function (t) {
+          return new Date(t * 1000).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        };
+        var pct = function (list) {
+          if (!list.length) return '–';
+          var ok = list.filter(function (c) { return c[1]; }).length;
+          return (Math.floor((ok / list.length) * 1000) / 10).toString().replace('.', ',') + ' %';
+        };
+        function show(state, title, sub) {
+          $('st-dot').className = 'status-dot ' + state;
+          $('st-title').textContent = title;
+          $('st-sub').textContent = sub;
+        }
+        function render(checks) {
+          var now = Date.now() / 1000;
+          var since = function (s) { return checks.filter(function (c) { return c[0] >= now - s; }); };
+          var last = checks[checks.length - 1];
+          if (!last) { show('', 'Todavía no hay mediciones', 'El monitor empieza a registrar en los próximos minutos.'); }
+          else if (now - last[0] > 3600) { show('', 'Sin datos recientes', 'Última medición: ' + fmtDate(last[0]) + '.'); }
+          else if (last[1]) { show('up', 'Funcionando', 'Última verificación: ' + fmtDate(last[0]) + ' · ' + last[2] + ' ms'); }
+          else { show('down', 'Con problemas', 'La última verificación (' + fmtDate(last[0]) + ') falló con código ' + last[3] + '.'); }
+
+          $('st-24h').textContent = pct(since(DAY));
+          $('st-7d').textContent = pct(since(7 * DAY));
+          $('st-30d').textContent = pct(since(30 * DAY));
+          var okDay = since(DAY).filter(function (c) { return c[1]; });
+          $('st-ms').textContent = okDay.length
+            ? Math.round(okDay.reduce(function (a, c) { return a + c[2]; }, 0) / okDay.length) + ' ms'
+            : '–';
+
+          var bars = $('st-bars');
+          bars.textContent = '';
+          var today = new Date(); today.setHours(0, 0, 0, 0);
+          for (var d = 29; d >= 0; d--) {
+            var start = today.getTime() / 1000 - d * DAY;
+            var day = checks.filter(function (c) { return c[0] >= start && c[0] < start + DAY; });
+            var ok = day.filter(function (c) { return c[1]; }).length;
+            var bar = document.createElement('i');
+            var label = new Date(start * 1000).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+            if (day.length) {
+              bar.className = ok === day.length ? 'up' : ok / day.length >= 0.9 ? 'partial' : 'down';
+              bar.title = label + ': ' + pct(day);
+            } else {
+              bar.title = label + ': sin datos';
+            }
+            bars.appendChild(bar);
+          }
+
+          // Incidente = dos o más verificaciones seguidas que fallaron.
+          var incidents = [];
+          var run = null;
+          checks.forEach(function (c) {
+            if (!c[1]) { run = run || { from: c[0], n: 0, code: c[3] }; run.n++; run.to = c[0]; }
+            else if (run) { if (run.n >= 2) { run.until = c[0]; incidents.push(run); } run = null; }
+          });
+          if (run && run.n >= 2) incidents.push(run);
+          var ul = $('st-incidents');
+          ul.textContent = '';
+          if (!incidents.length) {
+            var li = document.createElement('li'); li.className = 'muted'; li.textContent = 'Sin incidentes en los últimos 30 días.'; ul.appendChild(li);
+          }
+          incidents.slice(-5).reverse().forEach(function (i) {
+            var li = document.createElement('li');
+            var tag = document.createElement('span');
+            tag.className = 'kind ' + (i.until ? 'kind-arreglo' : 'kind-nuevo');
+            tag.textContent = i.until ? 'Resuelto' : 'En curso';
+            var text = document.createElement('span');
+            var mins = Math.max(15, Math.round(((i.until || now) - i.from) / 60));
+            text.textContent = fmtDate(i.from) + ' · ' + (mins >= 120 ? Math.round(mins / 60) + ' h' : mins + ' min') + ' sin servicio (código ' + i.code + ')';
+            li.appendChild(tag); li.appendChild(text); ul.appendChild(li);
+          });
+        }
+        fetch(URL_HISTORY, { cache: 'no-store' })
+          .then(function (r) { if (r.status === 404) return { checks: [] }; if (!r.ok) throw new Error(r.status); return r.json(); })
+          .then(function (data) { render(data.checks || []); })
+          .catch(function () {
+            show('', 'No se pudo leer el historial', 'Probá recargar en un rato.');
+            $('st-incidents').textContent = '';
+          });
+      })();
+    </script>
