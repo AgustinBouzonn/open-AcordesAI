@@ -40,6 +40,7 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   const [editMode, setEditMode] = useState(false);
   const [editedChords, setEditedChords] = useState(song.chords || '');
   const [saving, setSaving] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [avgRating, setAvgRating] = useState<RatingSummary | null>(null);
@@ -288,7 +289,10 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
   };
 
   const handleExportPdf = async () => {
+    if (exportingPdf) return;
+    setExportingPdf(true);
     try {
+      // jspdf (~130 KB gzip) se baja recién acá, no forma parte de la carga inicial.
       const { jsPDF } = await import('jspdf');
       const doc = new jsPDF({ unit: 'pt', format: 'a4' });
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -322,6 +326,8 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
     } catch (e) {
       console.error('Failed to export PDF:', e);
       showToast('No se pudo exportar el PDF', 'error');
+    } finally {
+      setExportingPdf(false);
     }
   };
 
@@ -412,8 +418,8 @@ export const SongViewer: React.FC<SongViewerProps> = ({ song, onSongUpdated }) =
                     <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300" title="Descargar como .txt">
                       <Upload size={16} /> .txt
                     </button>
-                    <button onClick={handleExportPdf} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300" title="Descargar como PDF">
-                      <FileText size={16} /> PDF
+                    <button onClick={handleExportPdf} disabled={exportingPdf} aria-busy={exportingPdf} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300 disabled:opacity-70" title="Descargar como PDF">
+                      {exportingPdf ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} PDF
                     </button>
                     <button onClick={() => setPresentationMode(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-dark-700 hover:bg-dark-600 text-gray-300" title="Modo presentación (Esc para salir)">
                       <Maximize size={16} /> Presentación
