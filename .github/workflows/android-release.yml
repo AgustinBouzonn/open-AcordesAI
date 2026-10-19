@@ -66,7 +66,7 @@ jobs:
           ./gradlew --no-daemon bundleRelease assembleRelease
           rm -f "$RUNNER_TEMP/upload.jks"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.cfg.outputs.skip != 'true'
         with:
           name: android-release
